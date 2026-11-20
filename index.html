@@ -94,10 +94,23 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 #PG_BATTLE{pointer-events:none}
 #touch{display:none}
 #PG_BATTLE.touch #touch{display:block}
-#touch .pad{position:absolute;bottom:4%;display:grid;grid-template-columns:repeat(3,4.4em);grid-auto-rows:4.4em;gap:.5em;pointer-events:auto;font-size:1.05em}
-#touch .l{left:2%}#touch .r{right:2%}
-#touch button{border-radius:50%;border:2px solid rgba(239,233,223,.35);background:rgba(20,17,16,.5);font-weight:700;touch-action:none}
-#touch button.on{background:rgba(232,67,43,.65)}
+#stickZone{position:absolute;left:0;bottom:0;width:44%;height:72%;pointer-events:auto;touch-action:none}
+#stick{position:absolute;left:30%;top:62%;width:10.5em;height:10.5em;margin:-5.25em 0 0 -5.25em;pointer-events:none;--kx:0px;--ky:0px;opacity:.7;transition:opacity .15s}
+#stick.on{opacity:1}
+#stick .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(239,233,223,.4);background:radial-gradient(circle,rgba(20,17,16,.2) 0 37%,rgba(20,17,16,.6) 38%)}
+#stick .ring i{position:absolute;font-style:normal;font-weight:700;font-size:.85em;line-height:1;color:rgba(239,233,223,.6)}
+#stick .u{top:.55em;left:50%;transform:translateX(-50%)}#stick .d{bottom:.55em;left:50%;transform:translateX(-50%)}
+#stick .l{left:.6em;top:50%;transform:translateY(-50%)}#stick .r{right:.6em;top:50%;transform:translateY(-50%)}
+#stick .ring i.on{color:var(--red)}
+#stick .knob{position:absolute;left:50%;top:50%;width:4.4em;height:4.4em;margin:-2.2em 0 0 -2.2em;border-radius:50%;background:rgba(239,233,223,.85);box-shadow:0 0 0 3px rgba(13,10,9,.55),0 .3em .8em rgba(0,0,0,.45);transform:translate(var(--kx),var(--ky))}
+#touch .pad.r{position:absolute;right:2%;bottom:3%;width:17em;height:13em;pointer-events:none}
+#touch .pad.r button{position:absolute;border-radius:50%;border:2px solid rgba(239,233,223,.4);background:rgba(20,17,16,.55);font-weight:700;touch-action:none;pointer-events:auto;padding:0}
+#touch .pad.r button.on{background:rgba(232,67,43,.7);border-color:var(--bone)}
+#touch .b-l{right:.4em;bottom:.4em;width:5.4em;height:5.4em}
+#touch .b-h{right:7.1em;bottom:.9em;width:4.4em;height:4.4em}
+#touch .b-s{right:.9em;bottom:7.1em;width:4.4em;height:4.4em}
+#touch .b-brk{right:5.6em;bottom:5.6em;width:3.9em;height:3.9em;border-color:rgba(232,67,43,.85)!important;color:#ffb8a8}
+#touch .b-fin{right:12em;bottom:1.3em;width:3.9em;height:3.9em}
 #wrap:fullscreen{background:#0a0807}#wrap:-webkit-full-screen{background:#0a0807}
 .hudbtn{position:absolute;top:2.4%;width:2.9cqw;height:2.9cqw;min-width:28px;min-height:28px;display:grid;place-items:center;padding:0;pointer-events:auto;background:rgba(13,10,9,.75);border:1px solid rgba(239,233,223,.3);border-radius:.25em;color:var(--bone)}
 .hudbtn:hover{border-color:var(--bone)}.hudbtn svg{width:62%;height:62%}
@@ -131,7 +144,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_CODEX">设定 ID 表</button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v0.3 · 背景为电脑自动对战演示</div>
+  <div class="ver">v0.4 · 背景为电脑自动对战演示</div>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
 </section>
 
@@ -146,8 +159,8 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 
 <section class="page" id="PG_BATTLE">
   <div id="touch">
-    <div class="pad l"><span></span><button data-k="up">▲</button><span></span><button data-k="left">◀</button><button data-k="guard">防</button><button data-k="right">▶</button></div>
-    <div class="pad r"><button data-k="brk">破链</button><button data-k="fin">终结</button><span></span><button data-k="l">轻</button><button data-k="h">重</button><button data-k="s">特</button></div>
+    <div id="stickZone"><div id="stick"><div class="ring"><i class="u">跳</i><i class="d">防</i><i class="l">◀</i><i class="r">▶</i></div><div class="knob"></div></div></div>
+    <div class="pad r"><button data-k="fin" class="b-fin">终结</button><button data-k="brk" class="b-brk">破链</button><button data-k="s" class="b-s">特</button><button data-k="h" class="b-h">重</button><button data-k="l" class="b-l">轻</button></div>
   </div>
   <button class="hudbtn" id="tPause" aria-label="暂停"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
   <button class="hudbtn" id="bFs" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg></button>
@@ -220,7 +233,7 @@ const CFG = {
   GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
   SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
   BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16,
-  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true,
+  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float',
 };
 const CFG_DESC = {
   HP: '生命值上限', ROUND_TIME: '每回合秒数（0 = 不限时）', ROUNDS_TO_WIN: '获胜所需回合数',
@@ -234,7 +247,7 @@ const CFG_DESC = {
   GRD_REGEN: '护架每帧恢复量', GRD_CRUSH_STUN: '破防硬直（帧）',
   SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
   BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
-  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）',
+  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置',
 };
 
 /* ---------- 二、掉落阶段（连段阈值）DL ----------
@@ -369,6 +382,7 @@ const SETTINGS = [
   { id: 'SET_SHAKE', label: '屏幕震动', key: 'SHAKE', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_SOUND', label: '音效', key: 'SOUND', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '安卓有效', opts: [[true, '开'], [false, '关']] },
+  { id: 'SET_STICK', label: '触屏摇杆', key: 'STICK_MODE', note: '左半屏按下即出现摇杆', opts: [['float', '跟随手指'], ['fixed', '固定位置']] },
 ];
 const DEFAULTS = Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]]));
 const SAVE_KEY = 'duanlian.settings.v1';
@@ -402,7 +416,7 @@ const Input = {
     return r;
   },
   endFrame() { this.taps.clear(); this.touchTaps.clear(); },
-  clear() { this.held.clear(); this.taps.clear(); this.touchTaps.clear(); this.touchHeld = {}; $$('#touch button').forEach(b => b.classList.remove('on')); },
+  clear() { this.held.clear(); this.taps.clear(); this.touchTaps.clear(); this.touchHeld = {}; $$('#touch button').forEach(b => b.classList.remove('on')); try { stickReset(); } catch (e) {} },
 };
 
 /* ---------- 音效（WebAudio 合成，无外部文件） ---------- */
@@ -859,7 +873,7 @@ function startMatch(o) {
   G.lastOpts = o; G.mode = o.mode; G.demo = false; G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
   G.f = [new Fighter(0, CHAR[o.p1], false), new Fighter(1, CHAR[o.p2], o.p1 === o.p2)];
   G.ai = [new AI(CFG.AI_LEVEL), new AI(o.mode === 'train' ? 1 : CFG.AI_LEVEL)];
-  G.round = 1; G.log = []; startRound(); go('PG_BATTLE'); SFX.init();
+  G.round = 1; G.log = []; G.lastMove = null; startRound(); go('PG_BATTLE'); SFX.init();
 }
 function startDemo() {
   G.demo = true; G.running = false; G.paused = false; G.mode = 'cpu'; G.autoP1 = false; G.stage = pick(STAGES).id;
@@ -1231,6 +1245,7 @@ function go(id) {
   ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings })[id]?.();
   Input.clear();
   $('#PG_BATTLE').classList.toggle('touch', TOUCH);
+  if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); } catch (e) {} });
   if (id !== 'PG_BATTLE') { const f = $(`#${id} .menu button, #${id} [aria-pressed=true], #${id} button`); f && f.focus({ preventScroll: true }); }
   else document.activeElement && document.activeElement.blur && document.activeElement.blur();
 }
@@ -1273,7 +1288,7 @@ function buildMoves() {
   const ch = CHAR[G.mvTab];
   $('#mvTable').innerHTML = `<tr><th>输入</th><th>招式</th><th>ID</th><th class="num">发生</th><th class="num">持续</th><th class="num">收招</th><th class="num">伤害</th><th class="num">势</th></tr>` +
     Object.entries(ch.moves).map(([k, m]) => `<tr><td>${MOVE_INPUT[k]}</td><td>${m.name}</td><td><code>${m.id}</code></td><td class="num">${m.startup}</td><td class="num">${m.active}</td><td class="num">${m.recovery}</td><td class="num">${m.dmg}</td><td class="num">${m.mom}</td></tr>`).join('');
-  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr>`;
+  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr><tr><td>触屏</td><td colspan="2">左侧摇杆：左右移动 · 上推跳 · 下拉防御；右侧按键出招</td></tr>`;
 }
 const CODEX = {
   pages: { name: '页面 PG', note: '界面页面。PG_BATTLE 的内容画在 canvas 上。', cols: ['ID', '名称', '说明'], rows: () => PAGES.map(p => [p.id, p.name, p.desc]) },
@@ -1384,6 +1399,36 @@ $$('#touch button').forEach(b => {
   const up = () => { Input.touchHeld[k] = false; b.classList.remove('on'); };
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => b.addEventListener(t, up));
 });
+/* ---------- 虚拟摇杆：左右移动 · 上推跳 · 下拉防御 ---------- */
+const STK = { id: null, cx: 0, cy: 0 };
+const zone = $('#stickZone'), stick = $('#stick');
+function stickHome() { STK.cx = zone.clientWidth * .3; STK.cy = zone.clientHeight * .62; stick.style.left = STK.cx + 'px'; stick.style.top = STK.cy + 'px'; }
+function stickSet(vx, vy) {
+  const R = stick.offsetWidth * .34; stick.style.setProperty('--kx', vx * R + 'px'); stick.style.setProperty('--ky', vy * R + 'px');
+  const th = Input.touchHeld, was = { up: th.up, guard: th.guard };
+  th.left = vx < -.3; th.right = vx > .3; th.up = vy < -.55; th.guard = vy > .55 && Math.abs(vx) < .8;
+  if (th.up && !was.up) { Input.touchTaps.add('up'); buzz(8); }
+  if (th.guard && !was.guard) buzz(5);
+  for (const [c, k] of [['u', 'up'], ['d', 'guard'], ['l', 'left'], ['r', 'right']]) stick.querySelector('.' + c).classList.toggle('on', !!th[k]);
+}
+function stickReset() { STK.id = null; stick.classList.remove('on'); if (zone.clientWidth) stickHome(); stickSet(0, 0); }
+function stickMove(e) {
+  if (e.pointerId !== STK.id) return; e.preventDefault();
+  const r = zone.getBoundingClientRect(), R = stick.offsetWidth * .34;
+  let vx = (e.clientX - r.left - STK.cx) / R, vy = (e.clientY - r.top - STK.cy) / R;
+  const m = Math.hypot(vx, vy); if (m > 1) { vx /= m; vy /= m; }
+  stickSet(vx, vy);
+}
+zone.addEventListener('pointerdown', e => {
+  if (STK.id !== null) return; e.preventDefault(); SFX.init();
+  STK.id = e.pointerId; try { zone.setPointerCapture(e.pointerId); } catch (_) {}
+  const r = zone.getBoundingClientRect(), h = stick.offsetWidth / 2;
+  if (CFG.STICK_MODE !== 'fixed') { STK.cx = clamp(e.clientX - r.left, h, Math.max(h, r.width - h)); STK.cy = clamp(e.clientY - r.top, h, Math.max(h, r.height - h)); stick.style.left = STK.cx + 'px'; stick.style.top = STK.cy + 'px'; }
+  stick.classList.add('on'); stickMove(e);
+});
+zone.addEventListener('pointermove', stickMove);
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => zone.addEventListener(t, e => { if (e.pointerId === STK.id) stickReset(); }));
+addEventListener('resize', () => { if (STK.id === null && zone.clientWidth) stickHome(); });
 
 window.DUANLIAN = { G, CFG, DROP_LEVELS, CHARS, STAGES, KEYMAP, EVENTS, on, startMatch, step, go };
 startDemo();
