@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0807">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="断链">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>断链 · 1V1 格斗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 冷硬、利落的武斗——像一册朱印拳谱
+   IDEA: 一根铁链：连段是链，破链是断
+   PICTURE: 画布上的整场对战；标题页是暮色断桥上的电脑自动对打
+   COLOUR/TYPE: 墨 #141110 + 朱 #e8432b + 骨白 #efe9df；马善政毛笔字 / Noto Sans SC / Oswald 数字
+   LAYOUT: 16:9 舞台按窗口等比缩放，各页面是叠在画布上的面板 */
+:root{--ink:#141110;--ink2:#1f1a18;--red:#e8432b;--bone:#efe9df;--mute:#a39a8f;--line:rgba(239,233,223,.16);color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;background:#0a0807;color:var(--bone);font:16px/1.5 "Noto Sans SC",system-ui,sans-serif;overflow:hidden;touch-action:manipulation;-webkit-touch-callout:none;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#wrap{position:fixed;inset:0;display:grid;place-items:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#app{position:relative;width:min(100vw - env(safe-area-inset-left) - env(safe-area-inset-right),(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9);aspect-ratio:16/9;container-type:size;overflow:hidden;background:#000;user-select:none;-webkit-user-select:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.page{position:absolute;inset:0;display:none;font-size:max(11px,1.25cqw)}
+.page.on{display:flex}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+.panel{margin:auto;width:min(94%,74em);max-height:92%;overflow:auto;background:rgba(20,17,16,.95);border-top:.35em solid var(--red);padding:1.4em 1.9em 1.3em;box-shadow:0 1em 3em #000a}
+.panel.narrow{width:min(90%,30em)}
+h2{font:400 2.5em/1.05 "Ma Shan Zheng","Noto Sans SC",serif;margin:0 0 .45em}
+h2 small{font:500 .36em "Noto Sans SC",sans-serif;color:var(--mute);margin-left:.7em;vertical-align:middle}
+h3{font-size:1.05em;margin:1em 0 .4em;color:var(--red)}
+p{margin:.35em 0;color:#d9d1c6}
+b{color:var(--bone)}
+.actions{display:flex;gap:.7em;justify-content:flex-end;margin-top:1.1em;flex-wrap:wrap}
+.btn{background:transparent;border:1px solid var(--line);padding:.5em 1.3em;min-height:2.6em;border-radius:.2em}
+.btn:hover,.btn:focus-visible{border-color:var(--bone);background:rgba(239,233,223,.06)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.btn.primary:hover{background:#f05a40}
+/* 标题页 */
+#PG_TITLE{align-items:stretch}
+#PG_TITLE .band{width:38%;background:var(--red);color:var(--ink);padding:4% 3.6% 3.6%;display:flex;flex-direction:column;justify-content:flex-end}
+#PG_TITLE .chainart{width:62%;margin-bottom:auto}
+#PG_TITLE h1{font:400 12.5cqw/.92 "Ma Shan Zheng",serif;margin:0;color:var(--ink)}
+#PG_TITLE .sub{font-weight:900;font-size:1.3em;margin:.7em 0 .3em}
+#PG_TITLE .rule{font-size:.95em;color:#3b130d;max-width:24em;margin:0}
+#PG_TITLE nav{flex:1;display:flex;flex-direction:column;justify-content:center;padding-left:5%;background:linear-gradient(90deg,rgba(10,8,7,.85),rgba(10,8,7,.1) 70%)}
+.menu button{background:none;border:0;border-left:.22em solid transparent;text-align:left;padding:.4em 1em;font-size:1.65em;font-weight:500;width:fit-content;min-height:2em}
+.menu button small{display:block;font-size:.5em;color:var(--mute);font-weight:400;line-height:1.3}
+.menu button:hover,.menu button:focus-visible{border-left-color:var(--red);background:linear-gradient(90deg,rgba(232,67,43,.25),transparent);outline:none}
+.menu.col{display:flex;flex-direction:column}
+.ver{position:absolute;right:1.2em;bottom:.9em;color:var(--mute);font-size:.78em}
+/* 选择页 */
+.selrow{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:1em;align-items:center;margin:.65em 0}
+.who{font:400 1.8em/1 "Ma Shan Zheng",serif;color:var(--red)}
+.cards{display:flex;gap:.7em;flex-wrap:wrap}
+.card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.1em .8em;align-items:center;background:rgba(239,233,223,.04);border:1px solid var(--line);padding:.45em .9em .45em .45em;border-radius:.2em;text-align:left;flex:1 1 12em}
+.card canvas{width:4.4em;height:5.4em;grid-row:span 3;display:block}
+.card b{font:400 1.75em/1 "Ma Shan Zheng",serif}
+.card .t{font-size:.82em;color:var(--mute)}
+.card .st{font-size:.75em;color:var(--mute);display:flex;flex-wrap:wrap;gap:0 .7em}
+.card .st i{font-style:normal;color:var(--bone)}
+.card.stage canvas{width:8em;height:4.5em}
+.card.small{flex:0 1 auto;padding:.5em 1em;grid-template-columns:1fr}
+.card[aria-pressed=true]{border-color:var(--red);background:rgba(232,67,43,.15);box-shadow:inset 0 -.2em 0 var(--red)}
+/* 表格页 */
+.cols{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:2em}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88em}
+th,td{padding:.32em .55em;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--mute);font-weight:500}
+td.w{white-space:normal;min-width:14em}
+td code{font:600 .95em "Oswald","Noto Sans SC",sans-serif;color:var(--bone);letter-spacing:.02em}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px solid var(--line);border-bottom-width:2px;padding:0 .45em;border-radius:.2em}
+.tabs{display:flex;gap:.35em;flex-wrap:wrap;margin:.1em 0 .7em}
+.tabs button{background:none;border:1px solid var(--line);padding:.25em .9em;border-radius:99em;font-size:.88em;min-height:2.2em}
+.tabs button[aria-selected=true]{background:var(--bone);color:var(--ink);border-color:var(--bone)}
+.dlbar{display:flex;height:2.6em;margin:.6em 0 .3em;border:1px solid var(--line)}
+.dlbar div{display:flex;flex-direction:column;justify-content:center;padding:0 .5em;color:var(--ink);font-size:.8em;line-height:1.15;overflow:hidden}
+.dlbar div b{color:inherit;font-size:1.15em}
+/* 设置 */
+.set{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.55em 1.2em;align-items:center}
+.set small{display:block;color:var(--mute);font-size:.8em}
+.set select{background:var(--ink2);border:1px solid var(--line);padding:.3em .6em;min-height:2.3em;border-radius:.2em}
+/* 对战页（触屏） */
+#PG_BATTLE{pointer-events:none}
+#touch{display:none}
+#PG_BATTLE.touch #touch{display:block}
+#touch .pad{position:absolute;bottom:4%;display:grid;grid-template-columns:repeat(3,4.4em);grid-auto-rows:4.4em;gap:.5em;pointer-events:auto;font-size:1.05em}
+#touch .l{left:2%}#touch .r{right:2%}
+#touch button{border-radius:50%;border:2px solid rgba(239,233,223,.35);background:rgba(20,17,16,.5);font-weight:700;touch-action:none}
+#touch button.on{background:rgba(232,67,43,.65)}
+#wrap:fullscreen{background:#0a0807}#wrap:-webkit-full-screen{background:#0a0807}
+.hudbtn{position:absolute;top:2.4%;width:2.9cqw;height:2.9cqw;min-width:28px;min-height:28px;display:grid;place-items:center;padding:0;pointer-events:auto;background:rgba(13,10,9,.75);border:1px solid rgba(239,233,223,.3);border-radius:.25em;color:var(--bone)}
+.hudbtn:hover{border-color:var(--bone)}.hudbtn svg{width:62%;height:62%}
+#tPause{left:42.9%}#bFs{left:54.3%}
+#fsTitle{position:absolute;top:1.1em;right:1.2em;display:flex;align-items:center;gap:.45em;background:rgba(13,10,9,.6);border:1px solid var(--line);border-radius:.25em;padding:.35em .9em;min-height:2.4em}
+#fsTitle svg{width:1.1em;height:1.1em}#fsTitle:hover{border-color:var(--bone)}
+[hidden]{display:none!important}
+#toast{position:absolute;left:50%;bottom:22%;transform:translateX(-50%);max-width:80%;background:rgba(13,10,9,.94);border:1px solid var(--red);padding:.6em 1.1em;border-radius:.25em;font-size:max(12px,1.2cqw);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
+#toast.on{opacity:1}
+#rotate{display:none;position:fixed;inset:0;place-items:center;background:#0a0807;z-index:9;font-size:18px;text-align:center;padding:2em}
+@media (orientation:portrait) and (max-width:820px){#rotate{display:grid}}
+@media (max-width:700px){.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="app">
+<canvas id="cv"></canvas>
+
+<section class="page on" id="PG_TITLE">
+  <div class="band">
+    <svg class="chainart" viewBox="0 0 260 110" aria-hidden="true"><g fill="none" stroke="#141110" stroke-width="11" stroke-linecap="round"><rect x="10" y="30" width="96" height="50" rx="25"/><path d="M84 55h46"/><path d="M150 32h38a25 25 0 0 1 0 50h-38"/><path d="M136 38l-10-14M132 74l-12 12M222 30l16-16M228 86l18 10"/></g></svg>
+    <h1>断链</h1>
+    <div class="sub">1V1 无限连段格斗</div>
+    <p class="rule">攻方可以一直连下去，伤害按阶段阈值“掉落”结算；守方攒满破链能量，就能把连段斩断。</p>
+  </div>
+  <nav class="menu">
+    <button data-mode="cpu">对战电脑<small>1P 对 CPU</small></button>
+    <button data-mode="pvp">双人对战<small>同一键盘 1P 对 2P</small></button>
+    <button data-mode="train">训练模式<small>对木桩练连段与破链时机</small></button>
+    <button data-go="PG_MOVES">招式与系统</button>
+    <button data-go="PG_CODEX">设定 ID 表</button>
+    <button data-go="PG_SETTINGS">设置</button>
+  </nav>
+  <div class="ver">v0.3 · 背景为电脑自动对战演示</div>
+  <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
+</section>
+
+<section class="page" id="PG_SELECT"><div class="panel">
+  <h2>选择角色 <small id="selMode"></small></h2>
+  <div class="selrow"><div class="who">1P</div><div class="cards" id="pickP1"></div></div>
+  <div class="selrow"><div class="who" id="p2Who">CPU</div><div class="cards" id="pickP2"></div></div>
+  <div class="selrow"><div class="who">场景</div><div class="cards" id="pickStage"></div></div>
+  <div class="selrow" id="dummyRow"><div class="who">木桩</div><div class="cards" id="pickDummy"></div></div>
+  <div class="actions"><button class="btn" data-go="PG_TITLE">返回</button><button class="btn primary" id="btnFight">开战</button></div>
+</div></section>
+
+<section class="page" id="PG_BATTLE">
+  <div id="touch">
+    <div class="pad l"><span></span><button data-k="up">▲</button><span></span><button data-k="left">◀</button><button data-k="guard">防</button><button data-k="right">▶</button></div>
+    <div class="pad r"><button data-k="brk">破链</button><button data-k="fin">终结</button><span></span><button data-k="l">轻</button><button data-k="h">重</button><button data-k="s">特</button></div>
+  </div>
+  <button class="hudbtn" id="tPause" aria-label="暂停"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
+  <button class="hudbtn" id="bFs" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg></button>
+</section>
+
+<section class="page" id="PG_PAUSE"><div class="panel narrow">
+  <h2>暂停</h2>
+  <nav class="menu col"><button id="btnResume">继续<small>Esc / P</small></button><button data-fs><span class="lbl">全屏</span><small>F 键</small></button><button data-go="PG_MOVES">招式与系统</button><button id="btnRestart">重新开始本场</button><button id="btnQuit">返回标题</button></nav>
+</div></section>
+
+<section class="page" id="PG_RESULT"><div class="panel narrow">
+  <h2 id="resTitle"></h2><p id="resSub"></p>
+  <div class="tablewrap"><table id="resTable"></table></div>
+  <div class="actions"><button class="btn" id="btnToTitle">返回标题</button><button class="btn" id="btnReselect">重选角色</button><button class="btn primary" id="btnRematch">再战</button></div>
+</div></section>
+
+<section class="page" id="PG_MOVES"><div class="panel">
+  <h2>招式与系统</h2>
+  <div class="cols">
+    <div id="sysText"></div>
+    <div><h3>招式表</h3><div class="tabs" id="mvTabs"></div><div class="tablewrap"><table id="mvTable"></table></div>
+      <h3>操作</h3><div class="tablewrap"><table id="keyTable"></table></div></div>
+  </div>
+  <div class="actions"><button class="btn" data-back>返回</button></div>
+</div></section>
+
+<section class="page" id="PG_CODEX"><div class="panel">
+  <h2>设定 ID 表 <small>由代码里的数据表直接生成，改数据后这里自动同步</small></h2>
+  <div class="tabs" id="cxTabs"></div>
+  <p id="cxNote"></p>
+  <div class="tablewrap"><table id="cxTable"></table></div>
+  <div class="actions"><button class="btn" data-back>返回</button></div>
+</div></section>
+
+<section class="page" id="PG_SETTINGS"><div class="panel narrow">
+  <h2>设置</h2>
+  <div class="set" id="setList"></div>
+  <div class="actions"><button class="btn" id="setReset">恢复默认</button><button class="btn primary" data-back>完成</button></div>
+</div></section>
+<div id="toast" role="status"></div>
+</div>
+<div id="rotate">请把设备横过来游玩</div></div>
+
+<script>
+{
+'use strict';
+/* ============================================================
+   《断链》1V1 无限连段格斗 —— 原型
+   所有可调内容都在下面的数据表里（CFG / DROP_LEVELS / CHARS / …）
+   ============================================================ */
+const W = 1280, H = 720;
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const rand = (a, b) => a + Math.random() * (b - a), randi = (a, b) => Math.floor(rand(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t;
+const FB = '"Ma Shan Zheng","Noto Sans SC",serif', FN = '"Oswald","Noto Sans SC",sans-serif', FU = '"Noto Sans SC",system-ui,sans-serif';
+const INK = '#0d0a09', BONE = '#efe9df', RED = '#e8432b', MUTE = '#a39a8f';
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+
+/* ---------- 一、全局参数 CFG（帧 = 1/60 秒） ---------- */
+const CFG = {
+  HP: 1600, ROUND_TIME: 99, ROUNDS_TO_WIN: 2,
+  GROUND: 620, WALL_L: 70, WALL_R: 1210, GRAVITY: 0.95, BUFFER: 8,
+  BRK_MAX: 100, BRK_COST: 100, BRK_START: 20,
+  GAIN: { guard: 6, landHit: 2, commit: 10, passive: 0.02 },
+  CHAIN_WINDOW: 40, WINDOW_MUL: 1, CHAIN_DIST: 100,
+  REPEAT_LIMIT: 3, REPEAT_MOM_MUL: 0.5, REPEAT_DMG_MUL: 0.7,
+  IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 3, COUNTER_MOM: 20,
+  END_PROTECT: 10, FIN_DOWN: 100,
+  GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
+  SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
+  BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16,
+  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true,
+};
+const CFG_DESC = {
+  HP: '生命值上限', ROUND_TIME: '每回合秒数（0 = 不限时）', ROUNDS_TO_WIN: '获胜所需回合数',
+  GROUND: '地面高度（像素）', WALL_L: '左墙', WALL_R: '右墙', GRAVITY: '重力', BUFFER: '按键预输入缓存（帧）',
+  BRK_MAX: '破链能量上限', BRK_COST: '破链一次消耗的能量', BRK_START: '每回合开局的破链能量',
+  GAIN: '其他充能：防御成功 / 命中对手 / 每次掉落结算（守方）/ 每帧自然增长',
+  CHAIN_WINDOW: '连段窗口（帧）：上一击命中后，下一击必须在这段时间内命中', WINDOW_MUL: '连段窗口倍率（设置页）', CHAIN_DIST: '连段中守方被锁定在攻方前方的距离',
+  REPEAT_LIMIT: '同一招连续命中达到此次数，连段中断', REPEAT_MOM_MUL: '重复招式的连段势倍率', REPEAT_DMG_MUL: '重复招式的伤害倍率',
+  IMMEDIATE_RATIO: '每击立即生效的伤害比例，其余进入暂存', FIN_MIN_LV: '可用终结技的最低掉落阶段', COUNTER_MOM: '反击起手（打断对手出招）额外的连段势',
+  END_PROTECT: '连段结束后守方额外的无敌帧（防止立刻再起手）', FIN_DOWN: '吃到终结技后的倒地帧数',
+  GRD_REGEN: '护架每帧恢复量', GRD_CRUSH_STUN: '破防硬直（帧）',
+  SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
+  BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
+  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）',
+};
+
+/* ---------- 二、掉落阶段（连段阈值）DL ----------
+   连段势 mom 越过 min 时：暂存伤害一次性结算（“掉落”）。
+   gain = 守方在该阶段每受一击获得的破链能量；end/stun = 连段在该阶段结束时守方的状态与硬直。 */
+const DROP_LEVELS = [
+  { id: 'DL0', lv: 0, name: '起势', min: 0,   dmgMul: 1.0, gain: 4,  end: 'ST_STAGGER',   stun: 16, color: '#efe9df', note: '连段刚开始，暂存伤害尚未结算' },
+  { id: 'DL1', lv: 1, name: '压制', min: 60,  dmgMul: 1.1, gain: 5,  end: 'ST_STAGGER',   stun: 28, color: '#f2b09a', note: '首次掉落；连段结束时对手踉跄' },
+  { id: 'DL2', lv: 2, name: '崩势', min: 160, dmgMul: 1.2, gain: 7,  end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '连段结束时对手倒地' },
+  { id: 'DL3', lv: 3, name: '坠落', min: 300, dmgMul: 1.3, gain: 10, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '解锁终结技；对手被重重砸地' },
+  { id: 'DL4', lv: 4, name: '终焉', min: 480, dmgMul: 0.5, gain: 16, end: 'ST_KNOCKDOWN', stun: 92, color: '#c21f0a', note: '此后伤害减半、对手充能加快，应尽快终结' },
+];
+
+/* ---------- 三、状态 ST ---------- */
+const STATES = {
+  ST_IDLE: { name: '站立', desc: '可自由行动' },
+  ST_WALK: { name: '移动', desc: '后退速度略慢' },
+  ST_JUMP: { name: '跳跃', desc: '空中可出一次空中击' },
+  ST_GUARD: { name: '防御', desc: '按住防御键；挡下攻击会消耗护架值' },
+  ST_ATTACK: { name: '出招', desc: '发生 → 持续 → 收招；连段中命中后可取消收招' },
+  ST_CHAINED: { name: '被连锁定', desc: '被连段锁定，只能使用破链' },
+  ST_STAGGER: { name: '踉跄', desc: '连段在低阶段结束后的硬直' },
+  ST_KNOCKDOWN: { name: '倒地', desc: '连段在高阶段结束或吃到终结技，倒地期间无敌' },
+  ST_WAKEUP: { name: '起身', desc: '倒地后起身，无敌' },
+  ST_CRUSH: { name: '破防', desc: '护架耗尽，短时间无法行动' },
+  ST_BREAK: { name: '破链爆发', desc: '守方破链后的短暂无敌' },
+  ST_REPELLED: { name: '被弹开', desc: '连段被破链后攻方的硬直' },
+  ST_KO: { name: '战败', desc: '本回合落败' },
+  ST_WIN: { name: '胜利', desc: '本回合获胜' },
+};
+
+/* ---------- 四、角色与招式 CH / MV ----------
+   招式字段：startup 发生帧 / active 持续帧 / recovery 收招帧 / dmg 伤害 / mom 连段势 / grd 削护架
+   range 攻击距离 / hbY 判定中心离脚底的高度 / hbH 判定高度 / cpush 连段中击退 / lift 浮空 / advance 前冲距离 */
+const MV = (id, name, startup, active, recovery, dmg, mom, grd, range, hbY, hbH, hitstop, pose, extra = {}) =>
+  ({ id, name, startup, active, recovery, dmg, mom, grd, range, hbY, hbH, hitstop, pose, cpush: 6, ...extra });
+const CHARS = [
+  { id: 'CH_JIN', name: '烬', title: '朱炎拳士', role: '均衡型：节奏稳定，最好上手',
+    color: '#e8432b', dark: '#8f2414', alt: '#6f7f8c', altDark: '#38424a', skin: '#d9b08c', hair: '#1a1210', sash: '#efe9df',
+    scarf: { at: 'head', n: 5, len: 13 }, build: 28, scale: 1.0,
+    walk: 4.2, jump: 17, atk: 1.0, def: 1.0, brkGain: 1.0, chainWin: 1.0, grd: 100, stats: { 攻: 3, 速: 3, 守: 3 },
+    moves: {
+      L:   MV('MV_JIN_L',   '朱拳', 5, 3, 11, 28, 12, 8, 118, 132, 42, 5, 'punch', { cpush: 4 }),
+      H:   MV('MV_JIN_H',   '崩脚', 10, 4, 18, 52, 20, 16, 148, 88, 52, 8, 'kick', { cpush: 8 }),
+      S:   MV('MV_JIN_S',   '焚掌', 13, 6, 20, 66, 26, 22, 168, 122, 72, 9, 'palm', { cpush: 10, lift: 30 }),
+      FS:  MV('MV_JIN_FS',  '炎突', 11, 8, 22, 58, 24, 18, 136, 112, 62, 8, 'lunge', { advance: 130 }),
+      AIR: MV('MV_JIN_AIR', '落焰', 6, 9, 8, 40, 14, 12, 112, 60, 64, 6, 'airkick', { cpush: 4 }),
+      FIN: MV('MV_JIN_FIN', '烬灭', 14, 10, 30, 170, 0, 0, 152, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
+    } },
+  { id: 'CH_LAN', name: '澜', title: '逐浪游侠', role: '速度型：出招快、连段窗口宽，单击伤害低',
+    color: '#1f8a8a', dark: '#0f4f52', alt: '#4b63a8', altDark: '#26335a', skin: '#e2c3a3', hair: '#0c1c1e', sash: '#dff3ef',
+    scarf: { at: 'hip', n: 7, len: 15 }, build: 25, scale: 0.96,
+    walk: 5.2, jump: 19, atk: 0.85, def: 1.05, brkGain: 1.0, chainWin: 1.25, grd: 90, stats: { 攻: 2, 速: 5, 守: 2 },
+    moves: {
+      L:   MV('MV_LAN_L',   '点浪', 4, 3, 9, 22, 10, 6, 122, 135, 42, 4, 'punch', { cpush: 3 }),
+      H:   MV('MV_LAN_H',   '回澜踢', 8, 4, 15, 42, 17, 13, 152, 100, 52, 7, 'kick'),
+      S:   MV('MV_LAN_S',   '漩涡', 11, 8, 16, 50, 22, 18, 160, 110, 92, 8, 'palm', { lift: 24 }),
+      FS:  MV('MV_LAN_FS',  '逐流', 9, 8, 18, 46, 20, 14, 132, 110, 62, 7, 'lunge', { advance: 170, cpush: 4 }),
+      AIR: MV('MV_LAN_AIR', '落潮', 5, 9, 7, 32, 12, 10, 116, 55, 62, 5, 'airkick', { cpush: 3 }),
+      FIN: MV('MV_LAN_FIN', '沧澜尽', 12, 12, 30, 150, 0, 0, 160, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
+    } },
+  { id: 'CH_YUE', name: '岳', title: '镇山力士', role: '力量型：出招慢，每击连段势高，护架厚',
+    color: '#b0812f', dark: '#5f4318', alt: '#7d7d78', altDark: '#3e3e3a', skin: '#c79a72', hair: '#2a1d10', sash: '#3b2b1a',
+    scarf: { at: 'head', n: 3, len: 10 }, build: 34, scale: 1.08,
+    walk: 3.4, jump: 15, atk: 1.2, def: 0.88, brkGain: 0.9, chainWin: 0.9, grd: 140, stats: { 攻: 5, 速: 1, 守: 4 },
+    moves: {
+      L:   MV('MV_YUE_L',   '镇拳', 7, 3, 13, 36, 15, 12, 122, 135, 46, 6, 'punch', { cpush: 5 }),
+      H:   MV('MV_YUE_H',   '崩岩脚', 13, 5, 21, 66, 26, 24, 150, 85, 56, 10, 'kick', { cpush: 9 }),
+      S:   MV('MV_YUE_S',   '震岳', 17, 6, 24, 84, 34, 34, 176, 60, 90, 12, 'palm', { cpush: 10, lift: 36 }),
+      FS:  MV('MV_YUE_FS',  '山崩', 15, 9, 24, 72, 30, 26, 140, 115, 72, 10, 'lunge', { advance: 110, cpush: 7 }),
+      AIR: MV('MV_YUE_AIR', '坠石', 8, 8, 12, 50, 18, 16, 110, 60, 72, 7, 'airkick', { cpush: 5 }),
+      FIN: MV('MV_YUE_FIN', '岳临', 18, 10, 34, 195, 0, 0, 160, 110, 130, 20, 'upper', { finisher: true, cpush: 0 }),
+    } },
+];
+const CHAR = Object.fromEntries(CHARS.map(c => [c.id, c]));
+const MOVE_INPUT = { L: '轻击', H: '重击', S: '特技', FS: '前 + 特技', AIR: '空中 轻/重', FIN: '终结技（连段中）' };
+
+/* ---------- 五、场景 STG / 道具 IT / 页面 PG / 事件 EV ---------- */
+const STAGES = [
+  { id: 'STG_01', name: '断桥', desc: '暮色里断成两截的石桥，铁链悬在缺口上' },
+  { id: 'STG_02', name: '雨庭', desc: '雨夜庭院，朱红灯笼映在湿亮的石板上' },
+];
+const ITEMS = [{ id: 'IT_SHARD', name: '链晶', desc: '场上定时出现，未被锁定的一方触碰即可获得破链能量' }];
+const PAGES = [
+  { id: 'PG_TITLE', name: '标题 / 模式选择', desc: '对战电脑、双人对战、训练模式与各子页面入口；背景是电脑自动对战演示' },
+  { id: 'PG_SELECT', name: '角色与场景选择', desc: '1P 与 2P/CPU 角色、场景；训练模式下选择木桩行为' },
+  { id: 'PG_BATTLE', name: '对战', desc: '画布绘制战斗与 HUD；触屏设备显示虚拟按键' },
+  { id: 'PG_PAUSE', name: '暂停', desc: 'Esc / P 打开' },
+  { id: 'PG_RESULT', name: '结算', desc: '胜负与本场数据' },
+  { id: 'PG_MOVES', name: '招式与系统', desc: '规则说明、掉落阶段图、招式表、按键表' },
+  { id: 'PG_CODEX', name: '设定 ID 表', desc: '所有数据表 ID 汇总（本页）' },
+  { id: 'PG_SETTINGS', name: '设置', desc: '回合、时间、难度与核心参数，保存在本机浏览器' },
+];
+const EVENTS = {
+  EV_ROUND_START: '回合开始', EV_CHAIN_START: '起手命中，连段开始', EV_CHAIN_HIT: '连段中每次命中',
+  EV_DROP_COMMIT: '越过阶段阈值，暂存伤害结算（掉落）', EV_CHAIN_DROP: '连段窗口耗尽，连段中断', EV_CHAIN_REPEAT: '同招重复过多，连段中断',
+  EV_CHAIN_END: '连段以其他方式结束（破链 / 终结 / 时间到 / 击倒）', EV_BREAK: '守方破链', EV_FINISH: '终结技命中',
+  EV_GUARD: '防御成功', EV_GUARD_CRUSH: '破防', EV_SHARD_SPAWN: '链晶出现', EV_SHARD_PICK: '拾取链晶', EV_KO: '击倒', EV_TIMEUP: '时间到',
+};
+const DUMMY = [
+  { id: 'DM_STAND', key: 'stand', name: '站立', desc: '不动，不破链' },
+  { id: 'DM_GUARD', key: 'guard', name: '一直防御', desc: '练习破防' },
+  { id: 'DM_BREAK', key: 'break', name: '自动破链', desc: '能量常满，会在阈值前破链' },
+  { id: 'DM_CPU', key: 'cpu', name: '电脑', desc: '普通难度 AI' },
+];
+const AI_LEVELS = [
+  { id: 'AI_EASY', name: '简单', react: 24, guard: .15, drop: .1, smart: 0, linkMin: 10, linkMax: 20, agg: .45, fin: .08 },
+  { id: 'AI_NORMAL', name: '普通', react: 12, guard: .4, drop: .04, smart: .45, linkMin: 4, linkMax: 11, agg: .65, fin: .2 },
+  { id: 'AI_HARD', name: '困难', react: 5, guard: .68, drop: .01, smart: 1, linkMin: 1, linkMax: 5, agg: .85, fin: .35 },
+];
+const HOOKS = {};
+const on = (ev, fn) => (HOOKS[ev] = HOOKS[ev] || []).push(fn);
+
+/* ---------- 六、按键 ---------- */
+const ACTIONS = { left: '左移', right: '右移', up: '跳跃', guard: '防御（按住）', l: '轻击', h: '重击', s: '特技（按住前方向 = 前冲技）', brk: '破链（被连时）', fin: '终结技（连段坠落阶段起）' };
+const KEYMAP = {
+  P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], guard: ['KeyS'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'] },
+  P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], guard: ['ArrowDown'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'] },
+};
+const KN = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", Space: '空格' };
+const keyName = c => KN[c] || (c.startsWith('Key') ? c.slice(3) : c.startsWith('Numpad') ? '小键盘' + c.slice(6) : c);
+
+/* ---------- 七、设置项 SET ---------- */
+const SETTINGS = [
+  { id: 'SET_ROUNDS', label: '获胜所需回合', key: 'ROUNDS_TO_WIN', opts: [[1, '1 回合'], [2, '2 回合'], [3, '3 回合']] },
+  { id: 'SET_TIME', label: '每回合时间', key: 'ROUND_TIME', opts: [[60, '60 秒'], [99, '99 秒'], [0, '不限时']] },
+  { id: 'SET_AI', label: '电脑难度', key: 'AI_LEVEL', opts: [[0, '简单'], [1, '普通'], [2, '困难']] },
+  { id: 'SET_WINDOW', label: '连段窗口', key: 'WINDOW_MUL', note: '下一击必须命中的时限', opts: [[.8, '紧 0.8×'], [1, '标准'], [1.25, '宽松 1.25×']] },
+  { id: 'SET_BRK_START', label: '开局破链能量', key: 'BRK_START', opts: [[0, '0'], [20, '20'], [50, '50'], [100, '满']] },
+  { id: 'SET_IMM', label: '每击立即生效比例', key: 'IMMEDIATE_RATIO', note: '其余进入暂存，越过阈值才掉落', opts: [[.2, '20%'], [.3, '30%'], [.5, '50%']] },
+  { id: 'SET_SHARDS', label: '链晶出现', key: 'SHARDS', opts: [[true, '开'], [false, '关']] },
+  { id: 'SET_SHAKE', label: '屏幕震动', key: 'SHAKE', opts: [[true, '开'], [false, '关']] },
+  { id: 'SET_SOUND', label: '音效', key: 'SOUND', opts: [[true, '开'], [false, '关']] },
+  { id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '安卓有效', opts: [[true, '开'], [false, '关']] },
+];
+const DEFAULTS = Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]]));
+const SAVE_KEY = 'duanlian.settings.v1';
+try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); for (const k in s) if (k in DEFAULTS) CFG[k] = s[k]; } catch (e) {}
+const saveSettings = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]])))); } catch (e) {} };
+
+/* ============================================================
+   运行时
+   ============================================================ */
+const EMPTY = { held: {}, pressed: {} };
+const G = {
+  page: 'PG_TITLE', prev: null, mode: 'cpu', demo: false, running: false, paused: false, autoP1: false,
+  f: [], ai: [], stage: 'STG_01', round: 1, timer: 0, rs: 'RS_INTRO', rsT: 0, winner: null,
+  hitstop: 0, slow: 0, shake: 0, flash: 0, parts: [], pops: [], banner: null, shards: [], shardT: 0, frame: 0,
+  log: [], dummy: 'stand', sel: { p1: 'CH_JIN', p2: 'CH_LAN', stage: 'STG_01', dummy: 'stand' }, lastOpts: null,
+  mvTab: 'CH_JIN', cxTab: 'pages',
+};
+const isHuman = f => !G.demo && (f.idx === 0 ? !G.autoP1 : G.mode === 'pvp');
+function emit(ev, d) {
+  if (G.mode === 'train' && !G.demo) { G.log.unshift(`${ev}${d && d.text ? ' · ' + d.text : ''}`); G.log.length = Math.min(G.log.length, 7); }
+  (HOOKS[ev] || []).forEach(fn => { try { fn(d); } catch (e) { console.error(e); } });
+}
+
+/* ---------- 输入 ---------- */
+const Input = {
+  held: new Set(), taps: new Set(), touchHeld: {}, touchTaps: new Set(),
+  read(pid) {
+    const map = KEYMAP[pid], r = { held: {}, pressed: {} };
+    for (const k in map) { r.held[k] = map[k].some(c => this.held.has(c)); r.pressed[k] = map[k].some(c => this.taps.has(c)); }
+    if (pid === 'P1') { for (const k in this.touchHeld) if (this.touchHeld[k]) r.held[k] = true; for (const k of this.touchTaps) r.pressed[k] = true; }
+    return r;
+  },
+  endFrame() { this.taps.clear(); this.touchTaps.clear(); },
+  clear() { this.held.clear(); this.taps.clear(); this.touchTaps.clear(); this.touchHeld = {}; $$('#touch button').forEach(b => b.classList.remove('on')); },
+};
+
+/* ---------- 音效（WebAudio 合成，无外部文件） ---------- */
+const SFX = {
+  c: null,
+  init() {
+    if (this.c) { if (this.c.state === 'suspended') this.c.resume(); return; }
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; this.c = new C();
+      this.m = this.c.createGain(); this.m.gain.value = .45; this.m.connect(this.c.destination);
+      const n = this.c.sampleRate; this.nb = this.c.createBuffer(1, n, n); const d = this.nb.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { this.c = null; }
+  },
+  noise(t, dur, type, freq, vol, q = 1) {
+    const s = this.c.createBufferSource(), f = this.c.createBiquadFilter(), g = this.c.createGain();
+    s.buffer = this.nb; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(this.m); s.start(t); s.stop(t + dur + .05);
+  },
+  tone(t, f0, f1, dur, type, vol) {
+    const o = this.c.createOscillator(), g = this.c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g); g.connect(this.m); o.start(t); o.stop(t + dur + .05);
+  },
+  play(k, p = 0) {
+    if (!CFG.SOUND || !this.c || G.demo) return;
+    const t = this.c.currentTime;
+    switch (k) {
+      case 'swing': this.noise(t, .08, 'bandpass', 900 + p * 8, .1, 1.3); break;
+      case 'hit': this.tone(t, 170, 46, .16, 'sine', .45 + Math.min(.4, p / 200)); this.noise(t, .07, 'lowpass', 2400, .32); break;
+      case 'block': this.tone(t, 1100, 700, .05, 'square', .07); this.noise(t, .05, 'highpass', 3000, .16); break;
+      case 'commit': this.tone(t, 92, 34, .6, 'sine', .7); [0, 4, 7].forEach((s, i) => { const f = 196 * Math.pow(2, (s + p * 2) / 12); this.tone(t + .02 * i, f, f, .7, 'triangle', .07); }); this.noise(t, .25, 'lowpass', 900, .28); break;
+      case 'break': this.noise(t, .7, 'highpass', 2800, .42); this.tone(t, 1500, 180, .5, 'sawtooth', .07); this.tone(t, 80, 30, .7, 'sine', .7); break;
+      case 'finish': this.tone(t, 120, 28, 1, 'sine', .9); this.noise(t, .5, 'lowpass', 1400, .5); this.tone(t + .05, 330, 110, .8, 'triangle', .11); break;
+      case 'shard': this.tone(t, 880, 880, .25, 'sine', .14); this.tone(t + .06, 1320, 1320, .3, 'sine', .11); break;
+      case 'crush': this.noise(t, .3, 'bandpass', 600, .5, 2); this.tone(t, 200, 60, .3, 'square', .13); break;
+      case 'ko': this.tone(t, 70, 25, 1.6, 'sine', .9); this.noise(t, 1, 'lowpass', 600, .4); break;
+      case 'round': this.tone(t, 196, 196, 1.2, 'triangle', .16); this.tone(t, 294, 294, 1.2, 'triangle', .1); break;
+      case 'ui': this.tone(t, 660, 660, .05, 'square', .04); break;
+    }
+  },
+};
+
+/* ---------- 姿势与骨架（角度：0 = 竖直向下，+π/2 = 面朝方向水平，π = 向上） ---------- */
+const PKEYS = ['lean', 'head', 'fT', 'fS', 'bT', 'bS', 'fU', 'fF', 'bU', 'bF', 'rot'];
+const P_ = (lean, head, fT, fS, bT, bS, fU, fF, bU, bF, rot = 0) => ({ lean, head, fT, fS, bT, bS, fU, fF, bU, bF, rot });
+const POSES = {
+  idle: P_(.08, 0, .38, .04, -.3, -.08, .95, 2.35, .55, 2.05),
+  jump: P_(.04, 0, 1.3, -.3, .8, -.55, 1, 2.1, .6, 1.7),
+  guard: P_(-.08, .1, .5, -.08, -.38, -.18, 1.4, 2.8, 1.2, 2.65),
+  punchW: P_(-.06, 0, .42, 0, -.36, -.12, .35, 1.9, .75, 2.25),
+  punch: P_(.3, -.05, .55, .12, -.48, -.2, 1.58, 1.58, .3, 1.9),
+  kickW: P_(-.15, 0, 1, -.5, -.1, 0, .6, 1.9, .9, 2.2),
+  kick: P_(-.34, .1, 1.58, 1.62, -.12, -.04, .45, 1.3, -.7, -.25),
+  palmW: P_(-.12, 0, .48, 0, -.42, -.16, .15, .7, .05, .6),
+  palm: P_(.4, -.1, .78, .25, -.58, -.3, 1.48, 1.55, 1.32, 1.42),
+  lungeW: P_(.12, 0, .32, -.12, -.22, -.42, -.1, .5, .4, 1.6),
+  lunge: P_(.62, -.15, 1, .45, -.85, -.58, 1.62, 1.6, -.5, -.15),
+  airkickW: P_(-.1, 0, 1.35, -.45, .95, -.6, 1.2, 2.3, .9, 2),
+  airkick: P_(-.28, .1, .9, 1, 1.05, -.45, 2.3, 2.6, -.6, -.3),
+  upperW: P_(.22, 0, .65, -.2, -.42, -.5, .15, .15, .5, 1.6),
+  upper: P_(-.2, -.2, .22, .08, -.3, -.2, 2.95, 3.05, -.35, -.1),
+  hit: P_(-.48, -.35, .38, .26, -.26, -.04, -.55, -.1, -.9, -.6),
+  hit2: P_(-.22, .25, .2, .16, -.42, -.2, -.2, .45, -.6, -.2),
+  stagger: P_(-.32, -.2, .16, .05, -.5, -.25, .1, .5, -.3, .1),
+  down: P_(0, .1, .15, .1, -.12, -.1, 2.7, 2.9, 2.4, 2.8, -1.52),
+  brk: P_(-.2, -.25, .6, .1, -.58, -.16, 2.45, 2.7, -2.45, -2.7),
+  win: P_(0, -.1, .25, .05, -.25, -.05, 2.95, 3.1, .45, 1.95),
+};
+function skel(f) {
+  const P = f.pose, s = f.ch.scale, T = 44 * s, S = 44 * s, TOR = 56 * s, HR = 15 * s, UA = 32 * s, FA = 30 * s;
+  const add = (p, a, l) => [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l];
+  const depth = Math.max(T * Math.cos(P.fT) + S * Math.cos(P.fS), T * Math.cos(P.bT) + S * Math.cos(P.bS), 30 * s);
+  const hip = [0, -depth];
+  const neck = [hip[0] + Math.sin(P.lean) * TOR, hip[1] - Math.cos(P.lean) * TOR];
+  const ha = P.lean + P.head;
+  const head = [neck[0] + Math.sin(ha) * (HR + 3 * s), neck[1] - Math.cos(ha) * (HR + 3 * s)];
+  const sh = [neck[0] - Math.sin(P.lean) * 7 * s, neck[1] + Math.cos(P.lean) * 7 * s];
+  const fk = add(hip, P.fT, T), ff = add(fk, P.fS, S), bk = add(hip, P.bT, T), bf = add(bk, P.bS, S);
+  const fe = add(sh, P.fU, UA), fh = add(fe, P.fF, FA), be = add(sh, P.bU, UA), bh = add(be, P.bF, FA);
+  return { hip, neck, head, sh, fk, ff, bk, bf, fe, fh, be, bh, HR, s };
+}
+function toWorld(f, p) {
+  let x = p[0], y = p[1]; const r = f.pose.rot;
+  if (Math.abs(r) > .01) { const cx = x, cy = y; x = cx * Math.cos(r) - cy * Math.sin(r); y = cx * Math.sin(r) + cy * Math.cos(r) - 9 * f.ch.scale; }
+  return [f.x + f.face * x, f.y + y];
+}
+
+/* ---------- 角色实体 ---------- */
+let SERIAL = 0;
+function phys(f) {
+  if (f.y < CFG.GROUND || f.vy < 0) {
+    f.vy += CFG.GRAVITY; f.y += f.vy; f.x += f.vx;
+    if (f.y >= CFG.GROUND) { f.y = CFG.GROUND; f.vy = 0; f.landed = true; if (f.state !== 'ST_JUMP' && f.state !== 'ST_ATTACK') f.vx *= .5; }
+  } else { f.x += f.vx; f.vx *= .82; if (Math.abs(f.vx) < .05) f.vx = 0; }
+}
+class Fighter {
+  constructor(idx, ch, alt) { this.idx = idx; this.ch = ch; this.alt = alt; this.wins = 0; this.stats = { maxHits: 0, maxLv: 0, dmg: 0, breaks: 0, shards: 0, fins: 0 }; this.reset(); }
+  reset() {
+    Object.assign(this, { x: this.idx ? 850 : 430, y: CFG.GROUND, vx: 0, vy: 0, face: this.idx ? -1 : 1, hp: CFG.HP, trail: CFG.HP, brk: CFG.BRK_START,
+      grdMax: this.ch.grd, grd: this.ch.grd, state: 'ST_IDLE', t: 0, move: null, mt: 0, hitDone: false, stun: 0, inv: 0, chain: null, chainedBy: null,
+      flash: 0, buf: null, inp: EMPTY, airUsed: false, landed: false, walkPh: 0, hitAlt: false, refill: 0, denyT: 0, serial: -1 });
+    this.pose = { ...POSES.idle }; this.scarf = [];
+  }
+  get grounded() { return this.y >= CFG.GROUND - .5 && this.vy >= 0; }
+  get col() { return this.alt ? this.ch.alt : this.ch.color; }
+  setState(s) { this.state = s; this.t = 0; }
+  intake(inp) {
+    this.inp = inp; const p = inp.pressed; let a = null;
+    if (p.fin) a = 'FIN'; else if (p.s) a = (this.face > 0 ? inp.held.right : inp.held.left) ? 'FS' : 'S'; else if (p.h) a = 'H'; else if (p.l) a = 'L';
+    if (a) this.buf = { act: a, t: CFG.BUFFER };
+  }
+  update(op) {
+    this.t++; this.landed = false;
+    if (this.inv > 0) this.inv--; if (this.flash > 0) this.flash--;
+    if (this.buf && --this.buf.t <= 0) this.buf = null;
+    if (this.state !== 'ST_GUARD') this.grd = Math.min(this.grdMax, this.grd + CFG.GRD_REGEN);
+    switch (this.state) {
+      case 'ST_KO': case 'ST_WIN': phys(this); break;
+      case 'ST_CHAINED':
+        if (this.y < CFG.GROUND || this.vy < 0) { this.vy += .38; this.y += this.vy; if (this.y >= CFG.GROUND) { this.y = CFG.GROUND; this.vy = 0; } }
+        break;
+      case 'ST_STAGGER': case 'ST_CRUSH': case 'ST_REPELLED': case 'ST_BREAK':
+        phys(this); if (--this.stun <= 0) this.setState('ST_IDLE'); break;
+      case 'ST_KNOCKDOWN':
+        phys(this); if (this.landed) dust(this.x, 10); if (--this.stun <= 0) { this.setState('ST_WAKEUP'); this.stun = 20; } break;
+      case 'ST_WAKEUP': if (--this.stun <= 0) { this.setState('ST_IDLE'); this.inv = Math.max(this.inv, 6); } break;
+      case 'ST_ATTACK': this.updMove(); break;
+      case 'ST_JUMP':
+        phys(this);
+        if (this.buf && (this.buf.act === 'L' || this.buf.act === 'H') && !this.airUsed) { this.buf = null; this.startMove('AIR'); }
+        else if (this.landed) { this.setState('ST_IDLE'); this.vx = 0; dust(this.x, 5); }
+        break;
+      default: this.neutral(op, this.inp);
+    }
+    this.updPose(); this.updScarf();
+  }
+  neutral(op, inp) {
+    if (Math.abs(op.x - this.x) > 6) this.face = op.x > this.x ? 1 : -1;
+    if (!this.grounded) { this.setState('ST_JUMP'); return; }
+    if (this.buf) {
+      const a = this.buf.act; this.buf = null;
+      if (a === 'FIN' && !(this.chain && this.chain.lv >= CFG.FIN_MIN_LV)) {
+        if (isHuman(this) && this.denyT < G.frame) { this.denyT = G.frame + 50; pop(`终结技需连段达到「${DROP_LEVELS[CFG.FIN_MIN_LV].name}」`, this.x, this.y - 240, MUTE, 20); }
+      } else if (this.startMove(a)) return;
+    }
+    if (inp.held.guard) { if (this.state !== 'ST_GUARD') this.setState('ST_GUARD'); return; }
+    const d = (inp.held.right ? 1 : 0) - (inp.held.left ? 1 : 0);
+    if (inp.pressed.up || inp.held.up) { this.vy = -this.ch.jump; this.vx = d * this.ch.walk * 1.15; this.y -= 1; this.airUsed = false; this.setState('ST_JUMP'); return; }
+    if (d) { this.x += d * this.ch.walk * (d === this.face ? 1 : .78); if (this.state !== 'ST_WALK') this.setState('ST_WALK'); this.walkPh += .2 * d * this.face; }
+    else if (this.state !== 'ST_IDLE') this.setState('ST_IDLE');
+  }
+  startMove(a) {
+    if (a === 'FIN') { if (!(this.chain && this.chain.lv >= CFG.FIN_MIN_LV) || !this.grounded) return false; }
+    else if (!this.grounded) { if (this.airUsed) return false; a = 'AIR'; }
+    else if (a === 'AIR') a = 'L';
+    const m = this.ch.moves[a]; if (!m) return false;
+    this.move = m; this.mt = 0; this.hitDone = false; this.serial = ++SERIAL; this.setState('ST_ATTACK');
+    if (a === 'AIR') this.airUsed = true; else this.vx = 0;
+    SFX.play('swing', m.dmg); G.lastMove = { who: this.idx, m };
+    return true;
+  }
+  updMove() {
+    const m = this.move; this.mt++;
+    const act = m.startup + m.active, total = act + m.recovery;
+    if (m.advance && this.mt <= act) this.x += this.face * m.advance / act;
+    if (!this.grounded || this.vy < 0) { phys(this); if (this.landed) { this.move = null; this.setState('ST_IDLE'); this.vx = 0; return; } }
+    if (this.chain && this.hitDone && this.mt > m.startup + 1 && this.buf && !m.finisher) {   // 连段取消
+      const b = this.buf; this.buf = null;
+      if ((b.act !== 'FIN' || this.chain.lv >= CFG.FIN_MIN_LV) && this.startMove(b.act)) return;
+    }
+    if (this.mt >= total) { this.move = null; this.setState(this.grounded ? 'ST_IDLE' : 'ST_JUMP'); }
+  }
+  updPose() {
+    const P = this.pose; let tgt = POSES.idle, k = .3;
+    switch (this.state) {
+      case 'ST_WALK': {
+        const s = Math.sin(this.walkPh), c = Math.cos(this.walkPh);
+        tgt = { ...POSES.idle, fT: .05 + s * .45, bT: .05 - s * .45, fU: .95 - s * .2, bU: .55 + s * .2 };
+        tgt.fS = tgt.fT - (.15 + .45 * Math.max(0, c)); tgt.bS = tgt.bT - (.15 + .45 * Math.max(0, -c)); k = .45; break;
+      }
+      case 'ST_JUMP': tgt = POSES.jump; break;
+      case 'ST_GUARD': tgt = POSES.guard; k = .45; break;
+      case 'ST_ATTACK': {
+        const m = this.move;
+        if (this.mt <= m.startup) { tgt = POSES[m.pose + 'W']; k = .4; }
+        else if (this.mt <= m.startup + m.active + Math.floor(m.recovery * .4)) { tgt = POSES[m.pose]; k = .6; }
+        else { tgt = POSES.idle; k = .2; }
+        break;
+      }
+      case 'ST_CHAINED': tgt = this.hitAlt ? POSES.hit : POSES.hit2; k = .5; break;
+      case 'ST_STAGGER': case 'ST_REPELLED': case 'ST_CRUSH': tgt = POSES.stagger; break;
+      case 'ST_KNOCKDOWN': case 'ST_KO': tgt = POSES.down; k = .25; break;
+      case 'ST_WAKEUP': tgt = POSES.guard; k = .2; break;
+      case 'ST_BREAK': tgt = POSES.brk; k = .5; break;
+      case 'ST_WIN': tgt = POSES.win; k = .15; break;
+    }
+    for (const key of PKEYS) P[key] += (tgt[key] - P[key]) * k;
+  }
+  updScarf() {
+    const k = skel(this), sc = this.ch.scarf, L = sc.len * this.ch.scale;
+    const A = toWorld(this, sc.at === 'head' ? [k.head[0] - 8 * k.s, k.head[1] - 4 * k.s] : k.hip);
+    if (this.scarf.length !== sc.n) this.scarf = Array.from({ length: sc.n }, () => [A[0], A[1]]);
+    this.scarf[0] = A;
+    for (let i = 1; i < sc.n; i++) {
+      const p = this.scarf[i], q = this.scarf[i - 1], wind = Math.sin(G.frame * .12 + i) * 1.6;
+      p[0] += (q[0] - this.face * L * .95 + wind - p[0]) * .3; p[1] += (q[1] + L * .3 - p[1]) * .3;
+      const dx = p[0] - q[0], dy = p[1] - q[1], d = Math.hypot(dx, dy) || 1;
+      if (d > L) { p[0] = q[0] + dx / d * L; p[1] = q[1] + dy / d * L; }
+    }
+  }
+}
+
+/* ---------- 判定 ---------- */
+function hitRect(f) {
+  const m = f.move, s = f.ch.scale, x1 = f.x + f.face * 14, x2 = f.x + f.face * m.range * s, cy = f.y - m.hbY * s;
+  return { l: Math.min(x1, x2), r: Math.max(x1, x2), t: cy - m.hbH / 2, b: cy + m.hbH / 2 };
+}
+function hurtRect(f) {
+  if (['ST_KNOCKDOWN', 'ST_WAKEUP', 'ST_KO'].includes(f.state)) return null;
+  const h = (f.state === 'ST_GUARD' ? 160 : 182) * f.ch.scale;
+  return { l: f.x - 34, r: f.x + 34, t: f.y - h, b: f.y };
+}
+const overlap = (a, b) => a && b && a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+function resolveHits() {
+  const [A, B] = G.f;
+  for (const [a, d] of [[A, B], [B, A]]) {
+    if (a.state !== 'ST_ATTACK' || a.hitDone) continue;
+    const m = a.move; if (a.mt <= m.startup || a.mt > m.startup + m.active) continue;
+    if (d.inv > 0 || (d.chainedBy && d.chainedBy !== a)) continue;
+    if (!overlap(hitRect(a), hurtRect(d))) continue;
+    a.hitDone = true; onHit(a, d, m);
+  }
+}
+
+/* ---------- 核心：连段 / 暂存 / 掉落 / 破链 ---------- */
+function onHit(a, d, m) {
+  if (a.chain && a.chain.target === d) return chainHit(a, d, m);
+  if (d.state === 'ST_GUARD' && d.grounded) return block(a, d, m);
+  if (m.finisher) return;
+  const counter = d.state === 'ST_ATTACK';
+  if (d.chain) endChain(d, 'drop');
+  d.move = null; d.buf = null; d.chainedBy = a; d.setState('ST_CHAINED');
+  a.chain = { target: d, hits: 0, mom: counter ? CFG.COUNTER_MOM : 0, lv: 0, pending: 0, committed: 0, last: null, rep: 0, win: 1, maxWin: 1, startHp: d.hp };
+  if (counter) pop('反击起手', d.x, d.y - 250, RED, 24, FB);
+  emit('EV_CHAIN_START', { who: a.idx, text: counter ? '反击' : m.id });
+  chainHit(a, d, m);
+}
+function chainHit(a, d, m) {
+  const c = a.chain;
+  if (m.finisher) return finisherHit(a, d, m);
+  c.rep = c.last === m.id ? c.rep + 1 : 1; c.last = m.id;
+  const DL = DROP_LEVELS[c.lv], rp = c.rep >= 2;
+  const dmg = m.dmg * DL.dmgMul * a.ch.atk * d.ch.def * (rp ? CFG.REPEAT_DMG_MUL : 1);
+  const imm = dmg * CFG.IMMEDIATE_RATIO;
+  d.hp = Math.max(0, d.hp - imm); c.pending += dmg - imm; c.hits++;
+  c.mom += m.mom * (rp ? CFG.REPEAT_MOM_MUL : 1);
+  d.brk = Math.min(CFG.BRK_MAX, d.brk + DL.gain * d.ch.brkGain);
+  a.brk = Math.min(CFG.BRK_MAX, a.brk + CFG.GAIN.landHit);
+  d.flash = 4; d.hitAlt = !d.hitAlt; d.x += a.face * m.cpush;
+  if (m.lift) d.vy = Math.min(d.vy, -m.lift * .2);
+  const hx = d.x - a.face * 22, hy = a.y - m.hbY * a.ch.scale;
+  spark(hx, hy, DL.lv >= 3 ? DL.color : BONE, 7 + m.hitstop, 5 + m.hitstop * .6);
+  G.hitstop = Math.max(G.hitstop, m.hitstop); shake(m.hitstop * .7);
+  SFX.play('hit', m.dmg); buzz(6 + m.hitstop * 2);
+  emit('EV_CHAIN_HIT', { who: a.idx, text: `${m.id} ${c.hits}连 势${Math.round(c.mom)}` });
+  if (rp) pop(c.rep >= CFG.REPEAT_LIMIT ? '重复 · 断' : '重复 · 衰减', d.x, d.y - 230, MUTE, 20);
+  while (a.chain && c.lv < DROP_LEVELS.length - 1 && c.mom >= DROP_LEVELS[c.lv + 1].min) { c.lv++; commit(a, d, true); }
+  if (checkKO(d, a)) return;
+  c.maxWin = Math.round(CFG.CHAIN_WINDOW * CFG.WINDOW_MUL * a.ch.chainWin * (rp ? .75 : 1)); c.win = c.maxWin;
+  if (c.rep >= CFG.REPEAT_LIMIT) endChain(a, 'repeat');
+}
+function commit(a, d, threshold) {
+  const c = a.chain, n = c.pending; c.pending = 0; c.committed += n; d.hp = Math.max(0, d.hp - n);
+  d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.GAIN.commit * d.ch.brkGain);
+  if (!threshold) return;
+  const DL = DROP_LEVELS[c.lv];
+  pop(`掉落 Lv.${DL.lv} · ${DL.name}`, 640, 205, DL.color, 46, FB, 80);
+  pop(`-${Math.round(n)}`, d.x, d.y - 200 * d.ch.scale, BONE, 34, FN, 60);
+  G.hitstop = Math.max(G.hitstop, 12); G.flash = Math.max(G.flash, .3); G.slow = Math.max(G.slow, 16); shake(10 + DL.lv * 3);
+  ring(d.x, d.y - 100, DL.color, 10, 180 + DL.lv * 40, 26);
+  a.stats.maxLv = Math.max(a.stats.maxLv, DL.lv);
+  SFX.play('commit', DL.lv); buzz([25, 30, 30 + DL.lv * 15]); emit('EV_DROP_COMMIT', { who: a.idx, lv: DL.lv, text: `${DL.id} 结算 ${Math.round(n)}` });
+}
+function finisherHit(a, d, m) {
+  const c = a.chain;
+  const dmg = m.dmg * a.ch.atk * d.ch.def * (1 + .2 * (c.lv - CFG.FIN_MIN_LV));
+  d.hp = Math.max(0, d.hp - dmg); c.hits++;
+  commit(a, d, false);
+  a.stats.fins++;
+  pop(m.name, 640, 250, BONE, 72, FB, 80);
+  pop(`-${Math.round(dmg)}`, d.x, d.y - 200, DROP_LEVELS[c.lv].color, 38, FN);
+  G.hitstop = 20; G.slow = 46; G.flash = .6; shake(28);
+  ring(d.x, d.y - 110, RED, 10, 420, 34); spark(d.x, d.y - 110, BONE, 34, 15);
+  d.vy = -15; SFX.play('finish'); buzz([60, 30, 140]); emit('EV_FINISH', { who: a.idx, text: `${m.id} ${Math.round(dmg)}` });
+  if (checkKO(d, a)) return;
+  endChain(a, 'finish');
+}
+function endChain(a, reason) {
+  const c = a.chain; if (!c) return;
+  const d = c.target; a.chain = null; d.chainedBy = null;
+  const DL = DROP_LEVELS[c.lv];
+  if (reason !== 'finish' && reason !== 'ko' && c.pending >= 1) pop(`暂存消散 ${Math.round(c.pending)}`, d.x, d.y - 260, BONE, 22);
+  c.pending = 0;
+  a.stats.dmg += Math.round(c.startHp - Math.max(0, d.hp));
+  a.stats.maxHits = Math.max(a.stats.maxHits, c.hits); a.stats.maxLv = Math.max(a.stats.maxLv, c.lv);
+  const label = { drop: '连段中断', repeat: '招式重复 · 中断', break: '断链', finish: '终结', time: '时间到', ko: '击倒' }[reason] || '';
+  if (reason !== 'ko') pop(`${c.hits} 连 · ${DL.name} · ${label}`, 640, 160, reason === 'break' ? (d.col) : BONE, 26, FU, 80);
+  emit(reason === 'drop' ? 'EV_CHAIN_DROP' : reason === 'repeat' ? 'EV_CHAIN_REPEAT' : 'EV_CHAIN_END', { who: a.idx, text: `${reason} ${c.hits}连 ${DL.id}` });
+  if (reason === 'break' || reason === 'ko') return;
+  const fin = reason === 'finish', st = fin ? 'ST_KNOCKDOWN' : DL.end;
+  d.setState(st); d.stun = fin ? CFG.FIN_DOWN : DL.stun; d.vx = a.face * (st === 'ST_KNOCKDOWN' ? 6 : 3);
+  if (st === 'ST_KNOCKDOWN' && d.vy >= 0) d.vy = -6;
+  d.inv = d.stun + CFG.END_PROTECT;
+}
+function tryBreak(d) {
+  if (d.brk >= CFG.BRK_COST) return doBreak(d);
+  if (isHuman(d) && d.denyT < G.frame) { d.denyT = G.frame + 40; pop('破链能量不足', d.x, d.y - 240, MUTE, 20); }
+}
+function doBreak(d) {
+  const a = d.chainedBy; if (!a || !a.chain) return;
+  const c = a.chain, refund = c.pending, lv = c.lv;
+  const ka = skel(a), h = toWorld(a, ka.fh), t = [d.x, d.y - 105 * d.ch.scale];
+  for (let i = 0; i < 14; i++) { const u = i / 13; G.parts.push({ k: 'frag', x: lerp(h[0], t[0], u), y: lerp(h[1], t[1], u), vx: rand(-7, 7), vy: rand(-9, -2), g: .45, life: 50, max: 50, col: DROP_LEVELS[lv].color, rot: rand(0, 6), vr: rand(-.4, .4) }); }
+  d.brk -= CFG.BRK_COST; d.stats.breaks++;
+  endChain(a, 'break');
+  d.setState('ST_BREAK'); d.stun = 22; d.inv = CFG.BREAK_INV;
+  a.move = null; a.buf = null; a.setState('ST_REPELLED'); a.stun = CFG.BREAK_STAGGER; a.vx = -a.face * CFG.BREAK_PUSH; a.vy = -7;
+  G.hitstop = 8; G.slow = 40; G.flash = .55; shake(22);
+  const cx = d.x, cy = d.y - 110 * d.ch.scale;
+  ring(cx, cy, BONE, 20, 440, 34); ring(cx, cy, d.col, 10, 300, 26); spark(cx, cy, BONE, 30, 14);
+  banner('断链', `未结算的暂存伤害 ${Math.round(refund)} 已返还`, d.col);
+  SFX.play('break'); buzz([30, 40, 90]); emit('EV_BREAK', { who: d.idx, text: `在 ${DROP_LEVELS[lv].id} 破链，返还 ${Math.round(refund)}` });
+}
+function block(a, d, m) {
+  d.grd -= m.grd; d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.GAIN.guard * d.ch.brkGain);
+  d.x += a.face * m.cpush * 1.6; a.x -= a.face * m.cpush * .4;
+  G.hitstop = Math.max(G.hitstop, Math.max(3, m.hitstop - 3));
+  spark(d.x - a.face * 30, a.y - m.hbY * a.ch.scale, '#9fd3d0', 8, 6); SFX.play('block'); buzz(4); emit('EV_GUARD', { who: d.idx, text: m.id });
+  if (d.grd <= 0) {
+    d.grd = 0; d.setState('ST_CRUSH'); d.stun = CFG.GRD_CRUSH_STUN; shake(12);
+    pop('破防', d.x, d.y - 240, RED, 40, FB); SFX.play('crush'); buzz(45); emit('EV_GUARD_CRUSH', { who: d.idx });
+  }
+}
+function checkKO(d, a) {
+  if (d.hp > 0) return false;
+  if (G.mode === 'train' && !G.demo) { d.hp = 1; return false; }
+  ko(d, a); return true;
+}
+function ko(d, a) {
+  if (a.chain) endChain(a, 'ko');
+  d.chainedBy = null; d.move = null; d.setState('ST_KO'); d.vx = a.face * 7; d.vy = -11; d.hp = 0;
+  a.wins++; G.winner = a; G.rs = 'RS_KO'; G.rsT = 0; G.slow = 80; G.flash = .7; shake(26);
+  banner('KO', '', RED, 110); SFX.play('ko'); buzz([80, 50, 200]); emit('EV_KO', { who: a.idx });
+}
+function timeUp() {
+  for (const f of G.f) if (f.chain) endChain(f, 'time');
+  const [A, B] = G.f; G.winner = A.hp > B.hp ? A : B.hp > A.hp ? B : null;
+  if (G.winner) G.winner.wins++;
+  G.rs = 'RS_KO'; G.rsT = 0; banner('时间到', G.winner ? `${G.winner.ch.name} 剩余生命更多` : '平手', BONE, 110); emit('EV_TIMEUP', {});
+}
+
+/* ---------- AI ---------- */
+function smartBreak(d) {
+  const a = d.chainedBy, c = a && a.chain; if (!c) return false;
+  const next = DROP_LEVELS[c.lv + 1]; if (!next) return true;
+  const maxMom = Math.max(...['L', 'H', 'S', 'FS'].map(k => a.ch.moves[k].mom));
+  return next.min - c.mom <= maxMom + 1;
+}
+class AI {
+  constructor(level) { this.P = AI_LEVELS[level]; this.cd = 40; this.link = 0; this.guardT = 0; this.seen = -1; this.plan = null; this.delay = 0; this.walkT = 0; this.walkDir = 1; this.dropAt = -1; }
+  think(me, op) {
+    const P = this.P, o = { held: {}, pressed: {} };
+    const dx = op.x - me.x, dist = Math.abs(dx), tw = dx >= 0 ? 'right' : 'left', aw = dx >= 0 ? 'left' : 'right';
+    if (me.state === 'ST_KO' || me.state === 'ST_WIN' || G.rs !== 'RS_FIGHT') return o;
+    if (me.chainedBy) {
+      const c = me.chainedBy.chain; if (!c) return o;
+      if (me.brk >= CFG.BRK_COST) {
+        if (this.plan !== c) { this.plan = c; this.smart = Math.random() < P.smart; this.delay = randi(P.react, P.react * 3 + 20); }
+        if (this.smart ? smartBreak(me) : --this.delay <= 0) o.pressed.brk = true;
+      }
+      return o;
+    }
+    if (me.chain) {
+      const c = me.chain, m = me.move;
+      const free = me.state !== 'ST_ATTACK' || (me.hitDone && me.mt > m.startup + 2);
+      if (!free || this.dropAt === c) return o;
+      if (this.link > 0) { this.link--; return o; }
+      if (Math.random() < P.drop) { this.dropAt = c; return o; }
+      let k;
+      if (c.lv >= CFG.FIN_MIN_LV && (c.lv >= DROP_LEVELS.length - 1 || Math.random() < P.fin)) k = 'FIN';
+      else k = pick(['L', 'H', 'S', 'FS'].filter(x => me.ch.moves[x].id !== c.last));
+      if (k === 'FS') o.held[tw] = true;
+      o.pressed[{ L: 'l', H: 'h', S: 's', FS: 's', FIN: 'fin' }[k]] = true;
+      this.link = randi(P.linkMin, P.linkMax);
+      return o;
+    }
+    if (!['ST_IDLE', 'ST_WALK', 'ST_GUARD', 'ST_JUMP'].includes(me.state)) return o;
+    if (op.state === 'ST_ATTACK' && op.serial !== this.seen) {
+      this.seen = op.serial;
+      if (dist < op.move.range * op.ch.scale + (op.move.advance || 0) + 70 && Math.random() < P.guard) this.guardT = op.move.startup + op.move.active + 8;
+    }
+    if (this.guardT > 0 && me.grounded) { this.guardT--; o.held.guard = true; return o; }
+    if (this.cd > 0) this.cd--;
+    const s = G.shards[0];
+    if (s && Math.abs(s.x - me.x) + 40 < Math.abs(s.x - op.x) + 80 && Math.abs(s.x - me.x) > 18 && me.grounded) { o.held[s.x > me.x ? 'right' : 'left'] = true; return o; }
+    if (me.state === 'ST_JUMP') { if (!me.airUsed && dist < 150 && Math.random() < .3) o.pressed.l = true; return o; }
+    if (op.y < CFG.GROUND - 60 && dist < 180 && this.cd <= 0 && Math.random() < P.agg * .5) { o.pressed.s = true; this.cd = 24; return o; }
+    const sc = me.ch.scale, reachL = me.ch.moves.L.range * sc, reachH = me.ch.moves.H.range * sc, reachFS = me.ch.moves.FS.range * sc + me.ch.moves.FS.advance;
+    if (dist > reachH + 5) {
+      if (this.cd <= 0 && dist < reachFS && Math.random() < .04 * P.agg) { o.held[tw] = true; o.pressed.s = true; this.cd = randi(30, 60); return o; }
+      if (this.cd <= 0 && Math.random() < .006 * P.agg) { o.held[tw] = true; o.pressed.up = true; this.cd = 30; return o; }
+      if (this.walkT <= 0) { this.walkDir = Math.random() < .82 ? 1 : -1; this.walkT = randi(10, 30); }
+      this.walkT--; o.held[this.walkDir > 0 ? tw : aw] = true; return o;
+    }
+    if (this.cd <= 0 && Math.random() < .1 * P.agg + .03) {
+      const r = Math.random(), k = dist < reachL ? (r < .45 ? 'l' : r < .8 ? 'h' : 's') : (r < .55 ? 'h' : 's');
+      o.pressed[k] = true; this.cd = Math.round(randi(12, 36) * (1.5 - P.agg)); return o;
+    }
+    if (Math.random() < .015) { this.walkDir = -1; this.walkT = randi(8, 20); }
+    if (this.walkT > 0 && this.walkDir < 0) { this.walkT--; o.held[aw] = true; }
+    return o;
+  }
+}
+function dummyInput(me, op) {
+  if (G.dummy === 'guard') return { held: { guard: true }, pressed: {} };
+  if (G.dummy === 'break') { me.brk = CFG.BRK_MAX; return { held: {}, pressed: { brk: !!me.chainedBy && smartBreak(me) } }; }
+  if (G.dummy === 'cpu') return G.ai[1].think(me, op);
+  return EMPTY;
+}
+
+/* ---------- 特效 ---------- */
+const shake = v => { if (CFG.SHAKE) G.shake = Math.max(G.shake, v); };
+const buzz = p => { if (!CFG.VIBRATE || G.demo || !navigator.vibrate) return; try { navigator.vibrate(p); } catch (e) {} };
+function spark(x, y, col, n = 12, spd = 8) { for (let i = 0; i < n; i++) { const a = rand(0, Math.PI * 2), v = rand(spd * .4, spd); G.parts.push({ k: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: .2, life: randi(12, 24), max: 24, col, sz: rand(2, 4.5) }); } }
+function ring(x, y, col, r0, r1, life) { G.parts.push({ k: 'ring', x, y, r0, r1, life, max: life, col }); }
+function dust(x, n) { for (let i = 0; i < n; i++) G.parts.push({ k: 'dust', x: x + rand(-30, 30), y: CFG.GROUND - 4, vx: rand(-2.5, 2.5), vy: rand(-2, -.4), g: .02, life: randi(18, 30), max: 30, col: 'rgba(200,180,160,', sz: rand(4, 9) }); }
+function pop(text, x, y, col = BONE, size = 24, font = FU, life = 60) { if (G.demo) return; G.pops.push({ text, x: clamp(x, 110, W - 110), y, col, size, font, life, max: life }); }
+function banner(text, sub, col, life = 75) { if (!G.demo) G.banner = { text, sub, col, life, max: life }; }
+function updateFX() {
+  G.shake *= .86; if (G.shake < .3) G.shake = 0;
+  G.flash *= .86; if (G.flash < .02) G.flash = 0;
+  for (const p of G.parts) { p.life--; if (p.k === 'ring') continue; p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= .96; if (p.rot !== undefined) p.rot += p.vr; }
+  G.parts = G.parts.filter(p => p.life > 0);
+  for (const p of G.pops) p.life--; G.pops = G.pops.filter(p => p.life > 0);
+  if (G.banner && --G.banner.life <= 0) G.banner = null;
+  for (const f of G.f) if (!f.chainedBy && f.trail > f.hp) f.trail = Math.max(f.hp, f.trail - 5);
+}
+
+/* ---------- 回合流程 ---------- */
+function startMatch(o) {
+  G.lastOpts = o; G.mode = o.mode; G.demo = false; G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
+  G.f = [new Fighter(0, CHAR[o.p1], false), new Fighter(1, CHAR[o.p2], o.p1 === o.p2)];
+  G.ai = [new AI(CFG.AI_LEVEL), new AI(o.mode === 'train' ? 1 : CFG.AI_LEVEL)];
+  G.round = 1; G.log = []; startRound(); go('PG_BATTLE'); SFX.init();
+}
+function startDemo() {
+  G.demo = true; G.running = false; G.paused = false; G.mode = 'cpu'; G.autoP1 = false; G.stage = pick(STAGES).id;
+  const a = pick(CHARS), b = pick(CHARS);
+  G.f = [new Fighter(0, a, false), new Fighter(1, b, a === b)]; G.ai = [new AI(1), new AI(1)]; G.round = 1; startRound();
+}
+function startRound() {
+  for (const f of G.f) f.reset();
+  Object.assign(G, { timer: CFG.ROUND_TIME * 60, rs: 'RS_INTRO', rsT: 0, shards: [], shardT: 0, parts: [], pops: [], hitstop: 0, slow: 0, winner: null, banner: null });
+  if (G.demo) { G.f[0].x = 760; G.f[1].x = 1060; G.rsT = 80; return; }
+  banner(`第 ${G.round} 回合`, G.mode === 'train' ? '训练模式 · 不会被击倒' : '', BONE, 60); SFX.play('round'); emit('EV_ROUND_START', { text: `R${G.round}` });
+}
+function roundOver() {
+  const [A, B] = G.f;
+  if (G.demo) { if (A.wins >= 2 || B.wins >= 2) startDemo(); else { G.round++; startRound(); } return; }
+  if (A.wins >= CFG.ROUNDS_TO_WIN || B.wins >= CFG.ROUNDS_TO_WIN || G.round >= 9) endMatch();
+  else { G.round++; startRound(); }
+}
+function endMatch() {
+  G.running = false; const [A, B] = G.f, w = A.wins > B.wins ? A : B.wins > A.wins ? B : null;
+  const who = f => f.idx === 0 ? '1P' : G.mode === 'cpu' ? 'CPU' : '2P';
+  $('#resTitle').textContent = w ? `${w.ch.name} 胜` : '平局';
+  $('#resSub').textContent = w ? `${who(w)} · ${w.ch.title}　回合 ${w.wins} : ${(w === A ? B : A).wins}` : `回合 ${A.wins} : ${B.wins}`;
+  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['终结技', f => f.stats.fins], ['拾取链晶', f => f.stats.shards]];
+  $('#resTable').innerHTML = `<tr><th></th><th class="num">${who(A)} · ${A.ch.name}</th><th class="num">${who(B)} · ${B.ch.name}</th></tr>` + rows.map(([n, fn]) => `<tr><td>${n}</td><td class="num">${fn(A)}</td><td class="num">${fn(B)}</td></tr>`).join('');
+  if (w) { w.move = null; w.setState('ST_WIN'); }
+  go('PG_RESULT');
+}
+
+/* ---------- 主循环 ---------- */
+function step() {
+  G.frame++;
+  if (G.page === 'PG_RESULT') { for (const f of G.f) { f.intake(EMPTY); f.update(G.f[1 - f.idx]); } updateFX(); Input.endFrame(); return; }
+  const active = (G.running && !G.paused) || G.demo;
+  if (!active) { Input.endFrame(); return; }
+  const [A, B] = G.f;
+  const inA = (G.demo || G.autoP1) ? G.ai[0].think(A, B) : Input.read('P1');
+  const inB = (G.demo || G.mode === 'cpu') ? G.ai[1].think(B, A) : G.mode === 'pvp' ? Input.read('P2') : dummyInput(B, A);
+  Input.endFrame();
+  updateFX();
+  if (G.rs !== 'RS_FIGHT') {
+    G.rsT++;
+    for (const f of G.f) { f.intake(EMPTY); f.update(G.f[1 - f.idx]); }
+    if (G.rs === 'RS_INTRO') { if (G.rsT === 58) { banner('开战', '', RED, 40); } if (G.rsT >= 90) G.rs = 'RS_FIGHT'; }
+    else { if (G.rsT === 60 && G.winner && G.winner.state !== 'ST_KO') { G.winner.move = null; G.winner.setState('ST_WIN'); } if (G.rsT >= (G.demo ? 110 : 160)) roundOver(); }
+    clampAll(); return;
+  }
+  A.intake(inA); B.intake(inB);
+  for (const [d, inp] of [[A, inA], [B, inB]]) if (d.chainedBy && inp.pressed.brk) tryBreak(d);
+  if (G.hitstop > 0) { G.hitstop--; return; }
+  A.update(B); B.update(A);
+  resolveHits();
+  if (G.rs !== 'RS_FIGHT') return;
+  for (const f of G.f) if (f.chain && --f.chain.win <= 0) endChain(f, 'drop');
+  for (const a of G.f) { const c = a.chain; if (c) { const d = c.target; d.x += (a.x + a.face * CFG.CHAIN_DIST * a.ch.scale - d.x) * .18; } }
+  clampAll();
+  for (const f of G.f) if (!f.chainedBy) f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.GAIN.passive);
+  // 链晶
+  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? rand(780, 1060) : rand(360, 920); G.shards.push({ x, y: CFG.GROUND - 52, life: CFG.SHARD_LIFE, t: 0 }); emit('EV_SHARD_SPAWN', { text: `x=${Math.round(x)}` }); }
+  for (const s of G.shards) {
+    s.t++; s.life--;
+    for (const f of G.f) {
+      if (f.chainedBy || ['ST_KO', 'ST_KNOCKDOWN', 'ST_WAKEUP'].includes(f.state)) continue;
+      if (Math.abs(f.x - s.x) < 42 && s.y > f.y - 190 * f.ch.scale && s.y < f.y + 10) {
+        f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.SHARD_VALUE); s.life = 0; f.stats.shards++;
+        pop(`链晶 +${CFG.SHARD_VALUE}`, s.x, s.y - 50, f.col, 26, FB); spark(s.x, s.y, BONE, 16, 7); ring(s.x, s.y, f.col, 5, 90, 20);
+        SFX.play('shard'); emit('EV_SHARD_PICK', { who: f.idx }); break;
+      }
+    }
+  }
+  G.shards = G.shards.filter(s => s.life > 0);
+  if (CFG.ROUND_TIME > 0 && G.mode !== 'train' && --G.timer <= 0) timeUp();
+  if (G.mode === 'train' && !G.demo) for (const f of G.f) { if (!f.chainedBy && !f.chain && f.hp < CFG.HP) { if (++f.refill > 90) { f.hp = f.trail = CFG.HP; f.refill = 0; } } else f.refill = 0; }
+}
+function clampAll() {
+  const [A, B] = G.f, dx = B.x - A.x, minD = 58;
+  if (Math.abs(dx) < minD && Math.abs(A.y - B.y) < 120 && A.state !== 'ST_KO' && B.state !== 'ST_KO') { const o = (minD - Math.abs(dx)) / 2, s = dx >= 0 ? 1 : -1; A.x -= o * s; B.x += o * s; }
+  const wl = G.demo ? 640 : CFG.WALL_L;
+  for (const f of G.f) f.x = clamp(f.x, wl, CFG.WALL_R);
+}
+
+/* ============================================================
+   绘制
+   ============================================================ */
+const cv = $('#cv'), ctx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * DPR; cv.height = H * DPR;
+const BG = {};
+function seeded(s) { return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function ridge(c, r, y0, amp, col, step) {
+  c.fillStyle = col; c.beginPath(); c.moveTo(0, H);
+  let prev = y0 + (r() - .5) * amp; c.lineTo(0, prev);
+  for (let x = step; x <= W + step; x += step) { const y = y0 + (r() - .5) * amp; c.quadraticCurveTo(x - step / 2, prev, x, y); prev = y; }
+  c.lineTo(W, H); c.closePath(); c.fill();
+}
+function paintBridge(c) {
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#2a1517'); g.addColorStop(.42, '#7e2c22'); g.addColorStop(.72, '#d4603d'); g.addColorStop(1, '#efbf94');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  g = c.createRadialGradient(930, 330, 0, 930, 330, 200); g.addColorStop(0, 'rgba(255,240,215,.9)'); g.addColorStop(.35, 'rgba(255,214,170,.45)'); g.addColorStop(1, 'rgba(255,190,140,0)');
+  c.fillStyle = g; c.fillRect(700, 120, 460, 440); c.fillStyle = '#fbe6c8'; c.beginPath(); c.arc(930, 330, 60, 0, 7); c.fill();
+  c.fillStyle = 'rgba(60,20,18,.28)'; for (const [x, y, w] of [[120, 160, 380], [640, 210, 300], [860, 270, 260], [60, 300, 220]]) c.fillRect(x, y, w, 6);
+  ridge(c, seeded(7), 440, 90, '#9a3f2b', 60); ridge(c, seeded(11), 485, 70, '#6a2820', 50);
+  c.fillStyle = '#24120f';
+  c.beginPath(); c.moveTo(-10, 372); c.lineTo(505, 372); c.lineTo(522, 384); c.lineTo(498, 396); c.lineTo(514, 412); c.lineTo(-10, 412); c.fill();
+  c.beginPath(); c.moveTo(772, 372); c.lineTo(1290, 372); c.lineTo(1290, 412); c.lineTo(768, 412); c.lineTo(786, 397); c.lineTo(762, 384); c.fill();
+  for (const x of [150, 380, 900, 1140]) { c.fillRect(x - 24, 405, 48, 215); c.fillRect(x - 32, 405, 64, 12); }
+  c.strokeStyle = '#24120f'; c.lineWidth = 9; for (const [a, b] of [[174, 356], [924, 1116]]) { c.beginPath(); c.moveTo(a, 600); c.quadraticCurveTo((a + b) / 2, 420, b, 600); c.stroke(); }
+  c.fillStyle = '#24120f'; for (let x = 0; x < W; x += 34) if (x < 500 || x > 780) c.fillRect(x, 346, 5, 28); c.fillRect(0, 344, 505, 5); c.fillRect(772, 344, 520, 5);
+  ridge(c, seeded(23), 545, 40, '#3d1915', 40);
+  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#2a1714'); g.addColorStop(1, '#0f0908'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
+  c.fillStyle = '#6a3326'; c.fillRect(0, 600, W, 3);
+  c.strokeStyle = 'rgba(239,233,223,.06)'; c.lineWidth = 2;
+  for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 110, 603); c.lineTo(640 + i * 260, H); c.stroke(); }
+  for (const y of [640, 685]) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+}
+function paintRain(c) {
+  let g = c.createLinearGradient(0, 0, 0, 600); g.addColorStop(0, '#141d1c'); g.addColorStop(.6, '#2f4643'); g.addColorStop(1, '#58736e');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  g = c.createRadialGradient(330, 170, 0, 330, 170, 200); g.addColorStop(0, 'rgba(225,240,235,.35)'); g.addColorStop(1, 'rgba(225,240,235,0)'); c.fillStyle = g; c.fillRect(100, 0, 480, 400);
+  const roof = (x, y, w, h, col) => {
+    c.fillStyle = col; c.fillRect(x + w * .08, y + h * .3, w * .84, 600 - y);
+    c.beginPath(); c.moveTo(x - 30, y + h * .32); c.quadraticCurveTo(x + w * .25, y + h * .1, x + w * .35, y - h * .2); c.lineTo(x + w * .65, y - h * .2);
+    c.quadraticCurveTo(x + w * .75, y + h * .1, x + w + 30, y + h * .32); c.lineTo(x + w, y + h * .42); c.lineTo(x, y + h * .42); c.closePath(); c.fill();
+  };
+  roof(40, 400, 360, 90, '#22302f'); roof(820, 380, 420, 100, '#22302f'); roof(430, 430, 400, 80, '#1b2626');
+  c.fillStyle = '#0f0c0b'; c.fillRect(70, 0, 60, 620); c.fillRect(1150, 0, 60, 620); c.fillRect(0, 40, W, 34); c.fillRect(0, 84, W, 10);
+  for (const x of [210, 1070]) {
+    c.strokeStyle = '#0f0c0b'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, 94); c.lineTo(x, 220); c.stroke();
+    g = c.createRadialGradient(x, 252, 0, x, 252, 130); g.addColorStop(0, 'rgba(232,67,43,.45)'); g.addColorStop(1, 'rgba(232,67,43,0)'); c.fillStyle = g; c.fillRect(x - 130, 120, 260, 260);
+    c.fillStyle = '#e8432b'; c.beginPath(); c.ellipse(x, 252, 26, 34, 0, 0, 7); c.fill(); c.fillStyle = '#0f0c0b'; c.fillRect(x - 16, 216, 32, 6); c.fillRect(x - 16, 282, 32, 6);
+  }
+  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#26302f'); g.addColorStop(1, '#0b0f0f'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
+  c.fillStyle = 'rgba(232,67,43,.18)'; for (const x of [210, 1070]) { c.beginPath(); c.ellipse(x, 668, 30, 52, 0, 0, 7); c.fill(); }
+  c.fillStyle = 'rgba(225,240,235,.25)'; c.fillRect(0, 600, W, 2);
+  c.strokeStyle = 'rgba(225,240,235,.07)'; c.lineWidth = 2; for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 120, 603); c.lineTo(640 + i * 280, H); c.stroke(); }
+}
+function bgCanvas(id) {
+  if (BG[id]) return BG[id];
+  const b = document.createElement('canvas'); b.width = W * DPR; b.height = H * DPR; const c = b.getContext('2d'); c.scale(DPR, DPR);
+  (id === 'STG_02' ? paintRain : paintBridge)(c); return (BG[id] = b);
+}
+const AMB = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.3, 1.2), ph: rand(0, 6), sz: rand(1, 3) }));
+const RAIN = Array.from({ length: 150 }, () => ({ x: rand(0, W + 200), y: rand(0, H), l: rand(14, 30), v: rand(14, 22) }));
+function drawStage(c) {
+  c.drawImage(bgCanvas(G.stage), 0, 0, W, H);
+  if (G.stage === 'STG_02') {
+    c.strokeStyle = 'rgba(220,235,230,.32)'; c.lineWidth = 1.5; c.beginPath();
+    for (const r of RAIN) { r.y += r.v * .5; r.x -= r.v * .12; if (r.y > 640) { r.y = rand(-60, 0); r.x = rand(0, W + 200); } c.moveTo(r.x, r.y); c.lineTo(r.x + r.l * .25, r.y - r.l); }
+    c.stroke();
+  } else {
+    c.strokeStyle = '#1a0d0b'; c.lineWidth = 3;
+    for (const [ax, ph] of [[506, 0], [770, 2]]) {
+      const sw = Math.sin(G.frame * .02 + ph) * .1;
+      for (let i = 0; i < 11; i++) { const x = ax + Math.sin(sw) * i * 14, y = 398 + Math.cos(sw) * i * 14; c.beginPath(); c.ellipse(x, y, i % 2 ? 2.5 : 5, 8, sw, 0, 7); c.stroke(); }
+    }
+    for (const e of AMB) { e.y -= e.v; e.x += Math.sin(G.frame * .02 + e.ph) * .4; if (e.y < 0) { e.y = H; e.x = rand(0, W); } c.fillStyle = `rgba(255,${150 + e.sz * 30},90,${.35 + .3 * Math.sin(G.frame * .1 + e.ph)})`; c.fillRect(e.x, e.y, e.sz, e.sz); }
+  }
+}
+function line(c, a, b) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); }
+function drawFighter(c, f) {
+  const k = skel(f), s = k.s, ch = f.ch, white = f.flash > 0;
+  const col = white ? '#fff' : f.col, dk = white ? '#fff' : (f.alt ? ch.altDark : ch.dark);
+  if (f.inv > 0 && (f.state === 'ST_BREAK' || f.state === 'ST_WAKEUP') && G.frame % 4 < 2) c.globalAlpha = .55;
+  if (f.scarf.length) {
+    c.lineCap = 'round'; c.strokeStyle = white ? '#fff' : ch.sash;
+    for (let i = 1; i < f.scarf.length; i++) { c.lineWidth = Math.max(2, (9 - i * 1.1) * s); line(c, f.scarf[i - 1], f.scarf[i]); }
+  }
+  c.save(); c.translate(f.x + (f.state === 'ST_CHAINED' ? rand(-2, 2) : 0), f.y); c.scale(f.face, 1);
+  if (Math.abs(f.pose.rot) > .01) { c.translate(0, -9 * s); c.rotate(f.pose.rot); }
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  const seg = (a, b, w, fill) => { c.strokeStyle = INK; c.lineWidth = w + 5; line(c, a, b); c.strokeStyle = fill; c.lineWidth = w; line(c, a, b); };
+  const ball = (p, r, fill) => { c.fillStyle = INK; c.beginPath(); c.arc(p[0], p[1], r + 2.5, 0, 7); c.fill(); c.fillStyle = fill; c.beginPath(); c.arc(p[0], p[1], r, 0, 7); c.fill(); };
+  seg(k.sh, k.be, 14 * s, dk); seg(k.be, k.bh, 12 * s, dk); ball(k.bh, 7 * s, white ? '#fff' : ch.skin);
+  seg(k.hip, k.bk, 17 * s, dk); seg(k.bk, k.bf, 15 * s, dk);
+  seg(k.hip, k.neck, ch.build * s, col);
+  c.strokeStyle = white ? '#fff' : ch.sash; c.lineWidth = 6 * s; line(c, [k.hip[0] - 12 * s, k.hip[1] + 2], [k.hip[0] + 12 * s, k.hip[1] - 2]);
+  ball(k.head, k.HR, white ? '#fff' : ch.skin);
+  if (!white) {
+    c.fillStyle = ch.hair; c.beginPath(); c.arc(k.head[0], k.head[1], k.HR, Math.PI * .95, Math.PI * 2.1); c.fill();
+    c.fillStyle = INK; c.fillRect(k.head[0] + k.HR * .35, k.head[1] - 2 * s, 5 * s, 3 * s);
+    if (ch.scarf.at === 'head') { c.strokeStyle = ch.sash; c.lineWidth = 4 * s; c.beginPath(); c.arc(k.head[0], k.head[1], k.HR - 1, Math.PI * 1.05, Math.PI * 1.95); c.stroke(); }
+  }
+  seg(k.hip, k.fk, 17 * s, col); seg(k.fk, k.ff, 15 * s, col);
+  seg(k.sh, k.fe, 14 * s, col); seg(k.fe, k.fh, 12 * s, col); ball(k.fh, 7.5 * s, white ? '#fff' : ch.skin);
+  if (f.state === 'ST_GUARD') {
+    const r = f.grd / f.grdMax; c.strokeStyle = r < .3 ? `rgba(232,67,43,.7)` : `rgba(239,233,223,${.25 + .35 * r})`; c.lineWidth = 4;
+    c.beginPath(); c.arc(10 * s, -110 * s, 70 * s, -1.1, 1.1); c.stroke();
+  }
+  c.restore(); c.globalAlpha = 1;
+}
+function drawChainLinks(c, a) {
+  const ch = a.chain, d = ch.target, h = toWorld(a, skel(a).fh), t = [d.x, d.y - 105 * d.ch.scale];
+  const dx = t[0] - h[0], dy = t[1] - h[1], len = Math.hypot(dx, dy), n = Math.max(2, Math.floor(len / 15)), ang = Math.atan2(dy, dx), DL = DROP_LEVELS[ch.lv];
+  c.save(); c.strokeStyle = DL.color; c.globalAlpha = .35 + ch.lv * .13; c.lineWidth = 3;
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, x = h[0] + dx * u, y = h[1] + dy * u + Math.sin(u * Math.PI) * 8 * Math.sin(G.frame * .15);
+    c.save(); c.translate(x, y); c.rotate(ang); c.beginPath(); c.ellipse(0, 0, 8, i % 2 ? 2.5 : 5, 0, 0, 7); c.stroke(); c.restore();
+  }
+  c.restore();
+}
+function drawParts(c) {
+  for (const p of G.parts) {
+    const a = p.life / p.max; c.globalAlpha = clamp(a, 0, 1);
+    if (p.k === 'spark') { c.strokeStyle = p.col; c.lineWidth = p.sz; line(c, [p.x, p.y], [p.x - p.vx * 1.6, p.y - p.vy * 1.6]); }
+    else if (p.k === 'ring') { const u = 1 - a, r = lerp(p.r0, p.r1, 1 - Math.pow(1 - u, 3)); c.strokeStyle = p.col; c.lineWidth = 7 * a + 1; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.stroke(); }
+    else if (p.k === 'frag') { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.strokeStyle = p.col; c.lineWidth = 3; c.beginPath(); c.ellipse(0, 0, 7, 4, 0, 0, 4); c.stroke(); c.restore(); }
+    else if (p.k === 'dust') { c.fillStyle = p.col + (a * .4) + ')'; c.beginPath(); c.arc(p.x, p.y, p.sz * (1.6 - a), 0, 7); c.fill(); }
+  }
+  c.globalAlpha = 1;
+}
+function drawShards(c) {
+  for (const s of G.shards) {
+    if (s.life < 90 && G.frame % 8 < 4) continue;
+    const y = s.y + Math.sin(s.t * .08) * 6, sc = Math.min(1, s.t / 15);
+    c.save(); c.translate(s.x, y); c.scale(sc, sc);
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, 46); g.addColorStop(0, 'rgba(255,220,200,.6)'); g.addColorStop(1, 'rgba(232,67,43,0)'); c.fillStyle = g; c.fillRect(-46, -46, 92, 92);
+    c.rotate(Math.sin(s.t * .05) * .3); c.fillStyle = BONE; c.strokeStyle = RED; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(0, -22); c.lineTo(13, 0); c.lineTo(0, 22); c.lineTo(-13, 0); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(0, -22); c.lineTo(0, 22); c.stroke();
+    c.restore();
+  }
+}
+const txt = (c, s, x, y, size, font, fill, align = 'center', stroke = 6, weight = 400) => {
+  c.font = `${weight} ${size}px ${font}`; c.textAlign = align; c.lineJoin = 'round'; c.lineWidth = stroke; c.strokeStyle = INK; c.strokeText(s, x, y); c.fillStyle = fill; c.fillText(s, x, y);
+};
+let STRIPES = null;
+function stripes(c) {
+  if (STRIPES) return STRIPES;
+  const p = document.createElement('canvas'); p.width = p.height = 12; const x = p.getContext('2d');
+  x.fillStyle = RED; x.fillRect(0, 0, 12, 12); x.strokeStyle = BONE; x.lineWidth = 3.5;
+  x.beginPath(); x.moveTo(-3, 15); x.lineTo(15, -3); x.moveTo(9, 15); x.lineTo(15, 9); x.moveTo(-3, 3); x.lineTo(3, -3); x.stroke();
+  return (STRIPES = c.createPattern(p, 'repeat'));
+}
+const brkKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「破链」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].brk[0]);
+const finKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「终结」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].fin[0]);
+function hpBar(c, f, x, y, w, side) {
+  const h = 24, r = f.hp / CFG.HP, tr = f.trail / CFG.HP, pend = (f.chainedBy && f.chainedBy.chain ? f.chainedBy.chain.pending : 0) / CFG.HP;
+  const seg = (a, b) => { if (b <= a) return; if (side > 0) c.fillRect(x + w - w * b, y, w * (b - a), h); else c.fillRect(x + w * a, y, w * (b - a), h); };
+  c.fillStyle = 'rgba(13,10,9,.9)'; c.fillRect(x - 4, y - 4, w + 8, h + 8);
+  c.fillStyle = '#3a2a26'; seg(0, 1);
+  c.fillStyle = '#8f2414'; seg(r, tr);
+  c.fillStyle = r < .25 ? '#f07a5c' : '#ebe2d2'; seg(0, r);
+  if (pend > 0) { c.fillStyle = stripes(c); seg(Math.max(0, r - pend), r); }
+  c.fillStyle = 'rgba(13,10,9,.85)'; c.fillRect(x, y + h + 6, w, 5);
+  const g = f.grd / f.grdMax; c.fillStyle = g < .3 ? RED : 'rgba(239,233,223,.55)';
+  if (side > 0) c.fillRect(x + w * (1 - g), y + h + 6, w * g, 5); else c.fillRect(x, y + h + 6, w * g, 5);
+  c.textBaseline = 'alphabetic';
+  txt(c, f.ch.name, side > 0 ? x : x + w, y + h + 46, 30, FB, f.col, side > 0 ? 'left' : 'right', 5);
+  c.font = `500 14px ${FU}`; c.fillStyle = MUTE; c.textAlign = side > 0 ? 'left' : 'right';
+  c.fillText(f.ch.title, side > 0 ? x + 40 : x + w - 40, y + h + 42);
+  c.font = `600 15px ${FN}`; c.textAlign = side > 0 ? 'right' : 'left'; c.fillStyle = BONE; c.fillText(Math.ceil(f.hp), side > 0 ? x + w : x, y + h + 30);
+  for (let i = 0; i < CFG.ROUNDS_TO_WIN; i++) {
+    const cx = side > 0 ? x + w - 52 - i * 18 : x + 52 + i * 18, cy = y + h + 40;
+    c.save(); c.translate(cx, cy); c.rotate(Math.PI / 4); c.fillStyle = i < f.wins ? RED : 'rgba(239,233,223,.2)'; c.fillRect(-5, -5, 10, 10); c.restore();
+  }
+}
+function brkGauge(c, f, x, y, w, side) {
+  const h = 16, r = f.brk / CFG.BRK_MAX, full = f.brk >= CFG.BRK_COST, col = f.col;
+  c.save();
+  c.fillStyle = 'rgba(13,10,9,.9)'; c.fillRect(x - 4, y - 4, w + 8, h + 8);
+  if (full) { c.shadowColor = col; c.shadowBlur = 14 + Math.sin(G.frame * .2) * 8; }
+  c.fillStyle = full ? col : 'rgba(239,233,223,.82)';
+  if (side > 0) c.fillRect(x, y, w * r, h); else c.fillRect(x + w * (1 - r), y, w * r, h);
+  c.shadowBlur = 0; c.fillStyle = 'rgba(13,10,9,.9)'; for (const q of [.25, .5, .75]) c.fillRect(x + w * q - 1, y, 2, h);
+  c.textBaseline = 'alphabetic'; const lx = side > 0 ? x : x + w;
+  txt(c, '破链', lx, y - 10, 26, FB, full ? col : BONE, side > 0 ? 'left' : 'right', 5);
+  c.font = `600 15px ${FU}`; c.fillStyle = full ? BONE : MUTE; c.textAlign = side > 0 ? 'left' : 'right';
+  const k = brkKey(f); c.fillText(full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${CFG.BRK_COST}`, lx + (side > 0 ? 62 : -62), y - 13);
+  c.restore();
+}
+function chainHUD(c, a) {
+  const ch = a.chain, DL = DROP_LEVELS[ch.lv], L = a.idx === 0, x = L ? 48 : W - 48, al = L ? 'left' : 'right';
+  c.textBaseline = 'alphabetic';
+  txt(c, String(ch.hits), x, 222, 96, FN, BONE, al, 9, 700);
+  const nw = c.measureText(String(ch.hits)).width;
+  txt(c, '连', L ? x + nw + 12 : x - nw - 12, 218, 38, FB, BONE, al, 6);
+  txt(c, DL.name, x, 278, 52, FB, DL.color, al, 7);
+  c.font = `600 16px ${FU}`; c.textAlign = al; c.fillStyle = BONE; c.fillText(`掉落 Lv.${DL.lv} · 暂存 ${Math.round(ch.pending)}`, x, 306);
+  const bx = 390, bw = 500, by = 102, bh = 12, max = DROP_LEVELS[DROP_LEVELS.length - 1].min * 1.15;
+  c.fillStyle = 'rgba(13,10,9,.85)'; c.fillRect(bx - 6, by - 6, bw + 12, bh + 36);
+  c.fillStyle = '#3a2a26'; c.fillRect(bx, by, bw, bh);
+  c.fillStyle = DL.color; const mw = bw * Math.min(1, ch.mom / max); if (L) c.fillRect(bx, by, mw, bh); else c.fillRect(bx + bw - mw, by, mw, bh);
+  c.font = `500 12px ${FU}`; c.textAlign = 'center';
+  for (const d of DROP_LEVELS.slice(1)) {
+    const u = d.min / max, tx = L ? bx + bw * u : bx + bw * (1 - u), passed = ch.mom >= d.min;
+    c.fillStyle = passed ? d.color : BONE; c.fillRect(tx - 1, by - 4, 2, bh + 8);
+    c.fillStyle = passed ? d.color : MUTE; c.fillText(d.name, tx, by + bh + 16);
+  }
+  const wr = clamp(ch.win / ch.maxWin, 0, 1); c.fillStyle = wr < .3 ? RED : BONE; c.fillRect(bx + bw / 2 - bw / 2 * wr, by + bh + 22, bw * wr, 3);
+}
+function drawHUD(c) {
+  const [A, B] = G.f;
+  hpBar(c, A, 40, 24, 500, 1); hpBar(c, B, 740, 24, 500, -1);
+  c.fillStyle = 'rgba(13,10,9,.9)'; c.fillRect(590, 14, 100, 68); c.strokeStyle = RED; c.lineWidth = 2; c.strokeRect(591, 15, 98, 66);
+  c.textBaseline = 'middle'; c.textAlign = 'center'; c.font = `700 40px ${FN}`; c.fillStyle = BONE;
+  c.fillText(CFG.ROUND_TIME > 0 && G.mode !== 'train' ? Math.ceil(Math.max(0, G.timer) / 60) : '∞', 640, 44);
+  c.font = `500 12px ${FU}`; c.fillStyle = MUTE; c.fillText(`第 ${G.round} 回合`, 640, 72);
+  c.textBaseline = 'alphabetic';
+  if (TOUCH) { brkGauge(c, A, 446, 676, 180, 1); brkGauge(c, B, 654, 676, 180, -1); }
+  else { brkGauge(c, A, 40, 676, 380, 1); brkGauge(c, B, 860, 676, 380, -1); }
+  for (const a of G.f) if (a.chain) chainHUD(c, a);
+  for (const f of G.f) {
+    if (f.chainedBy && f.brk >= CFG.BRK_COST && isHuman(f)) { c.globalAlpha = .6 + .4 * Math.sin(G.frame * .3); txt(c, `按 ${brkKey(f)} 破链`, f.x, f.y - 240 * f.ch.scale, 34, FB, f.col); c.globalAlpha = 1; }
+    if (f.chain && f.chain.lv >= CFG.FIN_MIN_LV && isHuman(f)) txt(c, `按 ${finKey(f)} 终结`, f.x, f.y - 240 * f.ch.scale, 28, FB, RED);
+  }
+  if (G.mode === 'train') {
+    c.font = `500 14px ${FU}`; c.textAlign = 'center'; c.fillStyle = MUTE;
+    const dm = DUMMY.find(d => d.key === G.dummy);
+    c.fillText(`训练模式 · 木桩：${dm ? dm.name : ''} · Esc 暂停`, 640, TOUCH ? 610 : 668);
+    if (G.lastMove) { const m = G.lastMove.m; c.fillStyle = BONE; c.fillText(`${m.id} ${m.name}　发生 ${m.startup} · 持续 ${m.active} · 收招 ${m.recovery} · 伤害 ${m.dmg} · 势 ${m.mom}`, 640, TOUCH ? 632 : 692); }
+    c.textAlign = 'right'; c.font = `500 12px ${FU}`;
+    G.log.forEach((l, i) => { c.fillStyle = `rgba(239,233,223,${.8 - i * .1})`; c.fillText(l, W - 40, 360 + i * 18); });
+  }
+}
+function drawPops(c) {
+  c.textBaseline = 'alphabetic';
+  for (const p of G.pops) {
+    const a = Math.min(1, p.life / 18) * Math.min(1, (p.max - p.life) / 5 + .3), y = p.y - (1 - p.life / p.max) * 36;
+    c.globalAlpha = a; txt(c, p.text, p.x, y, p.size, p.font, p.col, 'center', Math.max(4, p.size / 7), p.font === FN ? 700 : p.font === FU ? 700 : 400);
+  }
+  c.globalAlpha = 1;
+}
+function drawBanner(c) {
+  const b = G.banner; if (!b) return;
+  const t = b.max - b.life, sc = t < 8 ? 1.5 - t / 8 * .5 : 1, a = Math.min(1, b.life / 14);
+  c.save(); c.globalAlpha = a; c.translate(640, 340);
+  c.fillStyle = 'rgba(13,10,9,.55)'; c.fillRect(-640, -85, 1280, b.sub ? 200 : 170);
+  c.scale(sc, sc); c.textBaseline = 'middle';
+  txt(c, b.text, 0, 0, 130, FB, b.col, 'center', 12);
+  if (b.sub) txt(c, b.sub, 0, 92 / sc, 26, FU, BONE, 'center', 5, 500);
+  c.restore();
+}
+function render() {
+  const c = ctx; c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  c.save();
+  if (G.shake) c.translate(rand(-1, 1) * G.shake, rand(-1, 1) * G.shake);
+  drawStage(c);
+  if (G.f.length) {
+    drawShards(c);
+    for (const f of G.f) { const h = clamp((CFG.GROUND - f.y) / 300, 0, .7); c.fillStyle = `rgba(0,0,0,${.35 - h * .3})`; c.beginPath(); c.ellipse(f.x, CFG.GROUND + 2, 46 * (1 - h * .5), 9, 0, 0, 7); c.fill(); }
+    for (const a of G.f) if (a.chain) drawChainLinks(c, a);
+    const order = G.f.slice().sort((a, b) => (a.chainedBy ? 0 : 1) - (b.chainedBy ? 0 : 1) || (a.state === 'ST_ATTACK') - (b.state === 'ST_ATTACK'));
+    for (const f of order) drawFighter(c, f);
+    drawParts(c);
+  }
+  c.restore();
+  if (G.f.length && !G.demo) drawHUD(c);
+  drawPops(c); drawBanner(c);
+  if (G.flash > 0) { c.fillStyle = `rgba(255,250,240,${G.flash})`; c.fillRect(0, 0, W, H); }
+  if (G.demo) { c.fillStyle = 'rgba(10,8,7,.25)'; c.fillRect(0, 0, W, H); }
+}
+let last = performance.now(), acc = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(100, now - last); last = now;
+  if (G.slow > 0) G.slow -= dt / 16.67;
+  acc += dt / 16.667 * (G.slow > 0 ? .33 : 1);
+  let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0;
+  render();
+}
+
+/* ============================================================
+   页面
+   ============================================================ */
+const SUB = ['PG_MOVES', 'PG_CODEX', 'PG_SETTINGS'];
+function go(id) {
+  if (SUB.includes(id) && !SUB.includes(G.page)) G.prev = G.page;
+  G.page = id;
+  $$('.page').forEach(p => p.classList.toggle('on', p.id === id));
+  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings })[id]?.();
+  Input.clear();
+  $('#PG_BATTLE').classList.toggle('touch', TOUCH);
+  if (id !== 'PG_BATTLE') { const f = $(`#${id} .menu button, #${id} [aria-pressed=true], #${id} button`); f && f.focus({ preventScroll: true }); }
+  else document.activeElement && document.activeElement.blur && document.activeElement.blur();
+}
+function portrait(cv, ch, alt) {
+  const w = cv.clientWidth || 70, h = cv.clientHeight || 86;
+  cv.width = w * DPR; cv.height = h * DPR; const c = cv.getContext('2d'); c.scale(DPR, DPR);
+  c.fillStyle = alt ? ch.altDark : ch.dark; c.globalAlpha = .35; c.fillRect(0, 0, w, h); c.globalAlpha = 1;
+  const f = new Fighter(0, ch, alt); f.x = 0; f.y = 0; f.pose = { ...POSES.guard };
+  for (let i = 0; i < 12; i++) f.updScarf();
+  const s = h / 225; c.translate(w / 2, h * .97); c.scale(s, s); drawFighter(c, f);
+}
+function buildSelect() {
+  const modeName = { cpu: '对战电脑', pvp: '双人对战', train: '训练模式' }[G.mode];
+  $('#selMode').textContent = modeName; $('#p2Who').textContent = G.mode === 'cpu' ? 'CPU' : G.mode === 'pvp' ? '2P' : '木桩';
+  $('#dummyRow').hidden = G.mode !== 'train';
+  const charCards = (slot) => CHARS.map(ch => `<button class="card" data-slot="${slot}" data-id="${ch.id}" aria-pressed="${G.sel[slot] === ch.id}"><canvas></canvas><b>${ch.name}</b><span class="t">${ch.title} · ${ch.role.split('：')[0]}</span><span class="st">${Object.entries(ch.stats).map(([k, v]) => `${k} <i>${'■'.repeat(v)}${'□'.repeat(5 - v)}</i>`).join('')}</span></button>`).join('');
+  $('#pickP1').innerHTML = charCards('p1'); $('#pickP2').innerHTML = charCards('p2');
+  $('#pickStage').innerHTML = STAGES.map(st => `<button class="card stage" data-slot="stage" data-id="${st.id}" aria-pressed="${G.sel.stage === st.id}"><canvas></canvas><b>${st.name}</b><span class="t">${st.desc}</span><span class="t">${st.id}</span></button>`).join('');
+  $('#pickDummy').innerHTML = DUMMY.map(d => `<button class="card small" data-slot="dummy" data-id="${d.key}" aria-pressed="${G.sel.dummy === d.key}"><span><b style="font-size:1.25em">${d.name}</b></span><span class="t">${d.desc}</span></button>`).join('');
+  requestAnimationFrame(() => {
+    $$('#pickP1 canvas, #pickP2 canvas').forEach((cv, i) => { const ch = CHARS[i % CHARS.length]; portrait(cv, ch, i >= CHARS.length && G.sel.p1 === ch.id); });
+    $$('#pickStage canvas').forEach((cv, i) => { const w = cv.clientWidth || 128, h = cv.clientHeight || 72; cv.width = w * DPR; cv.height = h * DPR; cv.getContext('2d').drawImage(bgCanvas(STAGES[i].id), 0, 0, w * DPR, h * DPR); });
+  });
+}
+function buildMoves() {
+  const D = DROP_LEVELS, max = D[D.length - 1].min * 1.3;
+  $('#sysText').innerHTML = `
+    <h3>核心规则</h3>
+    <p><b>起手</b>：立回中命中没在防御的对手，就进入连段。对手被锁定，不能移动、防御或出招。</p>
+    <p><b>无限连段</b>：每次命中后，要在连段窗口（约 ${(CFG.CHAIN_WINDOW * CFG.WINDOW_MUL / 60).toFixed(2)} 秒，屏幕上方的白色细条）耗尽前命中下一击，就能一直连下去。命中后可以立刻取消收招接下一招。同一招连用会衰减，连续 ${CFG.REPEAT_LIMIT} 次连段中断。</p>
+    <p><b>暂存与掉落</b>：每击 ${Math.round(CFG.IMMEDIATE_RATIO * 100)}% 的伤害立即生效，其余进入<b>暂存</b>（血条上的红白斜纹）。连段势越过下面的阈值时，暂存伤害一次性结算，即<b>掉落</b>。连段因中断或破链结束时，没结算的暂存伤害会消散。</p>
+    <div class="dlbar">${D.map((d, i) => `<div style="flex:${((D[i + 1] ? D[i + 1].min : max) - d.min)};background:${d.color}"><b>${d.name}</b>${d.min}</div>`).join('')}</div>
+    <div class="tablewrap"><table><tr><th>阶段</th><th class="num">阈值</th><th class="num">伤害倍率</th><th class="num">守方每击充能</th><th>连段结束后</th></tr>
+    ${D.map(d => `<tr><td>${d.name} <span style="color:var(--mute)">${d.id}</span></td><td class="num">${d.min}</td><td class="num">${d.dmgMul}×</td><td class="num">+${d.gain}</td><td>${STATES[d.end].name} ${d.stun} 帧</td></tr>`).join('')}</table></div>
+    <p><b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，按破链键斩断连段。没结算的暂存伤害全部返还，攻方被弹开、硬直 ${CFG.BREAK_STAGGER} 帧。最划算的时机是<b>下一个阈值之前</b>。</p>
+    <p><b>充能方式</b>：被连受击（阶段越高越多）、防御成功 +${CFG.GAIN.guard}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
+    <p><b>终结技</b>：连段达到「${D[CFG.FIN_MIN_LV].name}」后可用，结算全部暂存伤害并造成重击，连段结束。到「${D[D.length - 1].name}」后伤害减半、对手充能加快，应尽快终结。</p>
+    <p><b>护架</b>：防御会消耗护架值（血条下的细条），耗尽即破防，短时间无法行动。</p>`;
+  $('#mvTabs').innerHTML = CHARS.map(ch => `<button data-mvtab="${ch.id}" aria-selected="${G.mvTab === ch.id}">${ch.name} · ${ch.title}</button>`).join('');
+  const ch = CHAR[G.mvTab];
+  $('#mvTable').innerHTML = `<tr><th>输入</th><th>招式</th><th>ID</th><th class="num">发生</th><th class="num">持续</th><th class="num">收招</th><th class="num">伤害</th><th class="num">势</th></tr>` +
+    Object.entries(ch.moves).map(([k, m]) => `<tr><td>${MOVE_INPUT[k]}</td><td>${m.name}</td><td><code>${m.id}</code></td><td class="num">${m.startup}</td><td class="num">${m.active}</td><td class="num">${m.recovery}</td><td class="num">${m.dmg}</td><td class="num">${m.mom}</td></tr>`).join('');
+  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr>`;
+}
+const CODEX = {
+  pages: { name: '页面 PG', note: '界面页面。PG_BATTLE 的内容画在 canvas 上。', cols: ['ID', '名称', '说明'], rows: () => PAGES.map(p => [p.id, p.name, p.desc]) },
+  chars: { name: '角色 CH', note: '角色属性；倍率 1 为基准。', cols: ['ID', '名称', '称号', '定位', '移速', '跳跃', '攻击', '受伤', '破链充能', '连段窗口', '护架'], rows: () => CHARS.map(c => [c.id, c.name, c.title, c.role, c.walk, c.jump, c.atk, c.def, c.brkGain, c.chainWin, c.grd]) },
+  moves: { name: '招式 MV', note: '帧数以 1/60 秒计；势 = 连段势，决定掉落阶段。', cols: ['ID', '角色', '名称', '输入', '发生', '持续', '收招', '伤害', '势', '削架', '距离'], rows: () => CHARS.flatMap(c => Object.entries(c.moves).map(([k, m]) => [m.id, c.name, m.name, MOVE_INPUT[k], m.startup, m.active, m.recovery, m.dmg, m.mom, m.grd, m.range])) },
+  drops: { name: '掉落阶段 DL', note: '连段势越过阈值即结算暂存伤害。', cols: ['ID', '名称', '阈值', '伤害倍率', '守方每击充能', '连段结束后', '硬直帧', '说明'], rows: () => DROP_LEVELS.map(d => [d.id, d.name, d.min, d.dmgMul, d.gain, STATES[d.end].name, d.stun, d.note]) },
+  states: { name: '状态 ST', note: '角色状态机。', cols: ['ID', '名称', '说明'], rows: () => Object.entries(STATES).map(([k, v]) => [k, v.name, v.desc]) },
+  world: { name: '场景与道具', note: 'STG 场景，IT 道具，DM 训练木桩。', cols: ['ID', '名称', '说明'], rows: () => [...STAGES.map(s => [s.id, s.name, s.desc]), ...ITEMS.map(i => [i.id, i.name, i.desc]), ...DUMMY.map(d => [d.id, d.name, d.desc])] },
+  events: { name: '事件 EV', note: '代码中用 on("EV_…", 函数) 订阅，可接成就、统计、演出。', cols: ['ID', '触发时机'], rows: () => Object.entries(EVENTS) },
+  keys: { name: '按键', note: '在 KEYMAP 中修改。', cols: ['动作 ID', '动作', '1P', '2P'], rows: () => Object.entries(ACTIONS).map(([k, v]) => [k, v, KEYMAP.P1[k].map(keyName).join(' / '), KEYMAP.P2[k].map(keyName).join(' / ')]) },
+  cfg: { name: '参数 CFG', note: '全局参数，当前值已含设置页的修改。', cols: ['键', '当前值', '说明'], rows: () => Object.entries(CFG_DESC).map(([k, v]) => [k, JSON.stringify(CFG[k]), v]) },
+  ai: { name: 'AI 与设置', note: 'AI 难度参数与设置项。', cols: ['ID', '名称', '说明'], rows: () => [...AI_LEVELS.map(a => [a.id, a.name, `防御率 ${a.guard} · 失误率 ${a.drop} · 智能破链 ${a.smart} · 进攻性 ${a.agg}`]), ...SETTINGS.map(s => [s.id, s.label, `对应 CFG.${s.key}`])] },
+};
+function buildCodex() {
+  $('#cxTabs').innerHTML = Object.entries(CODEX).map(([k, v]) => `<button data-cxtab="${k}" aria-selected="${G.cxTab === k}">${v.name}</button>`).join('');
+  const t = CODEX[G.cxTab]; $('#cxNote').textContent = t.note;
+  $('#cxTable').innerHTML = `<tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr>` + t.rows().map(r => `<tr>${r.map((v, i) => i === 0 ? `<td><code>${v}</code></td>` : `<td class="${typeof v === 'number' ? 'num' : String(v).length > 14 ? 'w' : ''}">${v}</td>`).join('')}</tr>`).join('');
+}
+function buildSettings() {
+  $('#setList').innerHTML = SETTINGS.map(s => {
+    const idx = s.opts.findIndex(o => o[0] === CFG[s.key]);
+    return `<label for="${s.id}">${s.label}${s.note ? `<small>${s.note}</small>` : ''}</label><select id="${s.id}" data-key="${s.key}">${s.opts.map((o, i) => `<option value="${i}" ${i === idx ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
+  }).join('');
+}
+
+/* ---------- 事件绑定 ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  SFX.init(); SFX.play('ui');
+  if (b.hasAttribute('data-fs')) { FS.toggle(); return; }
+  if (b.dataset.mode) { G.mode = b.dataset.mode; go('PG_SELECT'); }
+  else if (b.dataset.go) go(b.dataset.go);
+  else if (b.hasAttribute('data-back')) go(G.prev || 'PG_TITLE');
+  else if (b.dataset.slot) { G.sel[b.dataset.slot] = b.dataset.id; buildSelect(); requestAnimationFrame(() => { const n = $(`[data-slot="${b.dataset.slot}"][data-id="${b.dataset.id}"]`); n && n.focus({ preventScroll: true }); }); }
+  else if (b.dataset.mvtab) { G.mvTab = b.dataset.mvtab; buildMoves(); $(`[data-mvtab="${G.mvTab}"]`).focus(); }
+  else if (b.dataset.cxtab) { G.cxTab = b.dataset.cxtab; buildCodex(); $(`[data-cxtab="${G.cxTab}"]`).focus(); }
+});
+/* ---------- 全屏（只全屏游戏画面 #wrap） ---------- */
+const IOS = /iP(hone|od)/.test(navigator.userAgent);
+const FS_ENTER = 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5', FS_EXIT = 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5';
+let toastT = 0;
+function toast(msg, ms = 3200) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+const FS = {
+  root: $('#wrap'),
+  app: () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true,
+  can: () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled),
+  on: () => !!(document.fullscreenElement || document.webkitFullscreenElement),
+  enter() {
+    const el = this.root, req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) return Promise.reject(new Error('unsupported'));
+    return Promise.resolve(req.call(el, { navigationUI: 'hide' })).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} });
+  },
+  exit() { const ex = document.exitFullscreen || document.webkitExitFullscreen; return ex ? Promise.resolve(ex.call(document)) : Promise.resolve(); },
+  toggle() {
+    if (this.on()) { this.exit().catch(() => {}); return; }
+    if (!this.can()) { toast(IOS ? 'iPhone 浏览器不支持网页全屏：在 Safari 点「分享 → 添加到主屏幕」，从桌面图标打开就是全屏' : '这个浏览器不允许网页全屏，可以换 Chrome 或 Edge 试试'); return; }
+    this.enter().catch(() => toast('全屏被浏览器拦截了，请再点一次，或在新标签页里打开游戏'));
+  },
+  sync() {
+    const on = this.on(), hide = this.app();
+    $$('[data-fs]').forEach(b => { b.hidden = hide; b.setAttribute('aria-label', on ? '退出全屏' : '全屏'); const p = b.querySelector('svg path'); if (p) p.setAttribute('d', on ? FS_EXIT : FS_ENTER); const l = b.querySelector('.lbl'); if (l) l.textContent = on ? '退出全屏' : '全屏'; });
+  },
+};
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => FS.sync()));
+FS.sync();
+function tryFullscreen() {
+  if (!TOUCH || FS.app() || FS.on() || !FS.can() || window.self !== window.top) return;
+  FS.enter().catch(() => {});
+}
+$('#btnFight').onclick = () => tryFullscreen() || startMatch({ mode: G.mode, p1: G.sel.p1, p2: G.sel.p2, stage: G.sel.stage, dummy: G.sel.dummy });
+$('#btnResume').onclick = () => resume();
+$('#btnRestart').onclick = () => startMatch(G.lastOpts);
+$('#btnQuit').onclick = () => { G.running = false; startDemo(); go('PG_TITLE'); };
+$('#btnToTitle').onclick = () => { startDemo(); go('PG_TITLE'); };
+$('#btnReselect').onclick = () => { startDemo(); go('PG_SELECT'); };
+$('#btnRematch').onclick = () => startMatch(G.lastOpts);
+$('#tPause').onclick = () => pause();
+$('#setReset').onclick = () => { Object.assign(CFG, DEFAULTS); saveSettings(); buildSettings(); };
+$('#setList').addEventListener('change', e => { const s = SETTINGS.find(x => x.key === e.target.dataset.key); if (s) { CFG[s.key] = s.opts[+e.target.value][0]; saveSettings(); } });
+function pause() { if (!G.running || G.paused) return; G.paused = true; go('PG_PAUSE'); }
+function resume() { G.paused = false; go('PG_BATTLE'); }
+const GAME_CODES = new Set(Object.values(KEYMAP).flatMap(m => Object.values(m).flat()));
+addEventListener('keydown', e => {
+  SFX.init();
+  if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey) { e.preventDefault(); FS.toggle(); return; }
+  if (G.page === 'PG_BATTLE') {
+    if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); pause(); return; }
+    if (GAME_CODES.has(e.code) || e.code === 'Space') e.preventDefault();
+    if (!e.repeat) Input.taps.add(e.code); Input.held.add(e.code); return;
+  }
+  if (G.page === 'PG_PAUSE' && (e.code === 'Escape' || e.code === 'KeyP')) { e.preventDefault(); resume(); return; }
+  if (e.target.tagName === 'SELECT' && /Arrow(Up|Down)/.test(e.code)) return;
+  const page = $('#' + G.page); if (!page) return;
+  const items = [...page.querySelectorAll('button,select')].filter(el => el.offsetParent !== null);
+  const i = items.indexOf(document.activeElement);
+  if (/^(ArrowDown|ArrowRight)$/.test(e.code)) { e.preventDefault(); (items[i + 1] || items[0])?.focus(); }
+  else if (/^(ArrowUp|ArrowLeft)$/.test(e.code)) { e.preventDefault(); (items[i - 1] || items[items.length - 1])?.focus(); }
+  else if (e.code === 'KeyJ') document.activeElement?.click?.();
+  else if (e.code === 'Escape') (page.querySelector('[data-back]') || page.querySelector('[data-go="PG_TITLE"]'))?.click();
+});
+addEventListener('keyup', e => Input.held.delete(e.code));
+addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('blur', () => { Input.clear(); pause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+$$('#touch button').forEach(b => {
+  const k = b.dataset.k;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); buzz(5); Input.touchHeld[k] = true; Input.touchTaps.add(k); b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (_) {} });
+  const up = () => { Input.touchHeld[k] = false; b.classList.remove('on'); };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => b.addEventListener(t, up));
+});
+
+window.DUANLIAN = { G, CFG, DROP_LEVELS, CHARS, STAGES, KEYMAP, EVENTS, on, startMatch, step, go };
+startDemo();
+requestAnimationFrame(loop);
+}
+</script>
+<script>
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>

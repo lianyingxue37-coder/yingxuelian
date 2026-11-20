@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "断链 · 1V1 格斗",
+  "short_name": "断链",
+  "description": "1V1 无限连段格斗：伤害按阶段阈值掉落，守方攒满能量即可破链。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#0a0807",
+  "theme_color": "#0a0807",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
