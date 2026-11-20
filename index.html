@@ -92,26 +92,28 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .set select{background:var(--ink2);border:1px solid var(--line);padding:.3em .6em;min-height:2.3em;border-radius:.2em}
 /* 对战页（触屏） */
 #PG_BATTLE{pointer-events:none}
-#touch{display:none}
-#PG_BATTLE.touch #touch{display:block}
-#stickZone{position:absolute;left:0;bottom:0;width:44%;height:72%;pointer-events:auto;touch-action:none}
-#stick{position:absolute;left:30%;top:62%;width:10.5em;height:10.5em;margin:-5.25em 0 0 -5.25em;pointer-events:none;--kx:0px;--ky:0px;opacity:.7;transition:opacity .15s}
+#touch{display:none;position:absolute;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);pointer-events:none;z-index:3;font-size:clamp(9px,2.9vmin,15px);color:var(--bone)}
+#wrap.battle #touch{display:block}
+#stickZone{position:absolute;left:0;bottom:0;width:46%;height:78%;pointer-events:auto;touch-action:none}
+#stick{position:absolute;left:0;top:0;width:10em;height:10em;margin:-5em 0 0 -5em;pointer-events:none;--kx:0px;--ky:0px;opacity:.6;transition:opacity .18s}
 #stick.on{opacity:1}
-#stick .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(239,233,223,.4);background:radial-gradient(circle,rgba(20,17,16,.2) 0 37%,rgba(20,17,16,.6) 38%)}
-#stick .ring i{position:absolute;font-style:normal;font-weight:700;font-size:.85em;line-height:1;color:rgba(239,233,223,.6)}
+#stick.thru:not(.on){opacity:.2}
+#stick .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(239,233,223,.42);background:radial-gradient(circle,rgba(20,17,16,.06) 0 37%,rgba(20,17,16,.26) 38%)}
+#stick .ring i{position:absolute;font-style:normal;font-weight:700;font-size:.85em;line-height:1;color:rgba(239,233,223,.7);text-shadow:0 1px 3px #000}
 #stick .u{top:.55em;left:50%;transform:translateX(-50%)}#stick .d{bottom:.55em;left:50%;transform:translateX(-50%)}
 #stick .l{left:.6em;top:50%;transform:translateY(-50%)}#stick .r{right:.6em;top:50%;transform:translateY(-50%)}
 #stick .ring i.on{color:var(--red)}
-#stick .knob{position:absolute;left:50%;top:50%;width:4.4em;height:4.4em;margin:-2.2em 0 0 -2.2em;border-radius:50%;background:rgba(239,233,223,.85);box-shadow:0 0 0 3px rgba(13,10,9,.55),0 .3em .8em rgba(0,0,0,.45);transform:translate(var(--kx),var(--ky))}
-#touch .pad.r{position:absolute;right:2%;bottom:3%;width:17em;height:13em;pointer-events:none}
-#touch .pad.r button{position:absolute;border-radius:50%;border:2px solid rgba(239,233,223,.4);background:rgba(20,17,16,.55);font-weight:700;touch-action:none;pointer-events:auto;padding:0}
-#touch .pad.r button.on{background:rgba(232,67,43,.7);border-color:var(--bone)}
-#touch .b-l{right:.4em;bottom:.4em;width:5.4em;height:5.4em}
-#touch .b-h{right:7.1em;bottom:.9em;width:4.4em;height:4.4em}
-#touch .b-s{right:.9em;bottom:7.1em;width:4.4em;height:4.4em}
-#touch .b-brk{right:5.6em;bottom:5.6em;width:3.9em;height:3.9em;border-color:rgba(232,67,43,.85)!important;color:#ffb8a8}
-#touch .b-fin{right:12em;bottom:1.3em;width:3.9em;height:3.9em}
-#touch .b-ast{right:10.3em;bottom:6.5em;width:3.6em;height:3.6em;border-color:rgba(214,164,74,.9)!important;color:#ffe2a8}
+#stick .knob{position:absolute;left:50%;top:50%;width:3.9em;height:3.9em;margin:-1.95em 0 0 -1.95em;border-radius:50%;background:rgba(239,233,223,.78);box-shadow:0 0 0 3px rgba(13,10,9,.45),0 .3em .8em rgba(0,0,0,.4);transform:translate(var(--kx),var(--ky))}
+#touch .pad.r{position:absolute;right:0;bottom:0;width:15.6em;height:11.1em;pointer-events:none}
+#touch .pad.r button{position:absolute;border-radius:50%;border:2px solid rgba(239,233,223,.45);background:rgba(20,17,16,.28);color:var(--bone);font-size:1em;font-weight:700;text-shadow:0 1px 3px #000;touch-action:none;pointer-events:auto;padding:0;opacity:.9;transition:opacity .18s}
+#touch .pad.r button.on{background:rgba(232,67,43,.7);border-color:var(--bone);opacity:1}
+#touch .pad.r button.thru:not(.on){opacity:.2}
+#touch .b-l{right:.6em;bottom:.6em;width:5.4em;height:5.4em}
+#touch .b-h{right:6.6em;bottom:.5em;width:4.5em;height:4.5em}
+#touch .b-fin{right:11.6em;bottom:.7em;width:4em;height:4em}
+#touch .b-s{right:.9em;bottom:6.6em;width:4.5em;height:4.5em}
+#touch .b-brk{right:5.9em;bottom:5.6em;width:4.3em;height:4.3em;border-color:rgba(232,67,43,.85)!important;color:#ffb8a8}
+#touch .b-ast{right:10.8em;bottom:5.4em;width:3.8em;height:3.8em;border-color:rgba(214,164,74,.9)!important;color:#ffe2a8}
 #wrap:fullscreen{background:#0a0807}#wrap:-webkit-full-screen{background:#0a0807}
 .hudbtn{position:absolute;top:2.4%;width:2.9cqw;height:2.9cqw;min-width:28px;min-height:28px;display:grid;place-items:center;padding:0;pointer-events:auto;background:rgba(13,10,9,.75);border:1px solid rgba(239,233,223,.3);border-radius:.25em;color:var(--bone)}
 .hudbtn:hover{border-color:var(--bone)}.hudbtn svg{width:62%;height:62%}
@@ -175,7 +177,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_CODEX">设定 ID 表</button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v0.5 · 背景为电脑自动对战演示</div>
+  <div class="ver">v0.5.1 · 背景为电脑自动对战演示</div>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
 </section>
 
@@ -188,10 +190,6 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 </div></section>
 
 <section class="page" id="PG_BATTLE">
-  <div id="touch">
-    <div id="stickZone"><div id="stick"><div class="ring"><i class="u">跳</i><i class="d">防</i><i class="l">◀</i><i class="r">▶</i></div><div class="knob"></div></div></div>
-    <div class="pad r"><button data-k="fin" class="b-fin">终结</button><button data-k="brk" class="b-brk">破链</button><button data-k="s" class="b-s">特</button><button data-k="h" class="b-h">重</button><button data-k="l" class="b-l">轻</button><button data-k="ast" class="b-ast">援</button></div>
-  </div>
   <button class="hudbtn" id="tPause" aria-label="暂停"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
   <button class="hudbtn" id="bFs" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg></button>
 </section>
@@ -232,6 +230,10 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 </div></section>
 <div id="toast" role="status"></div>
 </div>
+  <div id="touch">
+    <div id="stickZone"><div id="stick"><div class="ring"><i class="u">跳</i><i class="d">防</i><i class="l">◀</i><i class="r">▶</i></div><div class="knob"></div></div></div>
+    <div class="pad r"><button data-k="fin" class="b-fin">终结</button><button data-k="brk" class="b-brk">破链</button><button data-k="s" class="b-s">特</button><button data-k="h" class="b-h">重</button><button data-k="l" class="b-l">轻</button><button data-k="ast" class="b-ast">援</button></div>
+  </div>
 <div id="rotate">请把设备横过来游玩</div></div>
 
 <script>
@@ -265,7 +267,7 @@ const CFG = {
   BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16,
   PARRY_WINDOW: 6, PARRY_STUN: 26, PARRY_GAIN: 12, DOUBLE_TAP: 12,
   EMBER_DMG: 10, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80, ELIXIR: 60,
-  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float', CAMERA: true,
+  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float', CAMERA: true, TOUCH_LIFT: 64,
 };
 const CFG_DESC = {
   HP: '生命值上限', ROUND_TIME: '每回合秒数（0 = 不限时）', ROUNDS_TO_WIN: '获胜所需回合数',
@@ -279,7 +281,7 @@ const CFG_DESC = {
   GRD_REGEN: '护架每帧恢复量', GRD_CRUSH_STUN: '破防硬直（帧）',
   SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
   BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
-  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置',
+  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置', TOUCH_LIFT: '触屏时战斗画面最多上移多少像素，给按键让出底部',
   PARRY_WINDOW: '弹反判定：在被打中前多少帧内按下防御', PARRY_STUN: '被弹反后攻方的硬直（帧）', PARRY_GAIN: '弹反成功获得的破链能量',
   DOUBLE_TAP: '双击方向触发冲刺 / 后撤步的间隔（帧）', EMBER_DMG: '烬「余烬」每层伤害', ASSIST_CD: '外援冷却（帧）', ASSIST_START: '每回合开局外援剩余冷却（帧）',
   HEAL: '药师外援的回复量', ELIXIR: '回春丹的回复量', CAMERA: '动态镜头（连段时推近）',
@@ -495,7 +497,7 @@ const G = {
   page: 'PG_TITLE', prev: null, mode: 'cpu', demo: false, running: false, paused: false, autoP1: false,
   f: [], ai: [], stage: 'STG_01', round: 1, timer: 0, rs: 'RS_INTRO', rsT: 0, winner: null,
   hitstop: 0, slow: 0, shake: 0, flash: 0, parts: [], pops: [], banner: null, shards: [], shardT: 0, frame: 0,
-  log: [], dummy: 'stand', ents: [], cam: { x: 640, z: 1 }, camT: { cx: 640, z: 1, fy: 446 },
+  log: [], dummy: 'stand', ents: [], cam: { x: 640, z: 1, ly: 0 }, camT: { cx: 640, z: 1, fy: 446, ly: 0 }, liftT: 0,
   sel: { p1: 'CH_JIN', p2: 'CH_LAN', g1: 'GR_NONE', g2: 'GR_NONE', a1: 'AS_ARCHER', a2: 'AS_HOUND', stage: 'STG_01', dummy: 'stand' }, lastOpts: null,
   mvTab: 'CH_JIN', cxTab: 'pages',
 };
@@ -1345,7 +1347,8 @@ const RAIN = Array.from({ length: 150 }, () => ({ x: rand(0, W + 200), y: rand(0
 const LEAF = Array.from({ length: 34 }, () => ({ x: rand(0, W), y: rand(-H, H), v: rand(.6, 1.6), ph: rand(0, 6), r: rand(0, 6), sz: rand(5, 10) }));
 const SNOW = Array.from({ length: 130 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.6, 2), ph: rand(0, 6), sz: rand(1.2, 3.4) }));
 function drawStage(c) {
-  c.drawImage(bgCanvas(G.stage), 0, 0, W, H);
+  const bg = bgCanvas(G.stage); c.drawImage(bg, 0, 0, W, H);
+  if (G.camT.ly > .5) { c.drawImage(bg, 0, bg.height - 2, bg.width, 2, 0, H - 1, W, 150); c.fillStyle = 'rgba(10,8,7,.35)'; c.fillRect(0, H, W, 150); }
   if (G.stage === 'STG_02') {
     c.strokeStyle = 'rgba(220,235,230,.32)'; c.lineWidth = 1.5; c.beginPath();
     for (const r of RAIN) { r.y += r.v * .5; r.x -= r.v * .12; if (r.y > 640) { r.y = rand(-60, 0); r.x = rand(0, W + 200); } c.moveTo(r.x, r.y); c.lineTo(r.x + r.l * .25, r.y - r.l); }
@@ -1496,7 +1499,7 @@ function drawMarks(c) {
     }
   }
 }
-const toScreen = (x, y) => { const t = G.camT; return [(x - t.cx) * t.z + W / 2, (y - t.fy) * t.z + t.fy]; };
+const toScreen = (x, y) => { const t = G.camT; return [(x - t.cx) * t.z + W / 2, (y - t.fy) * t.z + t.fy - t.ly]; };
 const astKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「援」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].ast[0]);
 function mechText(f) {
   switch (f.ch.mech.id) {
@@ -1510,7 +1513,7 @@ function mechText(f) {
 }
 function infoLine(c, f, x, side) {
   const y = 118, a = AS_BY[f.assist], ready = f.astCD <= 0, r = 1 - f.astCD / CFG.ASSIST_CD, ix = side > 0 ? x + 12 : x - 12;
-  c.save();
+  c.save(); c.globalAlpha = hudA('inf' + f.idx, side > 0 ? x : x - 400, 100, side > 0 ? x + 400 : x, 128);
   c.beginPath(); c.arc(ix, y - 5, 12, 0, 7); c.fillStyle = 'rgba(13,10,9,.88)'; c.fill();
   c.beginPath(); c.moveTo(ix, y - 5); c.arc(ix, y - 5, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * r); c.closePath(); c.fillStyle = ready ? a.col : 'rgba(239,233,223,.32)'; c.fill();
   if (ready) { c.strokeStyle = a.col; c.lineWidth = 2; c.globalAlpha = .5 + .5 * Math.sin(G.frame * .2); c.beginPath(); c.arc(ix, y - 5, 15, 0, 7); c.stroke(); c.globalAlpha = 1; }
@@ -1519,9 +1522,10 @@ function infoLine(c, f, x, side) {
   const k = astKey(f), parts = [`${a.name}${ready ? (k ? ' · 按 ' + k : ' · 就绪') : ' · ' + Math.ceil(f.astCD / 60) + 's'}`];
   if (f.gear !== 'GR_NONE') parts.push(GEAR_BY[f.gear].name + (f.gear === 'GR_JADE' && f.jadeUsed ? '（已用）' : ''));
   parts.push(mechText(f));
-  c.fillStyle = ready ? BONE : MUTE; c.fillText(parts.join('  ·  '), side > 0 ? ix + 20 : ix - 20, y);
+  c.fillStyle = ready ? BONE : MUTE; otxt(c, parts.join('  ·  '), side > 0 ? ix + 20 : ix - 20, y);
   c.restore();
 }
+const otxt = (c, s, x, y) => { c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(13,10,9,.8)'; c.strokeText(s, x, y); c.fillText(s, x, y); };
 const txt = (c, s, x, y, size, font, fill, align = 'center', stroke = 6, weight = 400) => {
   c.font = `${weight} ${size}px ${font}`; c.textAlign = align; c.lineJoin = 'round'; c.lineWidth = stroke; c.strokeStyle = INK; c.strokeText(s, x, y); c.fillStyle = fill; c.fillText(s, x, y);
 };
@@ -1549,8 +1553,8 @@ function hpBar(c, f, x, y, w, side) {
   c.textBaseline = 'alphabetic';
   txt(c, f.ch.name, side > 0 ? x : x + w, y + h + 46, 30, FB, f.col, side > 0 ? 'left' : 'right', 5);
   c.font = `500 14px ${FU}`; c.fillStyle = MUTE; c.textAlign = side > 0 ? 'left' : 'right';
-  c.fillText(f.ch.title, side > 0 ? x + 40 : x + w - 40, y + h + 42);
-  c.font = `600 15px ${FN}`; c.textAlign = side > 0 ? 'right' : 'left'; c.fillStyle = BONE; c.fillText(Math.ceil(f.hp), side > 0 ? x + w : x, y + h + 30);
+  otxt(c, f.ch.title, side > 0 ? x + 40 : x + w - 40, y + h + 42);
+  c.font = `600 15px ${FN}`; c.textAlign = side > 0 ? 'right' : 'left'; c.fillStyle = BONE; otxt(c, Math.ceil(f.hp), side > 0 ? x + w : x, y + h + 30);
   for (let i = 0; i < CFG.ROUNDS_TO_WIN; i++) {
     const cx = side > 0 ? x + w - 52 - i * 18 : x + 52 + i * 18, cy = y + h + 40;
     c.save(); c.translate(cx, cy); c.rotate(Math.PI / 4); c.fillStyle = i < f.wins ? RED : 'rgba(239,233,223,.2)'; c.fillRect(-5, -5, 10, 10); c.restore();
@@ -1568,18 +1572,20 @@ function brkGauge(c, f, x, y, w, side) {
   c.textBaseline = 'alphabetic'; const lx = side > 0 ? x : x + w;
   txt(c, '破链', lx, y - 10, 26, FB, full ? col : BONE, side > 0 ? 'left' : 'right', 5);
   c.font = `600 15px ${FU}`; c.fillStyle = full ? BONE : MUTE; c.textAlign = side > 0 ? 'left' : 'right';
-  const k = brkKey(f); c.fillText(full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${cost}`, lx + (side > 0 ? 62 : -62), y - 13);
+  const k = brkKey(f); otxt(c, full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${cost}`, lx + (side > 0 ? 62 : -62), y - 13);
   c.restore();
 }
 function chainHUD(c, a) {
   const ch = a.chain, DL = DROP_LEVELS[ch.lv], L = a.idx === 0, x = L ? 48 : W - 48, al = L ? 'left' : 'right';
-  c.textBaseline = 'alphabetic';
+  c.save(); c.textBaseline = 'alphabetic';
+  c.globalAlpha = hudA('ch' + a.idx, L ? 40 : W - 340, 125, L ? 340 : W - 40, 312);
   txt(c, String(ch.hits), x, 222, 96, FN, BONE, al, 9, 700);
   const nw = c.measureText(String(ch.hits)).width;
   txt(c, '连', L ? x + nw + 12 : x - nw - 12, 218, 38, FB, BONE, al, 6);
   txt(c, DL.name, x, 278, 52, FB, DL.color, al, 7);
   c.font = `600 16px ${FU}`; c.textAlign = al; c.fillStyle = BONE; c.fillText(`掉落 Lv.${DL.lv} · 暂存 ${Math.round(ch.pending)}`, x, 306);
   const bx = 390, bw = 500, by = 102, bh = 12, max = DROP_LEVELS[DROP_LEVELS.length - 1].min * 1.15;
+  c.globalAlpha = hudA('mom', bx - 6, by - 6, bx + bw + 6, by + bh + 30);
   c.fillStyle = 'rgba(13,10,9,.85)'; c.fillRect(bx - 6, by - 6, bw + 12, bh + 36);
   c.fillStyle = '#3a2a26'; c.fillRect(bx, by, bw, bh);
   c.fillStyle = DL.color; const mw = bw * Math.min(1, ch.mom / max); if (L) c.fillRect(bx, by, mw, bh); else c.fillRect(bx + bw - mw, by, mw, bh);
@@ -1590,10 +1596,19 @@ function chainHUD(c, a) {
     c.fillStyle = passed ? d.color : MUTE; c.fillText(d.name, tx, by + bh + 16);
   }
   const wr = clamp(ch.win / ch.maxWin, 0, 1); c.fillStyle = wr < .3 ? RED : BONE; c.fillRect(bx + bw / 2 - bw / 2 * wr, by + bh + 22, bw * wr, 3);
+  c.restore();
+}
+const HUDA = {};
+function hudA(key, x0, y0, x1, y1, lo = .25) {
+  const hit = (G.fr || []).some(r => r[0] < x1 && r[2] > x0 && r[1] < y1 && r[3] > y0);
+  const a = HUDA[key] ?? 1; return (HUDA[key] = a + ((hit ? lo : 1) - a) * .2);
+}
+function fighterRects() {
+  return G.f.map(f => { const s = f.ch.scale, [x0, y0] = toScreen(f.x - 46 * s, f.y - 238 * s), [x1, y1] = toScreen(f.x + 48 * s, f.y); return [x0, y0, x1, y1]; });
 }
 function drawHUD(c) {
-  const [A, B] = G.f;
-  let g = c.createLinearGradient(0, 0, 0, 150); g.addColorStop(0, 'rgba(10,8,7,.62)'); g.addColorStop(1, 'rgba(10,8,7,0)'); c.fillStyle = g; c.fillRect(0, 0, W, 150);
+  const [A, B] = G.f; G.fr = fighterRects();
+  let g = c.createLinearGradient(0, 0, 0, 160); g.addColorStop(0, 'rgba(10,8,7,.66)'); g.addColorStop(.6, 'rgba(10,8,7,.3)'); g.addColorStop(1, 'rgba(10,8,7,0)'); c.fillStyle = g; c.fillRect(0, 0, W, 160);
   g = c.createLinearGradient(0, 620, 0, H); g.addColorStop(0, 'rgba(10,8,7,0)'); g.addColorStop(1, 'rgba(10,8,7,.6)'); c.fillStyle = g; c.fillRect(0, 620, W, 100);
   hpBar(c, A, 40, 24, 500, 1); hpBar(c, B, 740, 24, 500, -1);
   c.fillStyle = 'rgba(13,10,9,.9)'; c.fillRect(590, 14, 100, 68); c.strokeStyle = RED; c.lineWidth = 2; c.strokeRect(591, 15, 98, 66);
@@ -1613,10 +1628,10 @@ function drawHUD(c) {
   if (G.mode === 'train') {
     c.font = `500 14px ${FU}`; c.textAlign = 'center'; c.fillStyle = MUTE;
     const dm = DUMMY.find(d => d.key === G.dummy);
-    c.fillText(`训练模式 · 木桩：${dm ? dm.name : ''} · Esc 暂停`, 640, TOUCH ? 610 : 668);
-    if (G.lastMove) { const m = G.lastMove.m; c.fillStyle = BONE; c.fillText(`${m.id} ${m.name}　发生 ${m.startup} · 持续 ${m.active} · 收招 ${m.recovery} · 伤害 ${m.dmg} · 势 ${m.mom}`, 640, TOUCH ? 632 : 692); }
+    otxt(c, `训练模式 · 木桩：${dm ? dm.name : ''}${TOUCH ? '' : ' · Esc 暂停'}`, 640, TOUCH ? 610 : 668);
+    if (G.lastMove) { const m = G.lastMove.m; c.fillStyle = BONE; otxt(c, `${m.id} ${m.name}　发生 ${m.startup} · 持续 ${m.active} · 收招 ${m.recovery} · 伤害 ${m.dmg} · 势 ${m.mom}`, 640, TOUCH ? 632 : 692); }
     c.textAlign = 'right'; c.font = `500 12px ${FU}`;
-    G.log.forEach((l, i) => { c.fillStyle = `rgba(239,233,223,${.8 - i * .1})`; c.fillText(l, W - 40, 360 + i * 18); });
+    if (!B.chain) { c.save(); c.globalAlpha = hudA('log', W - 420, 140, W - 30, 290); G.log.forEach((l, i) => { c.fillStyle = `rgba(239,233,223,${.9 - i * .1})`; otxt(c, l, W - 40, 156 + i * 18); }); c.restore(); }
   }
 }
 function drawPops(c, world) {
@@ -1645,9 +1660,10 @@ function render() {
   let tz = 1, tx = W / 2;
   if (G.f.length === 2 && CFG.CAMERA && !G.demo) { const A = G.f[0], B = G.f[1], ch = A.chain || B.chain; tz = 1 + (ch ? .05 + ch.lv * .025 : 0) + Math.min(.04, G.hitstop * .004); tx = (A.x + B.x) / 2; }
   G.cam.z += (tz - G.cam.z) * .08; G.cam.x += (tx - G.cam.x) * .1;
-  const z = G.cam.z, half = W / (2 * z), cx = clamp(G.cam.x, half, W - half), fy = H * .62;
-  G.camT = { cx, z, fy };
-  c.translate(W / 2, fy); c.scale(z, z); c.translate(-cx, -fy);
+  G.cam.ly += ((G.demo || G.f.length < 2 ? 0 : G.liftT) - G.cam.ly) * .15;
+  const z = G.cam.z, half = W / (2 * z), cx = clamp(G.cam.x, half, W - half), fy = H * .62, ly = G.cam.ly;
+  G.camT = { cx, z, fy, ly };
+  c.translate(W / 2, fy - ly); c.scale(z, z); c.translate(-cx, -fy);
   drawStage(c);
   if (G.f.length) {
     drawShards(c);
@@ -1659,7 +1675,7 @@ function render() {
     drawMarks(c); drawParts(c); drawPops(c, true);
   }
   c.restore();
-  if (G.f.length && !G.demo) drawHUD(c);
+  if (G.f.length && !G.demo) { drawHUD(c); touchDim(); }
   drawPops(c, false); drawBanner(c);
   if (G.flash > 0) { c.fillStyle = `rgba(255,250,240,${G.flash})`; c.fillRect(0, 0, W, H); }
   if (G.demo) { c.fillStyle = 'rgba(10,8,7,.25)'; c.fillRect(0, 0, W, H); }
@@ -1684,8 +1700,8 @@ function go(id) {
   $$('.page').forEach(p => p.classList.toggle('on', p.id === id));
   ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings })[id]?.();
   Input.clear();
-  $('#PG_BATTLE').classList.toggle('touch', TOUCH);
-  if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); } catch (e) {} });
+  $('#wrap').classList.toggle('battle', id === 'PG_BATTLE' && TOUCH);
+  if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); calcLift(); } catch (e) {} });
   if (id !== 'PG_BATTLE') { const f = $(`#${id} .menu button, #${id} [aria-pressed=true], #${id} button`); f && f.focus({ preventScroll: true }); }
   else document.activeElement && document.activeElement.blur && document.activeElement.blur();
 }
@@ -1865,7 +1881,8 @@ $$('#touch button').forEach(b => {
 /* ---------- 虚拟摇杆：左右移动 · 上推跳 · 下拉防御 ---------- */
 const STK = { id: null, cx: 0, cy: 0 };
 const zone = $('#stickZone'), stick = $('#stick');
-function stickHome() { STK.cx = zone.clientWidth * .3; STK.cy = zone.clientHeight * .62; stick.style.left = STK.cx + 'px'; stick.style.top = STK.cy + 'px'; }
+const tEm = () => parseFloat(getComputedStyle($('#touch')).fontSize) || 11;
+function stickHome() { STK.cx = tEm() * 6.2; STK.cy = zone.clientHeight - tEm() * 6.2; stick.style.left = STK.cx + 'px'; stick.style.top = STK.cy + 'px'; }
 function stickSet(vx, vy) {
   const R = stick.offsetWidth * .34; stick.style.setProperty('--kx', vx * R + 'px'); stick.style.setProperty('--ky', vy * R + 'px');
   const th = Input.touchHeld, was = { up: th.up, guard: th.guard, left: th.left, right: th.right };
@@ -1892,7 +1909,23 @@ zone.addEventListener('pointerdown', e => {
 });
 zone.addEventListener('pointermove', stickMove);
 ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => zone.addEventListener(t, e => { if (e.pointerId === STK.id) stickReset(); }));
-addEventListener('resize', () => { if (STK.id === null && zone.clientWidth) stickHome(); });
+addEventListener('resize', () => { if (STK.id === null && zone.clientWidth) stickHome(); calcLift(); });
+/* 触屏：按键压到地面时把战斗画面上移；角色走到按键后面时按键自动变淡 */
+function calcLift() {
+  if (!TOUCH) { G.liftT = 0; return; }
+  const pr = $('#touch .pad.r').getBoundingClientRect(), ar = $('#app').getBoundingClientRect();
+  if (!pr.height || !ar.height) return;
+  const top = (pr.top - ar.top) * H / ar.height;
+  G.liftT = clamp(CFG.GROUND - top + 24, 0, CFG.TOUCH_LIFT);
+}
+const DIM_ELS = [...$$('#touch .pad.r button'), stick];
+let dimN = 0;
+function touchDim() {
+  if (!TOUCH || G.page !== 'PG_BATTLE' || G.f.length < 2 || ++dimN % 4) return;
+  const ar = $('#app').getBoundingClientRect(), k = ar.width / W;
+  const fr = fighterRects().map(([x0, y0, x1, y1]) => [ar.left + x0 * k, ar.top + y0 * k, ar.left + x1 * k, ar.top + y1 * k]);
+  for (const el of DIM_ELS) { const r = el.getBoundingClientRect(); el.classList.toggle('thru', fr.some(q => q[0] < r.right && q[2] > r.left && q[1] < r.bottom && q[3] > r.top)); }
+}
 
 window.DUANLIAN = { G, CFG, DROP_LEVELS, CHARS, STAGES, KEYMAP, EVENTS, on, startMatch, step, go };
 startDemo();
