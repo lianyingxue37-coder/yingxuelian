@@ -108,7 +108,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 #toast{position:absolute;left:50%;bottom:22%;transform:translateX(-50%);max-width:80%;background:rgba(13,10,9,.94);border:1px solid var(--red);padding:.6em 1.1em;border-radius:.25em;font-size:max(12px,1.2cqw);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
 #toast.on{opacity:1}
 #rotate{display:none;position:fixed;inset:0;place-items:center;background:#0a0807;z-index:9;font-size:18px;text-align:center;padding:2em}
-@media (orientation:portrait) and (max-width:820px){#rotate{display:grid}}
+@media (orientation:portrait) and (max-width:820px) and (pointer:coarse){#rotate{display:grid}}
 @media (max-width:700px){.cols{grid-template-columns:1fr}}
 </style>
 </head>
