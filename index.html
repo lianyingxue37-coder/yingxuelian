@@ -111,6 +111,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 #touch .b-s{right:.9em;bottom:7.1em;width:4.4em;height:4.4em}
 #touch .b-brk{right:5.6em;bottom:5.6em;width:3.9em;height:3.9em;border-color:rgba(232,67,43,.85)!important;color:#ffb8a8}
 #touch .b-fin{right:12em;bottom:1.3em;width:3.9em;height:3.9em}
+#touch .b-ast{right:10.3em;bottom:6.5em;width:3.6em;height:3.6em;border-color:rgba(214,164,74,.9)!important;color:#ffe2a8}
 #wrap:fullscreen{background:#0a0807}#wrap:-webkit-full-screen{background:#0a0807}
 .hudbtn{position:absolute;top:2.4%;width:2.9cqw;height:2.9cqw;min-width:28px;min-height:28px;display:grid;place-items:center;padding:0;pointer-events:auto;background:rgba(13,10,9,.75);border:1px solid rgba(239,233,223,.3);border-radius:.25em;color:var(--bone)}
 .hudbtn:hover{border-color:var(--bone)}.hudbtn svg{width:62%;height:62%}
@@ -122,6 +123,35 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 #toast.on{opacity:1}
 #rotate{display:none;position:fixed;inset:0;place-items:center;background:#0a0807;z-index:9;font-size:18px;text-align:center;padding:2em}
 @media (orientation:portrait) and (max-width:820px) and (pointer:coarse){#rotate{display:grid}}
+.page.on{animation:pgIn .22s ease-out}
+@keyframes pgIn{from{opacity:0;transform:scale(1.012)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.page.on{animation:none}}
+.sponsor{margin-top:1.1em;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.2em .9em;align-items:center;background:var(--ink);color:var(--bone);padding:.65em .8em .65em 1em;border-radius:.2em;max-width:24em}
+.sponsor b{font:400 1.45em/1 "Ma Shan Zheng",serif;color:var(--bone)}
+.sponsor .vx{font:600 1.08em "Oswald","Noto Sans SC",sans-serif;letter-spacing:.03em;user-select:text;-webkit-user-select:text}
+.sponsor .vx i{font:500 .78em "Noto Sans SC",sans-serif;font-style:normal;color:var(--mute);margin-right:.4em}
+.sponsor small{grid-column:1/-1;color:var(--mute);font-size:.76em;line-height:1.35}
+.sponsor button{grid-row:1/3;grid-column:2;background:var(--red);border:0;color:#fff;border-radius:.2em;padding:.35em 1em;min-height:2.4em;font-weight:700}
+.sponsor button:hover{background:#f05a40}
+.panel.wide{width:min(96%,82em)}
+.sides{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.1em;margin-bottom:.4em}
+.side{border:1px solid var(--line);padding:.6em .85em .7em;background:rgba(239,233,223,.025)}
+.side h3{margin:0 0 .45em;display:flex;align-items:baseline;gap:.6em;color:var(--bone);font-size:1em}
+.side h3 b{font:400 1.7em/1 "Ma Shan Zheng",serif;color:var(--red)}
+.side h3 span{color:var(--mute);font-weight:500}
+.roster{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.35em}
+.pc{display:grid;justify-items:center;gap:.05em;padding:.25em .15em .3em;background:rgba(239,233,223,.04);border:1px solid var(--line);border-radius:.2em}
+.pc canvas{width:100%;height:4.4em;display:block}
+.pc b{font:400 1.35em/1 "Ma Shan Zheng",serif}
+.pc[aria-pressed=true]{border-color:var(--red);background:rgba(232,67,43,.16);box-shadow:inset 0 -.2em 0 var(--red)}
+.detail{margin:.5em 0 .3em;font-size:.86em;line-height:1.5;color:#d9d1c6;min-height:4.4em}
+.detail .mech{color:var(--red);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:.3em;margin:.25em 0 0;align-items:center}
+.chips .lab{color:var(--mute);font-size:.8em;width:2.8em}
+.chip{background:none;border:1px solid var(--line);border-radius:99em;padding:.15em .75em;min-height:2em;font-size:.84em}
+.chip[aria-pressed=true]{background:var(--bone);color:var(--ink);border-color:var(--bone)}
+.hint{font-size:.76em;color:var(--mute);min-height:1.3em;margin:.15em 0 0 3.1em}
+@media(max-width:700px){.sides{grid-template-columns:1fr}}
 @media (max-width:700px){.cols{grid-template-columns:1fr}}
 </style>
 </head>
@@ -135,6 +165,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <h1>断链</h1>
     <div class="sub">1V1 无限连段格斗</div>
     <p class="rule">攻方可以一直连下去，伤害按阶段阈值“掉落”结算；守方攒满破链能量，就能把连段斩断。</p>
+    <div class="sponsor" id="sponsor"><b>赞助作者</b><button id="btnVx" type="button">复制</button><span class="vx"><i>微信</i>VX18530993088</span><small>喜欢这个游戏，欢迎请作者喝杯茶，支持后续更新</small></div>
   </div>
   <nav class="menu">
     <button data-mode="cpu">对战电脑<small>1P 对 CPU</small></button>
@@ -144,14 +175,13 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_CODEX">设定 ID 表</button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v0.4 · 背景为电脑自动对战演示</div>
+  <div class="ver">v0.5 · 背景为电脑自动对战演示</div>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
 </section>
 
-<section class="page" id="PG_SELECT"><div class="panel">
-  <h2>选择角色 <small id="selMode"></small></h2>
-  <div class="selrow"><div class="who">1P</div><div class="cards" id="pickP1"></div></div>
-  <div class="selrow"><div class="who" id="p2Who">CPU</div><div class="cards" id="pickP2"></div></div>
+<section class="page" id="PG_SELECT"><div class="panel wide">
+  <h2>备战 <small id="selMode"></small></h2>
+  <div class="sides"><div class="side" id="sideP1"></div><div class="side" id="sideP2"></div></div>
   <div class="selrow"><div class="who">场景</div><div class="cards" id="pickStage"></div></div>
   <div class="selrow" id="dummyRow"><div class="who">木桩</div><div class="cards" id="pickDummy"></div></div>
   <div class="actions"><button class="btn" data-go="PG_TITLE">返回</button><button class="btn primary" id="btnFight">开战</button></div>
@@ -160,7 +190,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 <section class="page" id="PG_BATTLE">
   <div id="touch">
     <div id="stickZone"><div id="stick"><div class="ring"><i class="u">跳</i><i class="d">防</i><i class="l">◀</i><i class="r">▶</i></div><div class="knob"></div></div></div>
-    <div class="pad r"><button data-k="fin" class="b-fin">终结</button><button data-k="brk" class="b-brk">破链</button><button data-k="s" class="b-s">特</button><button data-k="h" class="b-h">重</button><button data-k="l" class="b-l">轻</button></div>
+    <div class="pad r"><button data-k="fin" class="b-fin">终结</button><button data-k="brk" class="b-brk">破链</button><button data-k="s" class="b-s">特</button><button data-k="h" class="b-h">重</button><button data-k="l" class="b-l">轻</button><button data-k="ast" class="b-ast">援</button></div>
   </div>
   <button class="hudbtn" id="tPause" aria-label="暂停"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
   <button class="hudbtn" id="bFs" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg></button>
@@ -233,7 +263,9 @@ const CFG = {
   GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
   SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
   BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16,
-  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float',
+  PARRY_WINDOW: 6, PARRY_STUN: 26, PARRY_GAIN: 12, DOUBLE_TAP: 12,
+  EMBER_DMG: 10, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80, ELIXIR: 60,
+  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float', CAMERA: true,
 };
 const CFG_DESC = {
   HP: '生命值上限', ROUND_TIME: '每回合秒数（0 = 不限时）', ROUNDS_TO_WIN: '获胜所需回合数',
@@ -248,6 +280,9 @@ const CFG_DESC = {
   SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
   BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
   AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置',
+  PARRY_WINDOW: '弹反判定：在被打中前多少帧内按下防御', PARRY_STUN: '被弹反后攻方的硬直（帧）', PARRY_GAIN: '弹反成功获得的破链能量',
+  DOUBLE_TAP: '双击方向触发冲刺 / 后撤步的间隔（帧）', EMBER_DMG: '烬「余烬」每层伤害', ASSIST_CD: '外援冷却（帧）', ASSIST_START: '每回合开局外援剩余冷却（帧）',
+  HEAL: '药师外援的回复量', ELIXIR: '回春丹的回复量', CAMERA: '动态镜头（连段时推近）',
 };
 
 /* ---------- 二、掉落阶段（连段阈值）DL ----------
@@ -286,6 +321,7 @@ const MV = (id, name, startup, active, recovery, dmg, mom, grd, range, hbY, hbH,
   ({ id, name, startup, active, recovery, dmg, mom, grd, range, hbY, hbH, hitstop, pose, cpush: 6, ...extra });
 const CHARS = [
   { id: 'CH_JIN', name: '烬', title: '朱炎拳士', role: '均衡型：节奏稳定，最好上手',
+    mech: { id: 'MECH_EMBER', name: '余烬', desc: '连段中每击积 1 层余烬（最多 6）。连段结束时——哪怕被破链——余烬爆开，每层造成 10 点伤害（不会致死）。' },
     color: '#e8432b', dark: '#8f2414', alt: '#6f7f8c', altDark: '#38424a', skin: '#d9b08c', hair: '#1a1210', sash: '#efe9df',
     scarf: { at: 'head', n: 5, len: 13 }, build: 28, scale: 1.0,
     walk: 4.2, jump: 17, atk: 1.0, def: 1.0, brkGain: 1.0, chainWin: 1.0, grd: 100, stats: { 攻: 3, 速: 3, 守: 3 },
@@ -297,7 +333,8 @@ const CHARS = [
       AIR: MV('MV_JIN_AIR', '落焰', 6, 9, 8, 40, 14, 12, 112, 60, 64, 6, 'airkick', { cpush: 4 }),
       FIN: MV('MV_JIN_FIN', '烬灭', 14, 10, 30, 170, 0, 0, 152, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
     } },
-  { id: 'CH_LAN', name: '澜', title: '逐浪游侠', role: '速度型：出招快、连段窗口宽，单击伤害低',
+  { id: 'CH_LAN', name: '澜', title: '逐浪游侠', role: '速度型：出招快、连段窗口宽，单击伤害低', brkCost: 80,
+    mech: { id: 'MECH_FLOW', name: '回流', desc: '破链只需 80 能量；破链后 1.5 秒内起手的连段，直接带 55 连段势。' },
     color: '#1f8a8a', dark: '#0f4f52', alt: '#4b63a8', altDark: '#26335a', skin: '#e2c3a3', hair: '#0c1c1e', sash: '#dff3ef',
     scarf: { at: 'hip', n: 7, len: 15 }, build: 25, scale: 0.96,
     walk: 5.2, jump: 19, atk: 0.85, def: 1.05, brkGain: 1.0, chainWin: 1.25, grd: 90, stats: { 攻: 2, 速: 5, 守: 2 },
@@ -310,30 +347,90 @@ const CHARS = [
       FIN: MV('MV_LAN_FIN', '沧澜尽', 12, 12, 30, 150, 0, 0, 160, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
     } },
   { id: 'CH_YUE', name: '岳', title: '镇山力士', role: '力量型：出招慢，每击连段势高，护架厚',
+    mech: { id: 'MECH_ARMOR', name: '不动', desc: '重击、特技、前冲技在发生前带霸体：能硬吃一击（只受一半伤害）而不被打断。' },
     color: '#b0812f', dark: '#5f4318', alt: '#7d7d78', altDark: '#3e3e3a', skin: '#c79a72', hair: '#2a1d10', sash: '#3b2b1a',
     scarf: { at: 'head', n: 3, len: 10 }, build: 34, scale: 1.08,
     walk: 3.4, jump: 15, atk: 1.2, def: 0.88, brkGain: 0.9, chainWin: 0.9, grd: 140, stats: { 攻: 5, 速: 1, 守: 4 },
     moves: {
       L:   MV('MV_YUE_L',   '镇拳', 7, 3, 13, 36, 15, 12, 122, 135, 46, 6, 'punch', { cpush: 5 }),
-      H:   MV('MV_YUE_H',   '崩岩脚', 13, 5, 21, 66, 26, 24, 150, 85, 56, 10, 'kick', { cpush: 9 }),
-      S:   MV('MV_YUE_S',   '震岳', 17, 6, 24, 84, 34, 34, 176, 60, 90, 12, 'palm', { cpush: 10, lift: 36 }),
-      FS:  MV('MV_YUE_FS',  '山崩', 15, 9, 24, 72, 30, 26, 140, 115, 72, 10, 'lunge', { advance: 110, cpush: 7 }),
+      H:   MV('MV_YUE_H',   '崩岩脚', 13, 5, 21, 66, 26, 24, 150, 85, 56, 10, 'kick', { cpush: 9, armor: true }),
+      S:   MV('MV_YUE_S',   '震岳', 17, 6, 24, 84, 34, 34, 176, 60, 90, 12, 'palm', { cpush: 10, lift: 36, armor: true }),
+      FS:  MV('MV_YUE_FS',  '山崩', 15, 9, 24, 72, 30, 26, 140, 115, 72, 10, 'lunge', { advance: 110, cpush: 7, armor: true }),
       AIR: MV('MV_YUE_AIR', '坠石', 8, 8, 12, 50, 18, 16, 110, 60, 72, 7, 'airkick', { cpush: 5 }),
       FIN: MV('MV_YUE_FIN', '岳临', 18, 10, 34, 195, 0, 0, 160, 110, 130, 20, 'upper', { finisher: true, cpush: 0 }),
     } },
+  { id: 'CH_YING', name: '影', title: '夜行刺客', role: '技巧型：能瞬移绕背，出手快，单击偏轻',
+    mech: { id: 'MECH_SHADOW', name: '影步', desc: '后 + 特技：瞬移到对手身后，过程中无敌；连段中也能用来绕背换边。' },
+    color: '#4a6290', dark: '#24314b', alt: '#8c5a5a', altDark: '#4a2c2c', skin: '#d6b494', hair: '#0e0f14', sash: '#c9ced6',
+    scarf: { at: 'head', n: 6, len: 14 }, build: 24, scale: 0.98,
+    walk: 4.8, jump: 18, atk: 0.95, def: 1.05, brkGain: 1.05, chainWin: 1.1, grd: 85, stats: { 攻: 3, 速: 4, 守: 2 },
+    moves: {
+      L:   MV('MV_YING_L',   '刺', 4, 2, 10, 24, 11, 7, 125, 130, 40, 4, 'punch', { cpush: 3 }),
+      H:   MV('MV_YING_H',   '月牙踢', 9, 4, 16, 46, 18, 14, 150, 100, 56, 7, 'kick'),
+      S:   MV('MV_YING_S',   '影刃', 12, 7, 18, 58, 23, 18, 170, 118, 70, 8, 'palm', { lift: 20 }),
+      FS:  MV('MV_YING_FS',  '掠影', 8, 9, 18, 50, 21, 16, 132, 112, 60, 7, 'lunge', { advance: 190, cpush: 4 }),
+      BS:  MV('MV_YING_BS',  '影步', 4, 0, 12, 0, 0, 0, 0, 0, 0, 0, 'lungeW', { teleport: true, cpush: 0 }),
+      AIR: MV('MV_YING_AIR', '坠影', 5, 9, 8, 36, 13, 11, 116, 58, 64, 6, 'airkick', { cpush: 3 }),
+      FIN: MV('MV_YING_FIN', '无影', 12, 12, 30, 165, 0, 0, 156, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
+    } },
+  { id: 'CH_LING', name: '铃', title: '镇铃行者', role: '控制型：命中给对手挂“音”，用特技引爆压制对方的破链能量',
+    mech: { id: 'MECH_BELL', name: '铃音', desc: '每次命中给对手挂 1 枚“音”（最多 3）。特技「震铃」命中时引爆：每枚 +15 连段势、对手破链能量 -10。' },
+    color: '#3a9a6a', dark: '#1d5a3d', alt: '#b0577a', altDark: '#5e2b40', skin: '#e3c4a2', hair: '#2a1a12', sash: '#e8c45a',
+    scarf: { at: 'hip', n: 5, len: 12 }, build: 26, scale: 0.95,
+    walk: 4.0, jump: 17, atk: 0.95, def: 1.0, brkGain: 1.1, chainWin: 1.05, grd: 105, stats: { 攻: 3, 速: 3, 守: 3 },
+    moves: {
+      L:   MV('MV_LING_L',   '叩铃', 5, 3, 10, 26, 11, 8, 120, 132, 42, 5, 'punch', { cpush: 4 }),
+      H:   MV('MV_LING_H',   '回音踢', 10, 4, 17, 48, 19, 15, 148, 92, 54, 8, 'kick'),
+      S:   MV('MV_LING_S',   '震铃', 14, 8, 20, 60, 22, 20, 175, 115, 96, 9, 'palm', { ring: true }),
+      FS:  MV('MV_LING_FS',  '铃步', 10, 8, 20, 52, 22, 16, 134, 110, 62, 8, 'lunge', { advance: 140 }),
+      AIR: MV('MV_LING_AIR', '落铃', 6, 9, 8, 38, 14, 12, 112, 60, 64, 6, 'airkick', { cpush: 4 }),
+      FIN: MV('MV_LING_FIN', '钟鸣万籁', 14, 12, 30, 168, 0, 0, 160, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
+    } },
+];
+const COMMON = {
+  DASH:  MV('MV_DASH',  '冲刺', 1, 0, 13, 0, 0, 0, 0, 0, 0, 0, 'dash', { dash: 1, dist: 130 }),
+  BDASH: MV('MV_BDASH', '后撤步', 1, 0, 15, 0, 0, 0, 0, 0, 0, 0, 'bdash', { dash: -1, dist: 110, invF: 9 }),
+};
+const MECHS = [
+  { id: 'MECH_PARRY', name: '弹反', desc: '在被打中前约 0.1 秒内按下防御：不掉护架，攻方硬直，自己获得破链能量。' },
+  { id: 'MECH_DASH', name: '冲刺 / 后撤步', desc: '快速双击前 / 后方向。冲刺中可直接出招；后撤步开头无敌。' },
+  { id: 'MECH_CANCEL', name: '取消', desc: '攻击命中或被防御后，可立刻取消收招接下一招，立回也能打出连贯的压制。' },
 ];
 const CHAR = Object.fromEntries(CHARS.map(c => [c.id, c]));
-const MOVE_INPUT = { L: '轻击', H: '重击', S: '特技', FS: '前 + 特技', AIR: '空中 轻/重', FIN: '终结技（连段中）' };
+const MOVE_INPUT = { L: '轻击', H: '重击', S: '特技', FS: '前 + 特技', BS: '后 + 特技', AIR: '空中 轻/重', FIN: '终结技（连段中）' };
+const brkCost = f => f.ch.brkCost || CFG.BRK_COST;
 
 /* ---------- 五、场景 STG / 道具 IT / 页面 PG / 事件 EV ---------- */
 const STAGES = [
   { id: 'STG_01', name: '断桥', desc: '暮色里断成两截的石桥，铁链悬在缺口上' },
   { id: 'STG_02', name: '雨庭', desc: '雨夜庭院，朱红灯笼映在湿亮的石板上' },
+  { id: 'STG_03', name: '竹海', desc: '晨雾里的竹林，竹叶不停飘落' },
+  { id: 'STG_04', name: '雪寺', desc: '月下山寺，窗里亮着灯，雪一直在下' },
 ];
-const ITEMS = [{ id: 'IT_SHARD', name: '链晶', desc: '场上定时出现，未被锁定的一方触碰即可获得破链能量' }];
+const ITEMS = [
+  { id: 'IT_SHARD', name: '链晶', desc: '场上定时出现，未被锁定的一方触碰即可获得破链能量' },
+  { id: 'IT_ELIXIR', name: '回春丹', desc: '场上随机出现，触碰回复生命' },
+];
+const GEAR = [
+  { id: 'GR_NONE', name: '不带', desc: '不携带道具' },
+  { id: 'GR_JADE', name: '护心玉', desc: '每回合一次：被“掉落”结算时，这次结算伤害减半' },
+  { id: 'GR_GLASS', name: '流沙漏', desc: '自己的连段窗口延长 20%' },
+  { id: 'GR_BUCKLE', name: '断链扣', desc: '每回合开局破链能量 +30' },
+  { id: 'GR_FAN', name: '铁骨扇', desc: '护架 +40%，弹反判定多 3 帧' },
+  { id: 'GR_TALISMAN', name: '血符', desc: '造成的伤害 +12%，受到的伤害也 +12%' },
+];
+const GEAR_BY = Object.fromEntries(GEAR.map(g => [g.id, g]));
+const gearAtk = f => f.gear === 'GR_TALISMAN' ? 1.12 : 1, gearDef = f => f.gear === 'GR_TALISMAN' ? 1.12 : 1;
+const ASSISTS = [
+  { id: 'AS_GUARD', name: '铁卫', role: '持盾挡在身前约 2 秒，替你吃下对手的一次攻击', col: '#aab3bd' },
+  { id: 'AS_ARCHER', name: '弓手', role: '在身后射出一箭：命中可直接起手，连段中命中可接续连段', col: '#d6a44a' },
+  { id: 'AS_HOUND', name: '猎犬', role: '贴地扑向对手，命中使其踉跄；连段中命中可接续连段', col: '#c08a54' },
+  { id: 'AS_HEALER', name: '药师', role: '回复 80 生命与 15 破链能量', col: '#6fd39a' },
+];
+const AS_BY = Object.fromEntries(ASSISTS.map(a => [a.id, a]));
 const PAGES = [
-  { id: 'PG_TITLE', name: '标题 / 模式选择', desc: '对战电脑、双人对战、训练模式与各子页面入口；背景是电脑自动对战演示' },
-  { id: 'PG_SELECT', name: '角色与场景选择', desc: '1P 与 2P/CPU 角色、场景；训练模式下选择木桩行为' },
+  { id: 'PG_TITLE', name: '标题 / 模式选择', desc: '对战电脑、双人对战、训练模式与各子页面入口；左栏底部是赞助作者；背景是电脑自动对战演示' },
+  { id: 'PG_SELECT', name: '备战（角色 / 道具 / 外援 / 场景）', desc: '双方各选角色、携带道具与外援，再选场景；训练模式下选择木桩行为' },
   { id: 'PG_BATTLE', name: '对战', desc: '画布绘制战斗与 HUD；触屏设备显示虚拟按键' },
   { id: 'PG_PAUSE', name: '暂停', desc: 'Esc / P 打开' },
   { id: 'PG_RESULT', name: '结算', desc: '胜负与本场数据' },
@@ -345,7 +442,7 @@ const EVENTS = {
   EV_ROUND_START: '回合开始', EV_CHAIN_START: '起手命中，连段开始', EV_CHAIN_HIT: '连段中每次命中',
   EV_DROP_COMMIT: '越过阶段阈值，暂存伤害结算（掉落）', EV_CHAIN_DROP: '连段窗口耗尽，连段中断', EV_CHAIN_REPEAT: '同招重复过多，连段中断',
   EV_CHAIN_END: '连段以其他方式结束（破链 / 终结 / 时间到 / 击倒）', EV_BREAK: '守方破链', EV_FINISH: '终结技命中',
-  EV_GUARD: '防御成功', EV_GUARD_CRUSH: '破防', EV_SHARD_SPAWN: '链晶出现', EV_SHARD_PICK: '拾取链晶', EV_KO: '击倒', EV_TIMEUP: '时间到',
+  EV_GUARD: '防御成功', EV_GUARD_CRUSH: '破防', EV_PARRY: '弹反成功', EV_ASSIST: '呼叫外援', EV_MECH: '角色特性触发', EV_SHARD_SPAWN: '链晶出现', EV_SHARD_PICK: '拾取链晶', EV_KO: '击倒', EV_TIMEUP: '时间到',
 };
 const DUMMY = [
   { id: 'DM_STAND', key: 'stand', name: '站立', desc: '不动，不破链' },
@@ -354,18 +451,18 @@ const DUMMY = [
   { id: 'DM_CPU', key: 'cpu', name: '电脑', desc: '普通难度 AI' },
 ];
 const AI_LEVELS = [
-  { id: 'AI_EASY', name: '简单', react: 24, guard: .15, drop: .1, smart: 0, linkMin: 10, linkMax: 20, agg: .45, fin: .08 },
-  { id: 'AI_NORMAL', name: '普通', react: 12, guard: .4, drop: .04, smart: .45, linkMin: 4, linkMax: 11, agg: .65, fin: .2 },
-  { id: 'AI_HARD', name: '困难', react: 5, guard: .68, drop: .01, smart: 1, linkMin: 1, linkMax: 5, agg: .85, fin: .35 },
+  { id: 'AI_EASY', name: '简单', react: 24, guard: .15, drop: .1, smart: 0, linkMin: 10, linkMax: 20, agg: .45, fin: .08, parry: 0 },
+  { id: 'AI_NORMAL', name: '普通', react: 12, guard: .4, drop: .04, smart: .45, linkMin: 4, linkMax: 11, agg: .65, fin: .2, parry: .2 },
+  { id: 'AI_HARD', name: '困难', react: 5, guard: .68, drop: .01, smart: 1, linkMin: 1, linkMax: 5, agg: .85, fin: .35, parry: .45 },
 ];
 const HOOKS = {};
 const on = (ev, fn) => (HOOKS[ev] = HOOKS[ev] || []).push(fn);
 
 /* ---------- 六、按键 ---------- */
-const ACTIONS = { left: '左移', right: '右移', up: '跳跃', guard: '防御（按住）', l: '轻击', h: '重击', s: '特技（按住前方向 = 前冲技）', brk: '破链（被连时）', fin: '终结技（连段坠落阶段起）' };
+const ACTIONS = { left: '左移', right: '右移', up: '跳跃', guard: '防御（按住）', l: '轻击', h: '重击', s: '特技（按住前方向 = 前冲技）', brk: '破链（被连时）', fin: '终结技（连段坠落阶段起）', ast: '呼叫外援（冷却完毕时）' };
 const KEYMAP = {
-  P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], guard: ['KeyS'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'] },
-  P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], guard: ['ArrowDown'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'] },
+  P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], guard: ['KeyS'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'], ast: ['KeyU'] },
+  P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], guard: ['ArrowDown'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'], ast: ['KeyM', 'Numpad4'] },
 };
 const KN = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", Space: '空格' };
 const keyName = c => KN[c] || (c.startsWith('Key') ? c.slice(3) : c.startsWith('Numpad') ? '小键盘' + c.slice(6) : c);
@@ -383,6 +480,7 @@ const SETTINGS = [
   { id: 'SET_SOUND', label: '音效', key: 'SOUND', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '安卓有效', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_STICK', label: '触屏摇杆', key: 'STICK_MODE', note: '左半屏按下即出现摇杆', opts: [['float', '跟随手指'], ['fixed', '固定位置']] },
+  { id: 'SET_CAMERA', label: '动态镜头', key: 'CAMERA', note: '连段时镜头推近', opts: [[true, '开'], [false, '关']] },
 ];
 const DEFAULTS = Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]]));
 const SAVE_KEY = 'duanlian.settings.v1';
@@ -397,7 +495,8 @@ const G = {
   page: 'PG_TITLE', prev: null, mode: 'cpu', demo: false, running: false, paused: false, autoP1: false,
   f: [], ai: [], stage: 'STG_01', round: 1, timer: 0, rs: 'RS_INTRO', rsT: 0, winner: null,
   hitstop: 0, slow: 0, shake: 0, flash: 0, parts: [], pops: [], banner: null, shards: [], shardT: 0, frame: 0,
-  log: [], dummy: 'stand', sel: { p1: 'CH_JIN', p2: 'CH_LAN', stage: 'STG_01', dummy: 'stand' }, lastOpts: null,
+  log: [], dummy: 'stand', ents: [], cam: { x: 640, z: 1 }, camT: { cx: 640, z: 1, fy: 446 },
+  sel: { p1: 'CH_JIN', p2: 'CH_LAN', g1: 'GR_NONE', g2: 'GR_NONE', a1: 'AS_ARCHER', a2: 'AS_HOUND', stage: 'STG_01', dummy: 'stand' }, lastOpts: null,
   mvTab: 'CH_JIN', cxTab: 'pages',
 };
 const isHuman = f => !G.demo && (f.idx === 0 ? !G.autoP1 : G.mode === 'pvp');
@@ -458,6 +557,10 @@ const SFX = {
       case 'ko': this.tone(t, 70, 25, 1.6, 'sine', .9); this.noise(t, 1, 'lowpass', 600, .4); break;
       case 'round': this.tone(t, 196, 196, 1.2, 'triangle', .16); this.tone(t, 294, 294, 1.2, 'triangle', .1); break;
       case 'ui': this.tone(t, 660, 660, .05, 'square', .04); break;
+      case 'parry': this.tone(t, 1760, 1760, .25, 'sine', .14); this.tone(t, 2640, 2640, .3, 'sine', .08); this.noise(t, .08, 'highpass', 5000, .2); break;
+      case 'dash': this.noise(t, .14, 'bandpass', 600, .14, .8); break;
+      case 'assist': this.tone(t, 392, 523, .18, 'triangle', .12); this.tone(t + .08, 523, 659, .2, 'triangle', .1); break;
+      case 'ember': this.noise(t, .35, 'lowpass', 1800, .35); this.tone(t, 220, 60, .3, 'sawtooth', .06); break;
     }
   },
 };
@@ -487,6 +590,8 @@ const POSES = {
   down: P_(0, .1, .15, .1, -.12, -.1, 2.7, 2.9, 2.4, 2.8, -1.52),
   brk: P_(-.2, -.25, .6, .1, -.58, -.16, 2.45, 2.7, -2.45, -2.7),
   win: P_(0, -.1, .25, .05, -.25, -.05, 2.95, 3.1, .45, 1.95),
+  dash: P_(.5, -.1, .95, .25, -.7, -.5, 1.25, 1.85, -.35, .2),
+  bdash: P_(-.35, .15, .3, .1, -.6, -.2, 1.2, 2.45, .9, 2.25),
 };
 function skel(f) {
   const P = f.pose, s = f.ch.scale, T = 44 * s, S = 44 * s, TOR = 56 * s, HR = 15 * s, UA = 32 * s, FA = 30 * s;
@@ -516,24 +621,41 @@ function phys(f) {
   } else { f.x += f.vx; f.vx *= .82; if (Math.abs(f.vx) < .05) f.vx = 0; }
 }
 class Fighter {
-  constructor(idx, ch, alt) { this.idx = idx; this.ch = ch; this.alt = alt; this.wins = 0; this.stats = { maxHits: 0, maxLv: 0, dmg: 0, breaks: 0, shards: 0, fins: 0 }; this.reset(); }
+  constructor(idx, ch, alt, gear = 'GR_NONE', assist = 'AS_ARCHER') {
+    this.idx = idx; this.ch = ch; this.alt = alt; this.gear = gear; this.assist = assist; this.wins = 0;
+    this.stats = { maxHits: 0, maxLv: 0, dmg: 0, breaks: 0, shards: 0, fins: 0, parries: 0, assists: 0 }; this.reset();
+  }
   reset() {
-    Object.assign(this, { x: this.idx ? 850 : 430, y: CFG.GROUND, vx: 0, vy: 0, face: this.idx ? -1 : 1, hp: CFG.HP, trail: CFG.HP, brk: CFG.BRK_START,
-      grdMax: this.ch.grd, grd: this.ch.grd, state: 'ST_IDLE', t: 0, move: null, mt: 0, hitDone: false, stun: 0, inv: 0, chain: null, chainedBy: null,
-      flash: 0, buf: null, inp: EMPTY, airUsed: false, landed: false, walkPh: 0, hitAlt: false, refill: 0, denyT: 0, serial: -1 });
-    this.pose = { ...POSES.idle }; this.scarf = [];
+    Object.assign(this, { x: this.idx ? 850 : 430, y: CFG.GROUND, vx: 0, vy: 0, face: this.idx ? -1 : 1, hp: CFG.HP, trail: CFG.HP,
+      brk: Math.min(CFG.BRK_MAX, CFG.BRK_START + (this.gear === 'GR_BUCKLE' ? 30 : 0)),
+      grdMax: this.ch.grd * (this.gear === 'GR_FAN' ? 1.4 : 1), state: 'ST_IDLE', t: 0, move: null, mt: 0, hitDone: false, blockHit: false, stun: 0, inv: 0, chain: null, chainedBy: null,
+      flash: 0, buf: null, inp: EMPTY, airUsed: false, landed: false, walkPh: 0, hitAlt: false, refill: 0, denyT: 0, serial: -1,
+      ember: 0, marks: 0, markT: 0, flowT: 0, armorUsed: false, jadeUsed: false, astCD: CFG.ASSIST_START, parryT: -99, lastTapDir: 0, lastTapT: -99,
+      squash: 0, bounced: false });
+    this.grd = this.grdMax; this.pose = { ...POSES.idle }; this.pv = {}; this.scarf = []; this.ghosts = []; this.swoosh = [];
   }
   get grounded() { return this.y >= CFG.GROUND - .5 && this.vy >= 0; }
   get col() { return this.alt ? this.ch.alt : this.ch.color; }
-  setState(s) { this.state = s; this.t = 0; }
+  setState(s) { this.state = s; this.t = 0; if (s === 'ST_KNOCKDOWN') this.bounced = false; }
   intake(inp) {
     this.inp = inp; const p = inp.pressed; let a = null;
-    if (p.fin) a = 'FIN'; else if (p.s) a = (this.face > 0 ? inp.held.right : inp.held.left) ? 'FS' : 'S'; else if (p.h) a = 'H'; else if (p.l) a = 'L';
+    const fwd = this.face > 0 ? inp.held.right : inp.held.left, back = this.face > 0 ? inp.held.left : inp.held.right;
+    if (p.fin) a = 'FIN';
+    else if (p.s) a = (back && this.ch.moves.BS) ? 'BS' : fwd ? 'FS' : 'S';
+    else if (p.h) a = 'H'; else if (p.l) a = 'L';
+    if (p.guard) this.parryT = G.frame;
+    for (const [k, d] of [['right', 1], ['left', -1]]) if (p[k]) {
+      if (this.lastTapDir === d && G.frame - this.lastTapT <= CFG.DOUBLE_TAP) { a = a || (d === this.face ? 'DASH' : 'BDASH'); this.lastTapT = -99; }
+      else { this.lastTapDir = d; this.lastTapT = G.frame; }
+    }
+    if (inp.dash) a = a || inp.dash;
     if (a) this.buf = { act: a, t: CFG.BUFFER };
   }
   update(op) {
     this.t++; this.landed = false;
-    if (this.inv > 0) this.inv--; if (this.flash > 0) this.flash--;
+    if (this.inv > 0) this.inv--; if (this.flash > 0) this.flash--; if (this.squash > 0) this.squash--;
+    if (this.flowT > 0) this.flowT--;
+    if (this.marks && ++this.markT > 360) this.marks = 0;
     if (this.buf && --this.buf.t <= 0) this.buf = null;
     if (this.state !== 'ST_GUARD') this.grd = Math.min(this.grdMax, this.grd + CFG.GRD_REGEN);
     switch (this.state) {
@@ -542,19 +664,27 @@ class Fighter {
         if (this.y < CFG.GROUND || this.vy < 0) { this.vy += .38; this.y += this.vy; if (this.y >= CFG.GROUND) { this.y = CFG.GROUND; this.vy = 0; } }
         break;
       case 'ST_STAGGER': case 'ST_CRUSH': case 'ST_REPELLED': case 'ST_BREAK':
-        phys(this); if (--this.stun <= 0) this.setState('ST_IDLE'); break;
+        phys(this); if (this.landed) this.squash = 5; if (--this.stun <= 0) this.setState('ST_IDLE'); break;
       case 'ST_KNOCKDOWN':
-        phys(this); if (this.landed) dust(this.x, 10); if (--this.stun <= 0) { this.setState('ST_WAKEUP'); this.stun = 20; } break;
+        phys(this);
+        if (this.landed) { dust(this.x, 10); if (!this.bounced) { this.bounced = true; this.vy = -4.5; this.y -= 1; shake(4); } }
+        if (--this.stun <= 0) { this.setState('ST_WAKEUP'); this.stun = 20; } break;
       case 'ST_WAKEUP': if (--this.stun <= 0) { this.setState('ST_IDLE'); this.inv = Math.max(this.inv, 6); } break;
       case 'ST_ATTACK': this.updMove(); break;
       case 'ST_JUMP':
         phys(this);
         if (this.buf && (this.buf.act === 'L' || this.buf.act === 'H') && !this.airUsed) { this.buf = null; this.startMove('AIR'); }
-        else if (this.landed) { this.setState('ST_IDLE'); this.vx = 0; dust(this.x, 5); }
+        else if (this.landed) { this.setState('ST_IDLE'); this.vx = 0; this.squash = 7; dust(this.x, 5); }
         break;
       default: this.neutral(op, this.inp);
     }
     this.updPose(); this.updScarf();
+    const m = this.move, fast = this.state === 'ST_ATTACK' && m && (m.dash || m.teleport || (this.mt > m.startup - 2 && this.mt <= m.startup + m.active + 1));
+    if (fast) { this.ghosts.push({ x: this.x, y: this.y, face: this.face, pose: { ...this.pose } }); if (this.ghosts.length > 4) this.ghosts.shift(); }
+    else if (this.ghosts.length) this.ghosts.shift();
+    if (this.state === 'ST_ATTACK' && m && m.dmg > 0 && this.mt >= m.startup - 1 && this.mt <= m.startup + m.active + 2) {
+      const k = skel(this); this.swoosh.push(toWorld(this, m.pose === 'kick' || m.pose === 'airkick' ? k.ff : k.fh)); if (this.swoosh.length > 7) this.swoosh.shift();
+    } else if (this.swoosh.length) this.swoosh.splice(0, 2);
   }
   neutral(op, inp) {
     if (Math.abs(op.x - this.x) > 6) this.face = op.x > this.x ? 1 : -1;
@@ -567,56 +697,76 @@ class Fighter {
     }
     if (inp.held.guard) { if (this.state !== 'ST_GUARD') this.setState('ST_GUARD'); return; }
     const d = (inp.held.right ? 1 : 0) - (inp.held.left ? 1 : 0);
-    if (inp.pressed.up || inp.held.up) { this.vy = -this.ch.jump; this.vx = d * this.ch.walk * 1.15; this.y -= 1; this.airUsed = false; this.setState('ST_JUMP'); return; }
-    if (d) { this.x += d * this.ch.walk * (d === this.face ? 1 : .78); if (this.state !== 'ST_WALK') this.setState('ST_WALK'); this.walkPh += .2 * d * this.face; }
+    if (inp.pressed.up || inp.held.up) { this.vy = -this.ch.jump; this.vx = d * this.ch.walk * 1.15; this.y -= 1; this.airUsed = false; this.squash = 3; this.setState('ST_JUMP'); return; }
+    if (d) { this.x += d * this.ch.walk * (d === this.face ? 1 : .78); if (this.state !== 'ST_WALK') this.setState('ST_WALK'); this.walkPh += .2 * d * this.face; if (this.t % 14 === 0) dust(this.x - d * 14, 1); }
     else if (this.state !== 'ST_IDLE') this.setState('ST_IDLE');
   }
   startMove(a) {
     if (a === 'FIN') { if (!(this.chain && this.chain.lv >= CFG.FIN_MIN_LV) || !this.grounded) return false; }
+    else if (a === 'DASH' || a === 'BDASH') { if (!this.grounded) return false; }
     else if (!this.grounded) { if (this.airUsed) return false; a = 'AIR'; }
     else if (a === 'AIR') a = 'L';
-    const m = this.ch.moves[a]; if (!m) return false;
-    this.move = m; this.mt = 0; this.hitDone = false; this.serial = ++SERIAL; this.setState('ST_ATTACK');
+    const m = this.ch.moves[a] || COMMON[a]; if (!m) return false;
+    this.move = m; this.mt = 0; this.hitDone = false; this.blockHit = false; this.armorUsed = false; this.serial = ++SERIAL; this.setState('ST_ATTACK');
     if (a === 'AIR') this.airUsed = true; else this.vx = 0;
-    SFX.play('swing', m.dmg); G.lastMove = { who: this.idx, m };
+    if (m.teleport) this.inv = Math.max(this.inv, m.startup + m.recovery);
+    if (m.invF) this.inv = Math.max(this.inv, m.invF);
+    SFX.play(m.dash || m.teleport ? 'dash' : 'swing', m.dmg);
+    if (!m.dash) G.lastMove = { who: this.idx, m };
     return true;
   }
   updMove() {
     const m = this.move; this.mt++;
     const act = m.startup + m.active, total = act + m.recovery;
     if (m.advance && this.mt <= act) this.x += this.face * m.advance / act;
-    if (!this.grounded || this.vy < 0) { phys(this); if (this.landed) { this.move = null; this.setState('ST_IDLE'); this.vx = 0; return; } }
-    if (this.chain && this.hitDone && this.mt > m.startup + 1 && this.buf && !m.finisher) {   // 连段取消
+    if (m.dash) {
+      const u = this.mt / total; this.x += this.face * m.dash * (m.dist / total) * 2 * (1 - u);
+      if (this.mt % 4 === 1) dust(this.x - this.face * m.dash * 24, 1);
+      if (this.buf && this.mt > 3 && m.dash > 0) { const b = this.buf; this.buf = null; if (this.startMove(b.act)) return; }
+    }
+    if (m.teleport && this.mt === m.startup) {
+      const op = G.f[1 - this.idx], side = op.x >= this.x ? 1 : -1;
+      let nx = op.x + side * 95; if (nx < CFG.WALL_L + 10 || nx > CFG.WALL_R - 10) nx = op.x - side * 95;
+      ring(this.x, this.y - 100, this.col, 70, 6, 12); spark(this.x, this.y - 100, this.col, 8, 4);
+      this.x = clamp(nx, CFG.WALL_L, CFG.WALL_R); this.face = op.x >= this.x ? 1 : -1;
+      ring(this.x, this.y - 100, this.col, 6, 90, 16); spark(this.x, this.y - 100, BONE, 10, 6);
+      emit('EV_MECH', { who: this.idx, text: '影步' });
+    }
+    if (!this.grounded || this.vy < 0) { phys(this); if (this.landed) { this.move = null; this.setState('ST_IDLE'); this.vx = 0; this.squash = 7; dust(this.x, 5); return; } }
+    if ((this.chain || this.blockHit) && this.hitDone && this.mt > m.startup + 1 && this.buf && !m.finisher) {   // 命中 / 被防后取消
       const b = this.buf; this.buf = null;
-      if ((b.act !== 'FIN' || this.chain.lv >= CFG.FIN_MIN_LV) && this.startMove(b.act)) return;
+      if ((b.act !== 'FIN' || (this.chain && this.chain.lv >= CFG.FIN_MIN_LV)) && this.startMove(b.act)) return;
     }
     if (this.mt >= total) { this.move = null; this.setState(this.grounded ? 'ST_IDLE' : 'ST_JUMP'); }
   }
   updPose() {
-    const P = this.pose; let tgt = POSES.idle, k = .3;
+    const P = this.pose; let tgt = POSES.idle, k = .22, damp = .62;
     switch (this.state) {
+      case 'ST_IDLE': { const b = Math.sin(this.t * .06); tgt = { ...POSES.idle, lean: .08 + b * .035, fF: 2.35 + Math.sin(this.t * .06 + 1) * .1, bF: 2.05 + b * .08, fT: .38 - b * .02 }; k = .16; break; }
       case 'ST_WALK': {
         const s = Math.sin(this.walkPh), c = Math.cos(this.walkPh);
-        tgt = { ...POSES.idle, fT: .05 + s * .45, bT: .05 - s * .45, fU: .95 - s * .2, bU: .55 + s * .2 };
-        tgt.fS = tgt.fT - (.15 + .45 * Math.max(0, c)); tgt.bS = tgt.bT - (.15 + .45 * Math.max(0, -c)); k = .45; break;
+        tgt = { ...POSES.idle, lean: .14, fT: .05 + s * .45, bT: .05 - s * .45, fU: .95 - s * .2, bU: .55 + s * .2 };
+        tgt.fS = tgt.fT - (.15 + .45 * Math.max(0, c)); tgt.bS = tgt.bT - (.15 + .45 * Math.max(0, -c)); k = .35; damp = .5; break;
       }
-      case 'ST_JUMP': tgt = POSES.jump; break;
-      case 'ST_GUARD': tgt = POSES.guard; k = .45; break;
+      case 'ST_JUMP': tgt = this.vy < -4 ? POSES.jump : { ...POSES.jump, fT: .9, bT: .5, fS: .1, bS: -.2 }; k = .25; break;
+      case 'ST_GUARD': tgt = POSES.guard; k = .45; damp = .45; break;
       case 'ST_ATTACK': {
         const m = this.move;
-        if (this.mt <= m.startup) { tgt = POSES[m.pose + 'W']; k = .4; }
-        else if (this.mt <= m.startup + m.active + Math.floor(m.recovery * .4)) { tgt = POSES[m.pose]; k = .6; }
-        else { tgt = POSES.idle; k = .2; }
+        if (m.dash) { tgt = POSES[m.pose]; k = .4; damp = .45; }
+        else if (this.mt <= m.startup) { tgt = POSES[m.pose + 'W'] || POSES[m.pose]; k = .42; damp = .4; }
+        else if (this.mt <= m.startup + m.active + Math.floor(m.recovery * .4)) { tgt = POSES[m.pose]; k = .62; damp = .38; }
+        else { tgt = POSES.idle; k = .18; damp = .6; }
         break;
       }
-      case 'ST_CHAINED': tgt = this.hitAlt ? POSES.hit : POSES.hit2; k = .5; break;
-      case 'ST_STAGGER': case 'ST_REPELLED': case 'ST_CRUSH': tgt = POSES.stagger; break;
-      case 'ST_KNOCKDOWN': case 'ST_KO': tgt = POSES.down; k = .25; break;
+      case 'ST_CHAINED': tgt = this.hitAlt ? POSES.hit : POSES.hit2; k = .55; damp = .45; break;
+      case 'ST_STAGGER': case 'ST_REPELLED': case 'ST_CRUSH': tgt = POSES.stagger; k = .3; break;
+      case 'ST_KNOCKDOWN': case 'ST_KO': tgt = POSES.down; k = .22; damp = .55; break;
       case 'ST_WAKEUP': tgt = POSES.guard; k = .2; break;
-      case 'ST_BREAK': tgt = POSES.brk; k = .5; break;
-      case 'ST_WIN': tgt = POSES.win; k = .15; break;
+      case 'ST_BREAK': tgt = POSES.brk; k = .5; damp = .4; break;
+      case 'ST_WIN': tgt = POSES.win; k = .12; damp = .7; break;
     }
-    for (const key of PKEYS) P[key] += (tgt[key] - P[key]) * k;
+    const V = this.pv;
+    for (const key of PKEYS) { V[key] = (V[key] || 0) * damp + (tgt[key] - P[key]) * k; P[key] += V[key]; }
   }
   updScarf() {
     const k = skel(this), sc = this.ch.scarf, L = sc.len * this.ch.scale;
@@ -647,9 +797,15 @@ function resolveHits() {
   const [A, B] = G.f;
   for (const [a, d] of [[A, B], [B, A]]) {
     if (a.state !== 'ST_ATTACK' || a.hitDone) continue;
-    const m = a.move; if (a.mt <= m.startup || a.mt > m.startup + m.active) continue;
+    const m = a.move; if (!m.dmg || a.mt <= m.startup || a.mt > m.startup + m.active) continue;
+    const hr = hitRect(a);
+    const shield = G.ents.find(e => e.id === 'AS_GUARD' && e.owner === d && e.t < e.life - 8 && hr.l < e.x + 44 && hr.r > e.x - 44);
+    if (shield) {
+      a.hitDone = true; a.blockHit = true; shield.life = shield.t + 10; G.hitstop = Math.max(G.hitstop, 6); shake(6);
+      spark(shield.x - a.face * 20, a.y - m.hbY * a.ch.scale, '#cfd6de', 14, 8); pop('铁卫 · 挡下', shield.x, CFG.GROUND - 240, '#cfd6de', 24, FB); SFX.play('block'); continue;
+    }
     if (d.inv > 0 || (d.chainedBy && d.chainedBy !== a)) continue;
-    if (!overlap(hitRect(a), hurtRect(d))) continue;
+    if (!overlap(hr, hurtRect(d))) continue;
     a.hitDone = true; onHit(a, d, m);
   }
 }
@@ -659,40 +815,60 @@ function onHit(a, d, m) {
   if (a.chain && a.chain.target === d) return chainHit(a, d, m);
   if (d.state === 'ST_GUARD' && d.grounded) return block(a, d, m);
   if (m.finisher) return;
+  if (d.state === 'ST_ATTACK' && d.move && d.move.armor && d.mt <= d.move.startup && !d.armorUsed) return armorHit(a, d, m);
   const counter = d.state === 'ST_ATTACK';
   if (d.chain) endChain(d, 'drop');
   d.move = null; d.buf = null; d.chainedBy = a; d.setState('ST_CHAINED');
   a.chain = { target: d, hits: 0, mom: counter ? CFG.COUNTER_MOM : 0, lv: 0, pending: 0, committed: 0, last: null, rep: 0, win: 1, maxWin: 1, startHp: d.hp };
+  a.ember = 0;
   if (counter) pop('反击起手', d.x, d.y - 250, RED, 24, FB);
+  if (a.ch.mech.id === 'MECH_FLOW' && a.flowT > 0) { a.chain.mom += 55; a.flowT = 0; pop('回流', a.x, a.y - 250, a.col, 30, FB); emit('EV_MECH', { who: a.idx, text: '回流 +55 势' }); }
   emit('EV_CHAIN_START', { who: a.idx, text: counter ? '反击' : m.id });
   chainHit(a, d, m);
+}
+function armorHit(a, d, m) {
+  d.armorUsed = true; d.hp = Math.max(1, d.hp - m.dmg * .5 * a.ch.atk * d.ch.def * gearAtk(a) * gearDef(d));
+  d.flash = 3; G.hitstop = Math.max(G.hitstop, 7); shake(7); a.blockHit = true;
+  spark(d.x - a.face * 26, a.y - m.hbY * a.ch.scale, '#ffd38a', 12, 7); ring(d.x, d.y - 110, d.col, 20, 120, 16);
+  pop('不动', d.x, d.y - 245, d.col, 34, FB); SFX.play('block'); emit('EV_MECH', { who: d.idx, text: '霸体吃下 ' + m.id });
 }
 function chainHit(a, d, m) {
   const c = a.chain;
   if (m.finisher) return finisherHit(a, d, m);
   c.rep = c.last === m.id ? c.rep + 1 : 1; c.last = m.id;
   const DL = DROP_LEVELS[c.lv], rp = c.rep >= 2;
-  const dmg = m.dmg * DL.dmgMul * a.ch.atk * d.ch.def * (rp ? CFG.REPEAT_DMG_MUL : 1);
+  const dmg = m.dmg * DL.dmgMul * a.ch.atk * d.ch.def * gearAtk(a) * gearDef(d) * (rp ? CFG.REPEAT_DMG_MUL : 1);
   const imm = dmg * CFG.IMMEDIATE_RATIO;
   d.hp = Math.max(0, d.hp - imm); c.pending += dmg - imm; c.hits++;
   c.mom += m.mom * (rp ? CFG.REPEAT_MOM_MUL : 1);
   d.brk = Math.min(CFG.BRK_MAX, d.brk + DL.gain * d.ch.brkGain);
   a.brk = Math.min(CFG.BRK_MAX, a.brk + CFG.GAIN.landHit);
+  if (a.ch.mech.id === 'MECH_EMBER') a.ember = Math.min(6, a.ember + 1);
+  if (a.ch.mech.id === 'MECH_BELL') {
+    if (m.ring && d.marks > 0) {
+      const k = d.marks; c.mom += 15 * k; d.brk = Math.max(0, d.brk - 10 * k); d.marks = 0;
+      pop(`共鸣 ×${k}`, d.x, d.y - 280, '#e8c45a', 32, FB); ring(d.x, d.y - 120, '#e8c45a', 10, 160 + k * 30, 22); SFX.play('parry');
+      emit('EV_MECH', { who: a.idx, text: `共鸣 ×${k}` });
+    } else { d.marks = Math.min(3, d.marks + 1); d.markT = 0; }
+  }
   d.flash = 4; d.hitAlt = !d.hitAlt; d.x += a.face * m.cpush;
   if (m.lift) d.vy = Math.min(d.vy, -m.lift * .2);
   const hx = d.x - a.face * 22, hy = a.y - m.hbY * a.ch.scale;
   spark(hx, hy, DL.lv >= 3 ? DL.color : BONE, 7 + m.hitstop, 5 + m.hitstop * .6);
+  if (m.hitstop >= 8) ring(hx, hy, DL.lv >= 2 ? DL.color : BONE, 4, 40 + m.hitstop * 4, 10);
   G.hitstop = Math.max(G.hitstop, m.hitstop); shake(m.hitstop * .7);
   SFX.play('hit', m.dmg); buzz(6 + m.hitstop * 2);
   emit('EV_CHAIN_HIT', { who: a.idx, text: `${m.id} ${c.hits}连 势${Math.round(c.mom)}` });
   if (rp) pop(c.rep >= CFG.REPEAT_LIMIT ? '重复 · 断' : '重复 · 衰减', d.x, d.y - 230, MUTE, 20);
   while (a.chain && c.lv < DROP_LEVELS.length - 1 && c.mom >= DROP_LEVELS[c.lv + 1].min) { c.lv++; commit(a, d, true); }
   if (checkKO(d, a)) return;
-  c.maxWin = Math.round(CFG.CHAIN_WINDOW * CFG.WINDOW_MUL * a.ch.chainWin * (rp ? .75 : 1)); c.win = c.maxWin;
+  c.maxWin = Math.round(CFG.CHAIN_WINDOW * CFG.WINDOW_MUL * a.ch.chainWin * (a.gear === 'GR_GLASS' ? 1.2 : 1) * (rp ? .75 : 1)); c.win = c.maxWin;
   if (c.rep >= CFG.REPEAT_LIMIT) endChain(a, 'repeat');
 }
 function commit(a, d, threshold) {
-  const c = a.chain, n = c.pending; c.pending = 0; c.committed += n; d.hp = Math.max(0, d.hp - n);
+  const c = a.chain; let n = c.pending; c.pending = 0;
+  if (threshold && d.gear === 'GR_JADE' && !d.jadeUsed && n > 0) { d.jadeUsed = true; n *= .5; pop('护心玉 · 减半', d.x, d.y - 300, '#9fe0c8', 24, FB); }
+  c.committed += n; d.hp = Math.max(0, d.hp - n);
   d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.GAIN.commit * d.ch.brkGain);
   if (!threshold) return;
   const DL = DROP_LEVELS[c.lv];
@@ -705,7 +881,7 @@ function commit(a, d, threshold) {
 }
 function finisherHit(a, d, m) {
   const c = a.chain;
-  const dmg = m.dmg * a.ch.atk * d.ch.def * (1 + .2 * (c.lv - CFG.FIN_MIN_LV));
+  const dmg = m.dmg * a.ch.atk * d.ch.def * gearAtk(a) * gearDef(d) * (1 + .2 * (c.lv - CFG.FIN_MIN_LV));
   d.hp = Math.max(0, d.hp - dmg); c.hits++;
   commit(a, d, false);
   a.stats.fins++;
@@ -723,6 +899,11 @@ function endChain(a, reason) {
   const DL = DROP_LEVELS[c.lv];
   if (reason !== 'finish' && reason !== 'ko' && c.pending >= 1) pop(`暂存消散 ${Math.round(c.pending)}`, d.x, d.y - 260, BONE, 22);
   c.pending = 0;
+  if (a.ember > 0 && reason !== 'ko') {
+    const e = a.ember * CFG.EMBER_DMG; a.ember = 0; d.hp = Math.max(1, d.hp - e);
+    pop(`余烬 -${e}`, d.x, d.y - 295, '#ff9a5c', 28, FB); spark(d.x, d.y - 100, '#ff9a5c', 20, 9); ring(d.x, d.y - 100, '#ff9a5c', 8, 110, 16);
+    SFX.play('ember'); emit('EV_MECH', { who: a.idx, text: '余烬 ' + e });
+  }
   a.stats.dmg += Math.round(c.startHp - Math.max(0, d.hp));
   a.stats.maxHits = Math.max(a.stats.maxHits, c.hits); a.stats.maxLv = Math.max(a.stats.maxLv, c.lv);
   const label = { drop: '连段中断', repeat: '招式重复 · 中断', break: '断链', finish: '终结', time: '时间到', ko: '击倒' }[reason] || '';
@@ -735,7 +916,7 @@ function endChain(a, reason) {
   d.inv = d.stun + CFG.END_PROTECT;
 }
 function tryBreak(d) {
-  if (d.brk >= CFG.BRK_COST) return doBreak(d);
+  if (d.brk >= brkCost(d)) return doBreak(d);
   if (isHuman(d) && d.denyT < G.frame) { d.denyT = G.frame + 40; pop('破链能量不足', d.x, d.y - 240, MUTE, 20); }
 }
 function doBreak(d) {
@@ -743,7 +924,7 @@ function doBreak(d) {
   const c = a.chain, refund = c.pending, lv = c.lv;
   const ka = skel(a), h = toWorld(a, ka.fh), t = [d.x, d.y - 105 * d.ch.scale];
   for (let i = 0; i < 14; i++) { const u = i / 13; G.parts.push({ k: 'frag', x: lerp(h[0], t[0], u), y: lerp(h[1], t[1], u), vx: rand(-7, 7), vy: rand(-9, -2), g: .45, life: 50, max: 50, col: DROP_LEVELS[lv].color, rot: rand(0, 6), vr: rand(-.4, .4) }); }
-  d.brk -= CFG.BRK_COST; d.stats.breaks++;
+  d.brk -= brkCost(d); d.stats.breaks++;
   endChain(a, 'break');
   d.setState('ST_BREAK'); d.stun = 22; d.inv = CFG.BREAK_INV;
   a.move = null; a.buf = null; a.setState('ST_REPELLED'); a.stun = CFG.BREAK_STAGGER; a.vx = -a.face * CFG.BREAK_PUSH; a.vy = -7;
@@ -751,9 +932,12 @@ function doBreak(d) {
   const cx = d.x, cy = d.y - 110 * d.ch.scale;
   ring(cx, cy, BONE, 20, 440, 34); ring(cx, cy, d.col, 10, 300, 26); spark(cx, cy, BONE, 30, 14);
   banner('断链', `未结算的暂存伤害 ${Math.round(refund)} 已返还`, d.col);
+  if (d.ch.mech.id === 'MECH_FLOW') { d.flowT = 90; pop('回流 · 就绪', d.x, d.y - 280, d.col, 26, FB); }
   SFX.play('break'); buzz([30, 40, 90]); emit('EV_BREAK', { who: d.idx, text: `在 ${DROP_LEVELS[lv].id} 破链，返还 ${Math.round(refund)}` });
 }
 function block(a, d, m) {
+  a.blockHit = true;
+  if (G.frame - d.parryT <= CFG.PARRY_WINDOW + (d.gear === 'GR_FAN' ? 3 : 0)) return parry(a, d, m);
   d.grd -= m.grd; d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.GAIN.guard * d.ch.brkGain);
   d.x += a.face * m.cpush * 1.6; a.x -= a.face * m.cpush * .4;
   G.hitstop = Math.max(G.hitstop, Math.max(3, m.hitstop - 3));
@@ -762,6 +946,14 @@ function block(a, d, m) {
     d.grd = 0; d.setState('ST_CRUSH'); d.stun = CFG.GRD_CRUSH_STUN; shake(12);
     pop('破防', d.x, d.y - 240, RED, 40, FB); SFX.play('crush'); buzz(45); emit('EV_GUARD_CRUSH', { who: d.idx });
   }
+}
+function parry(a, d, m) {
+  d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.PARRY_GAIN); d.stats.parries++; d.parryT = -99;
+  a.move = null; a.buf = null; a.setState('ST_STAGGER'); a.stun = CFG.PARRY_STUN; a.vx = -a.face * 4;
+  G.hitstop = Math.max(G.hitstop, 10); G.slow = Math.max(G.slow, 14); G.flash = Math.max(G.flash, .22); shake(8);
+  const x = d.x - a.face * 30, y = a.y - (m.hbY || 110) * a.ch.scale;
+  ring(x, y, '#bfe9ff', 6, 120, 18); spark(x, y, '#e6f7ff', 16, 9);
+  pop('弹反', d.x, d.y - 245, '#bfe9ff', 42, FB); SFX.play('parry'); buzz([10, 20, 30]); emit('EV_PARRY', { who: d.idx });
 }
 function checkKO(d, a) {
   if (d.hp > 0) return false;
@@ -781,6 +973,81 @@ function timeUp() {
   G.rs = 'RS_KO'; G.rsT = 0; banner('时间到', G.winner ? `${G.winner.ch.name} 剩余生命更多` : '平手', BONE, 110); emit('EV_TIMEUP', {});
 }
 
+/* ---------- 外援 AS ---------- */
+const AS_MOVE = {
+  ARROW: MV('MV_AS_ARROW', '弓手 · 一箭', 0, 1, 0, 30, 15, 10, 0, 120, 30, 6, 'punch', { assist: true, cpush: 4 }),
+  HOUND: MV('MV_AS_HOUND', '猎犬 · 扑咬', 0, 1, 0, 24, 12, 8, 0, 40, 40, 6, 'kick', { assist: true, cpush: 6 }),
+};
+const NPC = {
+  AS_GUARD: { scale: 1.12, color: '#6f7780', dark: '#3c4248', skin: '#c9a88a', hair: '#1a1a1a', sash: '#b8bec6', scarf: { at: 'head', n: 3, len: 10 }, build: 36 },
+  AS_ARCHER: { scale: .95, color: '#8a6a32', dark: '#4a3818', skin: '#d8b48e', hair: '#22160c', sash: '#e8d39a', scarf: { at: 'head', n: 4, len: 12 }, build: 24 },
+  AS_HEALER: { scale: .92, color: '#2f7a55', dark: '#174230', skin: '#e2c2a0', hair: '#efe9df', sash: '#efe9df', scarf: { at: 'hip', n: 5, len: 12 }, build: 26 },
+};
+function callAssist(f) {
+  const busy = ['ST_KO', 'ST_WIN', 'ST_KNOCKDOWN', 'ST_WAKEUP', 'ST_CRUSH', 'ST_REPELLED', 'ST_STAGGER'].includes(f.state);
+  if (f.astCD > 0 || f.chainedBy || busy) {
+    if (isHuman(f) && f.denyT < G.frame) { f.denyT = G.frame + 40; pop(f.astCD > 0 ? `外援冷却中 · ${Math.ceil(f.astCD / 60)} 秒` : f.chainedBy ? '被锁定时不能呼叫外援' : '现在不能呼叫外援', f.x, f.y - 240, MUTE, 20); }
+    return;
+  }
+  f.astCD = CFG.ASSIST_CD; f.stats.assists++;
+  const id = f.assist, e = { id, owner: f, face: f.face, t: 0, x: f.x - f.face * 70, y: CFG.GROUND, alpha: 0, life: 60 };
+  if (id === 'AS_GUARD') { e.x = f.x + f.face * 80; e.life = 130; }
+  if (id === 'AS_ARCHER') { e.x = f.x - f.face * 110; e.life = 50; }
+  if (id === 'AS_HOUND') { e.x = f.x - f.face * 50; e.life = 75; }
+  if (id === 'AS_HEALER') { e.x = f.x - f.face * 90; e.life = 60; }
+  e.x = clamp(e.x, CFG.WALL_L, CFG.WALL_R);
+  if (NPC[id]) Object.assign(e, { ch: NPC[id], col: NPC[id].color, pose: { ...POSES.idle }, scarf: [], flash: 0, inv: 0, state: 'NPC', alt: false });
+  G.ents.push(e); ring(e.x, CFG.GROUND - 90, AS_BY[id].col, 10, 90, 16); spark(e.x, CFG.GROUND - 90, AS_BY[id].col, 10, 5);
+  pop(AS_BY[id].name, e.x, CFG.GROUND - 235, AS_BY[id].col, 28, FB);
+  SFX.play('assist'); buzz(12); emit('EV_ASSIST', { who: f.idx, text: id });
+}
+function npcPose(e, name) { const t = POSES[name]; for (const k of PKEYS) e.pose[k] += (t[k] - e.pose[k]) * .3; }
+function hitAt(px, py, w, op) { const r = hurtRect(op); return !!r && op.inv <= 0 && r.l < px + w && r.r > px - w && r.t < py && r.b > py; }
+function assistHit(f, op, m, e) {
+  if (op.chainedBy && op.chainedBy !== f) return;
+  if (f.chain && f.chain.target === op) { chainHit(f, op, m); return; }
+  if (op.state === 'ST_GUARD' && op.grounded) {
+    op.grd -= m.grd; spark(op.x - (e.vx > 0 ? 30 : -30), e.y, '#9fd3d0', 8, 6); SFX.play('block');
+    if (op.grd <= 0) { op.grd = 0; op.setState('ST_CRUSH'); op.stun = CFG.GRD_CRUSH_STUN; pop('破防', op.x, op.y - 240, RED, 40, FB); SFX.play('crush'); }
+    return;
+  }
+  if (m === AS_MOVE.HOUND) {
+    op.move = null; op.buf = null; op.setState('ST_STAGGER'); op.stun = 34; op.vx = (op.x >= e.x ? 1 : -1) * 5;
+    op.hp = Math.max(1, op.hp - m.dmg * gearDef(op)); op.flash = 4; spark(op.x, CFG.GROUND - 40, BONE, 12, 7);
+    pop('踉跄', op.x, op.y - 240, '#c08a54', 28, FB); SFX.play('hit', 20); G.hitstop = Math.max(G.hitstop, 5); shake(5); return;
+  }
+  onHit(f, op, m);
+}
+function updEnts() {
+  for (const e of G.ents) {
+    e.t++; const f = e.owner, op = G.f[1 - f.idx];
+    e.alpha = Math.min(1, e.t / 6) * Math.min(1, (e.life - e.t) / 8);
+    if (e.id === 'AS_GUARD') { e.face = op.x >= e.x ? 1 : -1; npcPose(e, 'guard'); }
+    else if (e.id === 'AS_ARCHER') {
+      e.face = op.x >= e.x ? 1 : -1; npcPose(e, e.t < 16 ? 'palmW' : 'palm');
+      if (e.t === 16) { G.ents.push({ id: 'ARROW', owner: f, x: e.x + e.face * 40, y: CFG.GROUND - 120, vx: e.face * 17, t: 0, life: 90, alpha: 1 }); SFX.play('swing', 30); }
+    }
+    else if (e.id === 'ARROW') {
+      e.x += e.vx;
+      if (op.state !== 'ST_KO' && hitAt(e.x, e.y, 22, op)) { e.life = e.t; assistHit(f, op, AS_MOVE.ARROW, e); }
+      if (e.x < -40 || e.x > W + 40) e.life = e.t;
+    }
+    else if (e.id === 'AS_HOUND') {
+      e.face = op.x >= e.x ? 1 : -1;
+      if (e.t > 8 && !e.hit) { e.x += e.face * 15; if (op.state !== 'ST_KO' && hitAt(e.x + e.face * 30, CFG.GROUND - 40, 30, op)) { e.hit = true; e.vx = e.face; e.y = CFG.GROUND - 40; e.life = e.t + 14; assistHit(f, op, AS_MOVE.HOUND, e); } }
+    }
+    else if (e.id === 'AS_HEALER') {
+      e.face = f.x >= e.x ? 1 : -1; npcPose(e, 'win');
+      if (e.t === 24) {
+        f.hp = Math.min(CFG.HP, f.hp + CFG.HEAL); f.trail = Math.max(f.trail, f.hp); f.brk = Math.min(CFG.BRK_MAX, f.brk + 15);
+        pop(`+${CFG.HEAL}`, f.x, f.y - 230, '#7fe0a8', 32, FN); SFX.play('shard');
+        for (let i = 0; i < 18; i++) G.parts.push({ k: 'dust', x: f.x + rand(-40, 40), y: f.y - rand(0, 170), vx: 0, vy: -rand(.6, 2.2), g: 0, life: 32, max: 32, col: 'rgba(127,224,168,', sz: rand(3, 6) });
+      }
+    }
+  }
+  G.ents = G.ents.filter(e => e.t < e.life);
+}
+
 /* ---------- AI ---------- */
 function smartBreak(d) {
   const a = d.chainedBy, c = a && a.chain; if (!c) return false;
@@ -789,14 +1056,14 @@ function smartBreak(d) {
   return next.min - c.mom <= maxMom + 1;
 }
 class AI {
-  constructor(level) { this.P = AI_LEVELS[level]; this.cd = 40; this.link = 0; this.guardT = 0; this.seen = -1; this.plan = null; this.delay = 0; this.walkT = 0; this.walkDir = 1; this.dropAt = -1; }
+  constructor(level) { this.P = AI_LEVELS[level]; this.cd = 40; this.link = 0; this.guardT = 0; this.seen = -1; this.seenBS = -1; this.plan = null; this.delay = 0; this.walkT = 0; this.walkDir = 1; this.dropAt = -1; }
   think(me, op) {
     const P = this.P, o = { held: {}, pressed: {} };
     const dx = op.x - me.x, dist = Math.abs(dx), tw = dx >= 0 ? 'right' : 'left', aw = dx >= 0 ? 'left' : 'right';
     if (me.state === 'ST_KO' || me.state === 'ST_WIN' || G.rs !== 'RS_FIGHT') return o;
     if (me.chainedBy) {
       const c = me.chainedBy.chain; if (!c) return o;
-      if (me.brk >= CFG.BRK_COST) {
+      if (me.brk >= brkCost(me)) {
         if (this.plan !== c) { this.plan = c; this.smart = Math.random() < P.smart; this.delay = randi(P.react, P.react * 3 + 20); }
         if (this.smart ? smartBreak(me) : --this.delay <= 0) o.pressed.brk = true;
       }
@@ -804,6 +1071,7 @@ class AI {
     }
     if (me.chain) {
       const c = me.chain, m = me.move;
+      if (me.astCD <= 0 && (me.assist === 'AS_ARCHER' || me.assist === 'AS_HOUND') && c.hits > 3 && Math.random() < .02) o.pressed.ast = true;
       const free = me.state !== 'ST_ATTACK' || (me.hitDone && me.mt > m.startup + 2);
       if (!free || this.dropAt === c) return o;
       if (this.link > 0) { this.link--; return o; }
@@ -817,11 +1085,21 @@ class AI {
       return o;
     }
     if (!['ST_IDLE', 'ST_WALK', 'ST_GUARD', 'ST_JUMP'].includes(me.state)) return o;
-    if (op.state === 'ST_ATTACK' && op.serial !== this.seen) {
-      this.seen = op.serial;
-      if (dist < op.move.range * op.ch.scale + (op.move.advance || 0) + 70 && Math.random() < P.guard) this.guardT = op.move.startup + op.move.active + 8;
+    if (me.astCD <= 0 && me.grounded) {
+      const want = me.assist === 'AS_HEALER' ? me.hp < CFG.HP * .5 : me.assist === 'AS_GUARD' ? (op.state === 'ST_ATTACK' && dist < 240) : (dist > 220 && Math.random() < .02 * P.agg);
+      if (want && Math.random() < .25) o.pressed.ast = true;
     }
-    if (this.guardT > 0 && me.grounded) { this.guardT--; o.held.guard = true; return o; }
+    if (op.state === 'ST_ATTACK' && op.move && op.move.dmg && op.serial !== this.seen) {
+      this.seen = op.serial;
+      const close = dist < op.move.range * op.ch.scale + (op.move.advance || 0) + 70;
+      if (close && me.ch.moves.BS && Math.random() < .12 * P.agg) { o.held[aw] = true; o.pressed.s = true; return o; }
+      if (close && Math.random() < P.guard) { this.guardT = op.move.startup + op.move.active + 8; this.parry = Math.random() < P.parry; }
+    }
+    if (this.guardT > 0 && me.grounded) {
+      this.guardT--; o.held.guard = true;
+      if (this.parry && op.state === 'ST_ATTACK' && op.move && op.mt === Math.max(1, op.move.startup - 2)) o.pressed.guard = true;
+      return o;
+    }
     if (this.cd > 0) this.cd--;
     const s = G.shards[0];
     if (s && Math.abs(s.x - me.x) + 40 < Math.abs(s.x - op.x) + 80 && Math.abs(s.x - me.x) > 18 && me.grounded) { o.held[s.x > me.x ? 'right' : 'left'] = true; return o; }
@@ -829,6 +1107,7 @@ class AI {
     if (op.y < CFG.GROUND - 60 && dist < 180 && this.cd <= 0 && Math.random() < P.agg * .5) { o.pressed.s = true; this.cd = 24; return o; }
     const sc = me.ch.scale, reachL = me.ch.moves.L.range * sc, reachH = me.ch.moves.H.range * sc, reachFS = me.ch.moves.FS.range * sc + me.ch.moves.FS.advance;
     if (dist > reachH + 5) {
+      if (this.cd <= 0 && dist > 320 && Math.random() < .012 * P.agg) { o.dash = 'DASH'; this.cd = 20; return o; }
       if (this.cd <= 0 && dist < reachFS && Math.random() < .04 * P.agg) { o.held[tw] = true; o.pressed.s = true; this.cd = randi(30, 60); return o; }
       if (this.cd <= 0 && Math.random() < .006 * P.agg) { o.held[tw] = true; o.pressed.up = true; this.cd = 30; return o; }
       if (this.walkT <= 0) { this.walkDir = Math.random() < .82 ? 1 : -1; this.walkT = randi(10, 30); }
@@ -856,7 +1135,7 @@ const buzz = p => { if (!CFG.VIBRATE || G.demo || !navigator.vibrate) return; tr
 function spark(x, y, col, n = 12, spd = 8) { for (let i = 0; i < n; i++) { const a = rand(0, Math.PI * 2), v = rand(spd * .4, spd); G.parts.push({ k: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: .2, life: randi(12, 24), max: 24, col, sz: rand(2, 4.5) }); } }
 function ring(x, y, col, r0, r1, life) { G.parts.push({ k: 'ring', x, y, r0, r1, life, max: life, col }); }
 function dust(x, n) { for (let i = 0; i < n; i++) G.parts.push({ k: 'dust', x: x + rand(-30, 30), y: CFG.GROUND - 4, vx: rand(-2.5, 2.5), vy: rand(-2, -.4), g: .02, life: randi(18, 30), max: 30, col: 'rgba(200,180,160,', sz: rand(4, 9) }); }
-function pop(text, x, y, col = BONE, size = 24, font = FU, life = 60) { if (G.demo) return; G.pops.push({ text, x: clamp(x, 110, W - 110), y, col, size, font, life, max: life }); }
+function pop(text, x, y, col = BONE, size = 24, font = FU, life = 60) { if (G.demo) return; G.pops.push({ text, x: clamp(x, 110, W - 110), y, col, size, font, life, max: life, w: x !== 640 }); }
 function banner(text, sub, col, life = 75) { if (!G.demo) G.banner = { text, sub, col, life, max: life }; }
 function updateFX() {
   G.shake *= .86; if (G.shake < .3) G.shake = 0;
@@ -871,18 +1150,18 @@ function updateFX() {
 /* ---------- 回合流程 ---------- */
 function startMatch(o) {
   G.lastOpts = o; G.mode = o.mode; G.demo = false; G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
-  G.f = [new Fighter(0, CHAR[o.p1], false), new Fighter(1, CHAR[o.p2], o.p1 === o.p2)];
+  G.f = [new Fighter(0, CHAR[o.p1], false, o.g1 || 'GR_NONE', o.a1 || 'AS_ARCHER'), new Fighter(1, CHAR[o.p2], o.p1 === o.p2, o.g2 || 'GR_NONE', o.a2 || 'AS_HOUND')];
   G.ai = [new AI(CFG.AI_LEVEL), new AI(o.mode === 'train' ? 1 : CFG.AI_LEVEL)];
   G.round = 1; G.log = []; G.lastMove = null; startRound(); go('PG_BATTLE'); SFX.init();
 }
 function startDemo() {
   G.demo = true; G.running = false; G.paused = false; G.mode = 'cpu'; G.autoP1 = false; G.stage = pick(STAGES).id;
   const a = pick(CHARS), b = pick(CHARS);
-  G.f = [new Fighter(0, a, false), new Fighter(1, b, a === b)]; G.ai = [new AI(1), new AI(1)]; G.round = 1; startRound();
+  G.f = [new Fighter(0, a, false, pick(GEAR).id, pick(ASSISTS).id), new Fighter(1, b, a === b, pick(GEAR).id, pick(ASSISTS).id)]; G.ai = [new AI(1), new AI(1)]; G.round = 1; startRound();
 }
 function startRound() {
   for (const f of G.f) f.reset();
-  Object.assign(G, { timer: CFG.ROUND_TIME * 60, rs: 'RS_INTRO', rsT: 0, shards: [], shardT: 0, parts: [], pops: [], hitstop: 0, slow: 0, winner: null, banner: null });
+  Object.assign(G, { timer: CFG.ROUND_TIME * 60, rs: 'RS_INTRO', rsT: 0, shards: [], shardT: 0, parts: [], pops: [], ents: [], hitstop: 0, slow: 0, winner: null, banner: null });
   if (G.demo) { G.f[0].x = 760; G.f[1].x = 1060; G.rsT = 80; return; }
   banner(`第 ${G.round} 回合`, G.mode === 'train' ? '训练模式 · 不会被击倒' : '', BONE, 60); SFX.play('round'); emit('EV_ROUND_START', { text: `R${G.round}` });
 }
@@ -897,7 +1176,7 @@ function endMatch() {
   const who = f => f.idx === 0 ? '1P' : G.mode === 'cpu' ? 'CPU' : '2P';
   $('#resTitle').textContent = w ? `${w.ch.name} 胜` : '平局';
   $('#resSub').textContent = w ? `${who(w)} · ${w.ch.title}　回合 ${w.wins} : ${(w === A ? B : A).wins}` : `回合 ${A.wins} : ${B.wins}`;
-  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['终结技', f => f.stats.fins], ['拾取链晶', f => f.stats.shards]];
+  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['弹反', f => f.stats.parries], ['终结技', f => f.stats.fins], ['呼叫外援', f => f.stats.assists], ['拾取道具', f => f.stats.shards]];
   $('#resTable').innerHTML = `<tr><th></th><th class="num">${who(A)} · ${A.ch.name}</th><th class="num">${who(B)} · ${B.ch.name}</th></tr>` + rows.map(([n, fn]) => `<tr><td>${n}</td><td class="num">${fn(A)}</td><td class="num">${fn(B)}</td></tr>`).join('');
   if (w) { w.move = null; w.setState('ST_WIN'); }
   go('PG_RESULT');
@@ -922,24 +1201,28 @@ function step() {
     clampAll(); return;
   }
   A.intake(inA); B.intake(inB);
-  for (const [d, inp] of [[A, inA], [B, inB]]) if (d.chainedBy && inp.pressed.brk) tryBreak(d);
+  for (const [d, inp] of [[A, inA], [B, inB]]) { if (d.chainedBy && inp.pressed.brk) tryBreak(d); if (inp.pressed.ast) callAssist(d); }
   if (G.hitstop > 0) { G.hitstop--; return; }
   A.update(B); B.update(A);
   resolveHits();
+  if (G.rs === 'RS_FIGHT') updEnts();
+  for (const f of G.f) if (f.astCD > 0 && !f.chainedBy) f.astCD--;
   if (G.rs !== 'RS_FIGHT') return;
   for (const f of G.f) if (f.chain && --f.chain.win <= 0) endChain(f, 'drop');
   for (const a of G.f) { const c = a.chain; if (c) { const d = c.target; d.x += (a.x + a.face * CFG.CHAIN_DIST * a.ch.scale - d.x) * .18; } }
   clampAll();
   for (const f of G.f) if (!f.chainedBy) f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.GAIN.passive);
   // 链晶
-  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? rand(780, 1060) : rand(360, 920); G.shards.push({ x, y: CFG.GROUND - 52, life: CFG.SHARD_LIFE, t: 0 }); emit('EV_SHARD_SPAWN', { text: `x=${Math.round(x)}` }); }
+  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? rand(780, 1060) : rand(360, 920); const type = Math.random() < .7 ? 'shard' : 'elixir'; G.shards.push({ x, y: CFG.GROUND - 52, life: CFG.SHARD_LIFE, t: 0, type }); emit('EV_SHARD_SPAWN', { text: `${type} x=${Math.round(x)}` }); }
   for (const s of G.shards) {
     s.t++; s.life--;
     for (const f of G.f) {
       if (f.chainedBy || ['ST_KO', 'ST_KNOCKDOWN', 'ST_WAKEUP'].includes(f.state)) continue;
       if (Math.abs(f.x - s.x) < 42 && s.y > f.y - 190 * f.ch.scale && s.y < f.y + 10) {
-        f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.SHARD_VALUE); s.life = 0; f.stats.shards++;
-        pop(`链晶 +${CFG.SHARD_VALUE}`, s.x, s.y - 50, f.col, 26, FB); spark(s.x, s.y, BONE, 16, 7); ring(s.x, s.y, f.col, 5, 90, 20);
+        s.life = 0; f.stats.shards++;
+        if (s.type === 'elixir') { f.hp = Math.min(CFG.HP, f.hp + CFG.ELIXIR); f.trail = Math.max(f.trail, f.hp); pop(`回春丹 +${CFG.ELIXIR}`, s.x, s.y - 50, '#7fe0a8', 26, FB); }
+        else { f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.SHARD_VALUE); pop(`链晶 +${CFG.SHARD_VALUE}`, s.x, s.y - 50, f.col, 26, FB); }
+        spark(s.x, s.y, BONE, 16, 7); ring(s.x, s.y, s.type === 'elixir' ? '#7fe0a8' : f.col, 5, 90, 20);
         SFX.play('shard'); emit('EV_SHARD_PICK', { who: f.idx }); break;
       }
     }
@@ -1009,19 +1292,72 @@ function paintRain(c) {
   c.fillStyle = 'rgba(225,240,235,.25)'; c.fillRect(0, 600, W, 2);
   c.strokeStyle = 'rgba(225,240,235,.07)'; c.lineWidth = 2; for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 120, 603); c.lineTo(640 + i * 280, H); c.stroke(); }
 }
+function paintBamboo(c) {
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#d6e6d8'); g.addColorStop(.55, '#94b9a2'); g.addColorStop(1, '#4f7a64'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  g = c.createRadialGradient(980, 170, 0, 980, 170, 280); g.addColorStop(0, 'rgba(255,250,228,.75)'); g.addColorStop(1, 'rgba(255,250,228,0)'); c.fillStyle = g; c.fillRect(600, 0, 680, 520);
+  const layer = (seed, n, col, wMin, wMax, alpha) => {
+    const r = seeded(seed); c.globalAlpha = alpha;
+    for (let i = 0; i < n; i++) {
+      const x = r() * W, w = wMin + r() * (wMax - wMin), lean = (r() - .5) * 40;
+      c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'butt'; c.beginPath(); c.moveTo(x, 640); c.quadraticCurveTo(x + lean * .4, 300, x + lean, -20); c.stroke();
+      c.strokeStyle = 'rgba(20,40,28,.3)'; c.lineWidth = 2;
+      for (let y = 600; y > 0; y -= 55 + r() * 50) { const xx = x + lean * ((640 - y) / 660); c.beginPath(); c.moveTo(xx - w / 2 - 1, y); c.lineTo(xx + w / 2 + 1, y); c.stroke(); }
+      c.fillStyle = col;
+      for (let k = 0; k < 6; k++) { const ly = 30 + r() * 420, lx = x + lean * ((640 - ly) / 660); c.save(); c.translate(lx, ly); c.rotate((r() - .5) * 1.4 + (r() < .5 ? 0 : Math.PI)); c.beginPath(); c.ellipse(20, 0, 24, 4.5, 0, 0, 7); c.fill(); c.restore(); }
+    }
+    c.globalAlpha = 1;
+  };
+  layer(3, 26, '#b4d1bd', 4, 8, .7); layer(5, 18, '#78a389', 7, 12, .85);
+  g = c.createLinearGradient(0, 380, 0, 580); g.addColorStop(0, 'rgba(232,242,234,0)'); g.addColorStop(1, 'rgba(232,242,234,.6)'); c.fillStyle = g; c.fillRect(0, 380, W, 200);
+  layer(9, 9, '#2f5440', 12, 18, 1);
+  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#3d4c36'); g.addColorStop(1, '#192117'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
+  c.fillStyle = '#62765a'; c.fillRect(0, 600, W, 3);
+  const r = seeded(13); c.fillStyle = 'rgba(200,205,130,.35)'; for (let i = 0; i < 70; i++) { c.beginPath(); c.ellipse(r() * W, 612 + r() * 100, 7, 2.2, r() * 3, 0, 7); c.fill(); }
+}
+function paintSnow(c) {
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#0d131e'); g.addColorStop(.6, '#243149'); g.addColorStop(1, '#4b5b76'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const r = seeded(21); c.fillStyle = '#f0f3fa'; for (let i = 0; i < 90; i++) { c.globalAlpha = .25 + r() * .7; c.fillRect(r() * W, r() * 330, 1.6, 1.6); } c.globalAlpha = 1;
+  g = c.createRadialGradient(250, 150, 0, 250, 150, 130); g.addColorStop(0, 'rgba(240,244,255,.9)'); g.addColorStop(.3, 'rgba(220,230,255,.3)'); g.addColorStop(1, 'rgba(220,230,255,0)'); c.fillStyle = g; c.fillRect(100, 0, 320, 300);
+  c.fillStyle = '#f2f4fa'; c.beginPath(); c.arc(250, 150, 42, 0, 7); c.fill();
+  ridge(c, seeded(27), 470, 80, '#34415c', 70);
+  const roof = (cx, y, w, h) => {
+    const shape = (d) => { c.beginPath(); c.moveTo(cx - w / 2 - 40 + d, y + h - d * .6); c.quadraticCurveTo(cx - w * .3, y + h * .55, cx - w * .18, y + d * .6); c.lineTo(cx + w * .18, y + d * .6); c.quadraticCurveTo(cx + w * .3, y + h * .55, cx + w / 2 + 40 - d, y + h - d * .6); c.closePath(); c.fill(); };
+    c.fillStyle = '#dfe6f2'; shape(0); c.fillStyle = '#121822'; shape(9);
+  };
+  c.fillStyle = '#121822'; c.fillRect(800, 330, 320, 280); roof(960, 248, 380, 92); c.fillStyle = '#121822'; c.fillRect(845, 218, 230, 44); roof(960, 168, 260, 72);
+  c.fillStyle = 'rgba(255,190,120,.85)'; for (const x of [848, 918, 988, 1058]) c.fillRect(x, 420, 26, 52);
+  g = c.createRadialGradient(960, 450, 0, 960, 450, 220); g.addColorStop(0, 'rgba(255,190,120,.18)'); g.addColorStop(1, 'rgba(255,190,120,0)'); c.fillStyle = g; c.fillRect(740, 250, 440, 380);
+  const pine = (x, y, s) => { c.fillStyle = '#0c121b'; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(x, y - s * (1 - i * .2)); c.lineTo(x - s * (.22 + i * .1), y - s * (.5 - i * .16)); c.lineTo(x + s * (.22 + i * .1), y - s * (.5 - i * .16)); c.fill(); } c.fillRect(x - 4, y - s * .2, 8, s * .2);
+    c.fillStyle = 'rgba(223,230,242,.75)'; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(x, y - s * (1 - i * .2)); c.lineTo(x - s * (.1 + i * .05), y - s * (.82 - i * .18)); c.lineTo(x + s * (.1 + i * .05), y - s * (.82 - i * .18)); c.fill(); } };
+  pine(110, 610, 250); pine(215, 610, 180); pine(690, 610, 150);
+  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#c4cfdf'); g.addColorStop(1, '#76839a'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
+  c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(0, 600, W, 3);
+  c.strokeStyle = 'rgba(40,52,74,.12)'; c.lineWidth = 2; for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 120, 603); c.lineTo(640 + i * 280, H); c.stroke(); }
+}
+const PAINT = { STG_01: paintBridge, STG_02: paintRain, STG_03: paintBamboo, STG_04: paintSnow };
 function bgCanvas(id) {
   if (BG[id]) return BG[id];
   const b = document.createElement('canvas'); b.width = W * DPR; b.height = H * DPR; const c = b.getContext('2d'); c.scale(DPR, DPR);
-  (id === 'STG_02' ? paintRain : paintBridge)(c); return (BG[id] = b);
+  (PAINT[id] || paintBridge)(c); return (BG[id] = b);
 }
 const AMB = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.3, 1.2), ph: rand(0, 6), sz: rand(1, 3) }));
 const RAIN = Array.from({ length: 150 }, () => ({ x: rand(0, W + 200), y: rand(0, H), l: rand(14, 30), v: rand(14, 22) }));
+const LEAF = Array.from({ length: 34 }, () => ({ x: rand(0, W), y: rand(-H, H), v: rand(.6, 1.6), ph: rand(0, 6), r: rand(0, 6), sz: rand(5, 10) }));
+const SNOW = Array.from({ length: 130 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.6, 2), ph: rand(0, 6), sz: rand(1.2, 3.4) }));
 function drawStage(c) {
   c.drawImage(bgCanvas(G.stage), 0, 0, W, H);
   if (G.stage === 'STG_02') {
     c.strokeStyle = 'rgba(220,235,230,.32)'; c.lineWidth = 1.5; c.beginPath();
     for (const r of RAIN) { r.y += r.v * .5; r.x -= r.v * .12; if (r.y > 640) { r.y = rand(-60, 0); r.x = rand(0, W + 200); } c.moveTo(r.x, r.y); c.lineTo(r.x + r.l * .25, r.y - r.l); }
     c.stroke();
+  } else if (G.stage === 'STG_03') {
+    for (const l of LEAF) {
+      l.y += l.v; l.x += Math.sin(G.frame * .03 + l.ph) * 1.2 - .3; l.r += .04; if (l.y > 640) { l.y = rand(-80, -10); l.x = rand(0, W + 100); }
+      c.save(); c.translate(l.x, l.y); c.rotate(l.r); c.fillStyle = 'rgba(176,196,110,.75)'; c.beginPath(); c.ellipse(0, 0, l.sz, l.sz * .28, 0, 0, 7); c.fill(); c.restore();
+    }
+  } else if (G.stage === 'STG_04') {
+    c.fillStyle = 'rgba(244,247,255,.85)';
+    for (const s of SNOW) { s.y += s.v; s.x += Math.sin(G.frame * .02 + s.ph) * .6; if (s.y > 660) { s.y = rand(-40, 0); s.x = rand(0, W); } c.beginPath(); c.arc(s.x, s.y, s.sz, 0, 7); c.fill(); }
   } else {
     c.strokeStyle = '#1a0d0b'; c.lineWidth = 3;
     for (const [ax, ph] of [[506, 0], [770, 2]]) {
@@ -1035,12 +1371,15 @@ function line(c, a, b) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1
 function drawFighter(c, f) {
   const k = skel(f), s = k.s, ch = f.ch, white = f.flash > 0;
   const col = white ? '#fff' : f.col, dk = white ? '#fff' : (f.alt ? ch.altDark : ch.dark);
-  if (f.inv > 0 && (f.state === 'ST_BREAK' || f.state === 'ST_WAKEUP') && G.frame % 4 < 2) c.globalAlpha = .55;
+  const A0 = c.globalAlpha;
+  if (f.inv > 0 && (f.state === 'ST_BREAK' || f.state === 'ST_WAKEUP') && G.frame % 4 < 2) c.globalAlpha = A0 * .55;
   if (f.scarf.length) {
     c.lineCap = 'round'; c.strokeStyle = white ? '#fff' : ch.sash;
     for (let i = 1; i < f.scarf.length; i++) { c.lineWidth = Math.max(2, (9 - i * 1.1) * s); line(c, f.scarf[i - 1], f.scarf[i]); }
   }
-  c.save(); c.translate(f.x + (f.state === 'ST_CHAINED' ? rand(-2, 2) : 0), f.y); c.scale(f.face, 1);
+  c.save(); c.translate(f.x + (f.state === 'ST_CHAINED' ? rand(-2, 2) : 0), f.y);
+  if (f.squash > 0) { const q = f.squash / 7; c.scale(1 + q * .1, 1 - q * .12); }
+  c.scale(f.face, 1);
   if (Math.abs(f.pose.rot) > .01) { c.translate(0, -9 * s); c.rotate(f.pose.rot); }
   c.lineCap = 'round'; c.lineJoin = 'round';
   const seg = (a, b, w, fill) => { c.strokeStyle = INK; c.lineWidth = w + 5; line(c, a, b); c.strokeStyle = fill; c.lineWidth = w; line(c, a, b); };
@@ -1061,7 +1400,7 @@ function drawFighter(c, f) {
     const r = f.grd / f.grdMax; c.strokeStyle = r < .3 ? `rgba(232,67,43,.7)` : `rgba(239,233,223,${.25 + .35 * r})`; c.lineWidth = 4;
     c.beginPath(); c.arc(10 * s, -110 * s, 70 * s, -1.1, 1.1); c.stroke();
   }
-  c.restore(); c.globalAlpha = 1;
+  c.restore(); c.globalAlpha = A0;
 }
 function drawChainLinks(c, a) {
   const ch = a.chain, d = ch.target, h = toWorld(a, skel(a).fh), t = [d.x, d.y - 105 * d.ch.scale];
@@ -1088,12 +1427,100 @@ function drawShards(c) {
     if (s.life < 90 && G.frame % 8 < 4) continue;
     const y = s.y + Math.sin(s.t * .08) * 6, sc = Math.min(1, s.t / 15);
     c.save(); c.translate(s.x, y); c.scale(sc, sc);
+    if (s.type === 'elixir') {
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, 46); g.addColorStop(0, 'rgba(180,255,210,.55)'); g.addColorStop(1, 'rgba(60,160,110,0)'); c.fillStyle = g; c.fillRect(-46, -46, 92, 92);
+      c.rotate(Math.sin(s.t * .05) * .2); c.fillStyle = '#3a9a6a'; c.strokeStyle = INK; c.lineWidth = 3;
+      c.beginPath(); c.arc(0, 8, 14, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.arc(0, -10, 9, 0, 7); c.fill(); c.stroke();
+      c.fillStyle = RED; c.fillRect(-7, -3, 14, 4); c.fillStyle = BONE; c.fillRect(-2, -24, 4, 6); c.restore(); continue;
+    }
     const g = c.createRadialGradient(0, 0, 0, 0, 0, 46); g.addColorStop(0, 'rgba(255,220,200,.6)'); g.addColorStop(1, 'rgba(232,67,43,0)'); c.fillStyle = g; c.fillRect(-46, -46, 92, 92);
     c.rotate(Math.sin(s.t * .05) * .3); c.fillStyle = BONE; c.strokeStyle = RED; c.lineWidth = 3;
     c.beginPath(); c.moveTo(0, -22); c.lineTo(13, 0); c.lineTo(0, 22); c.lineTo(-13, 0); c.closePath(); c.fill(); c.stroke();
     c.beginPath(); c.moveTo(0, -22); c.lineTo(0, 22); c.stroke();
     c.restore();
   }
+}
+function drawGhosts(c, f) {
+  if (!f.ghosts.length) return;
+  c.save(); c.lineCap = 'round'; c.strokeStyle = f.col;
+  f.ghosts.forEach((g, i) => {
+    const v = Object.create(f); v.x = g.x; v.y = g.y; v.face = g.face; v.pose = g.pose;
+    const k = skel(v), tw = p => toWorld(v, p), s = f.ch.scale;
+    c.globalAlpha = .07 + i * .06;
+    for (const [a, b, w] of [[k.hip, k.neck, f.ch.build], [k.sh, k.fe, 13], [k.fe, k.fh, 11], [k.hip, k.fk, 15], [k.fk, k.ff, 13], [k.hip, k.bk, 14], [k.bk, k.bf, 12], [k.sh, k.be, 12], [k.be, k.bh, 10]]) { c.lineWidth = w * s; line(c, tw(a), tw(b)); }
+  });
+  c.restore();
+}
+function drawSwoosh(c, f) {
+  const s = f.swoosh; if (s.length < 2) return;
+  c.save(); c.lineCap = 'round';
+  for (let i = 1; i < s.length; i++) { const u = i / s.length; c.globalAlpha = u * .7; c.strokeStyle = i >= s.length - 2 ? '#fff' : f.col; c.lineWidth = 2 + u * 10; line(c, s[i - 1], s[i]); }
+  c.restore();
+}
+function drawHound(c, e) {
+  const run = e.hit ? 0 : 1;
+  c.save(); c.translate(e.x, CFG.GROUND); c.scale(e.face, 1); c.lineCap = 'round';
+  for (const [lx, ph] of [[-22, 0], [-14, Math.PI], [18, Math.PI], [26, 0]]) { const s = Math.sin(e.t * .9 + ph) * 11 * run; c.strokeStyle = INK; c.lineWidth = 9; line(c, [lx, -30], [lx + s, -2]); c.strokeStyle = '#a0764a'; c.lineWidth = 5; line(c, [lx, -30], [lx + s, -2]); }
+  c.strokeStyle = '#a0764a'; c.lineWidth = 5; c.beginPath(); c.moveTo(-32, -40); c.quadraticCurveTo(-46, -54 + Math.sin(e.t * .5) * 6, -58, -50); c.stroke();
+  c.fillStyle = INK; c.beginPath(); c.ellipse(2, -36, 36, 15, -.05, 0, 7); c.fill(); c.fillStyle = '#a0764a'; c.beginPath(); c.ellipse(2, -36, 33, 12, -.05, 0, 7); c.fill();
+  c.fillStyle = INK; c.beginPath(); c.ellipse(40, -48, 15, 11, -.3, 0, 7); c.fill(); c.fillStyle = '#a0764a'; c.beginPath(); c.ellipse(40, -48, 12, 8, -.3, 0, 7); c.fill();
+  c.beginPath(); c.moveTo(33, -57); c.lineTo(29, -72); c.lineTo(42, -60); c.fill(); c.fillStyle = INK; c.fillRect(46, -52, 3, 3);
+  c.restore();
+}
+function drawEnts(c) {
+  for (const e of G.ents) {
+    c.save(); c.globalAlpha = clamp(e.alpha ?? 1, 0, 1);
+    if (e.id === 'ARROW') {
+      c.translate(e.x, e.y); c.scale(Math.sign(e.vx) || 1, 1); c.lineCap = 'round';
+      c.strokeStyle = 'rgba(255,240,200,.35)'; c.lineWidth = 6; line(c, [-90, 0], [-10, 0]);
+      c.strokeStyle = '#3a2a18'; c.lineWidth = 3; line(c, [-36, 0], [10, 0]);
+      c.fillStyle = '#e8e2d4'; c.beginPath(); c.moveTo(19, 0); c.lineTo(8, -5); c.lineTo(8, 5); c.fill();
+      c.fillStyle = '#d6a44a'; c.beginPath(); c.moveTo(-36, 0); c.lineTo(-44, -6); c.lineTo(-29, 0); c.lineTo(-44, 6); c.fill();
+    } else if (e.id === 'AS_HOUND') drawHound(c, e);
+    else if (e.ch) {
+      drawFighter(c, e);
+      if (e.id === 'AS_GUARD') { c.translate(e.x + e.face * 36, CFG.GROUND); c.fillStyle = '#5a636c'; c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); if (c.roundRect) c.roundRect(-13, -178, 26, 162, 9); else c.rect(-13, -178, 26, 162); c.fill(); c.stroke(); c.fillStyle = '#cfd6de'; c.fillRect(-3, -160, 6, 126); }
+      if (e.id === 'AS_ARCHER' && e.t < 18) { c.strokeStyle = '#d6a44a'; c.lineWidth = 3; c.beginPath(); c.arc(e.x + e.face * 46, CFG.GROUND - 120, 36, -1.1, 1.1); c.stroke(); }
+      if (e.id === 'AS_HEALER') { c.strokeStyle = 'rgba(127,224,168,.6)'; c.lineWidth = 3; c.beginPath(); c.arc(e.x, CFG.GROUND - 100, 60 + Math.sin(e.t * .3) * 6, 0, 7); c.stroke(); }
+    }
+    c.restore();
+  }
+}
+function drawMarks(c) {
+  for (const f of G.f) {
+    if (!f.marks) continue;
+    for (let i = 0; i < f.marks; i++) {
+      const x = f.x + (i - (f.marks - 1) / 2) * 22, y = f.y - 225 * f.ch.scale + Math.sin(G.frame * .15 + i) * 3;
+      c.fillStyle = '#e8c45a'; c.strokeStyle = INK; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x - 8, y + 6); c.quadraticCurveTo(x - 8, y - 9, x, y - 9); c.quadraticCurveTo(x + 8, y - 9, x + 8, y + 6); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = INK; c.beginPath(); c.arc(x, y + 8, 2.5, 0, 7); c.fill();
+    }
+  }
+}
+const toScreen = (x, y) => { const t = G.camT; return [(x - t.cx) * t.z + W / 2, (y - t.fy) * t.z + t.fy]; };
+const astKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「援」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].ast[0]);
+function mechText(f) {
+  switch (f.ch.mech.id) {
+    case 'MECH_EMBER': return `余烬 ${'●'.repeat(f.ember)}${'○'.repeat(6 - f.ember)}`;
+    case 'MECH_FLOW': return f.flowT > 0 ? '回流 · 生效中' : `回流 · 破链只需 ${brkCost(f)}`;
+    case 'MECH_ARMOR': return '不动 · 重/特/前冲带霸体';
+    case 'MECH_SHADOW': return '影步 · 后 + 特技';
+    case 'MECH_BELL': return '铃音 · 特技引爆';
+  }
+  return '';
+}
+function infoLine(c, f, x, side) {
+  const y = 118, a = AS_BY[f.assist], ready = f.astCD <= 0, r = 1 - f.astCD / CFG.ASSIST_CD, ix = side > 0 ? x + 12 : x - 12;
+  c.save();
+  c.beginPath(); c.arc(ix, y - 5, 12, 0, 7); c.fillStyle = 'rgba(13,10,9,.88)'; c.fill();
+  c.beginPath(); c.moveTo(ix, y - 5); c.arc(ix, y - 5, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * r); c.closePath(); c.fillStyle = ready ? a.col : 'rgba(239,233,223,.32)'; c.fill();
+  if (ready) { c.strokeStyle = a.col; c.lineWidth = 2; c.globalAlpha = .5 + .5 * Math.sin(G.frame * .2); c.beginPath(); c.arc(ix, y - 5, 15, 0, 7); c.stroke(); c.globalAlpha = 1; }
+  c.font = `700 12px ${FU}`; c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('援', ix, y - 5);
+  c.textBaseline = 'alphabetic'; c.textAlign = side > 0 ? 'left' : 'right'; c.font = `500 13px ${FU}`;
+  const k = astKey(f), parts = [`${a.name}${ready ? (k ? ' · 按 ' + k : ' · 就绪') : ' · ' + Math.ceil(f.astCD / 60) + 's'}`];
+  if (f.gear !== 'GR_NONE') parts.push(GEAR_BY[f.gear].name + (f.gear === 'GR_JADE' && f.jadeUsed ? '（已用）' : ''));
+  parts.push(mechText(f));
+  c.fillStyle = ready ? BONE : MUTE; c.fillText(parts.join('  ·  '), side > 0 ? ix + 20 : ix - 20, y);
+  c.restore();
 }
 const txt = (c, s, x, y, size, font, fill, align = 'center', stroke = 6, weight = 400) => {
   c.font = `${weight} ${size}px ${font}`; c.textAlign = align; c.lineJoin = 'round'; c.lineWidth = stroke; c.strokeStyle = INK; c.strokeText(s, x, y); c.fillStyle = fill; c.fillText(s, x, y);
@@ -1130,17 +1557,18 @@ function hpBar(c, f, x, y, w, side) {
   }
 }
 function brkGauge(c, f, x, y, w, side) {
-  const h = 16, r = f.brk / CFG.BRK_MAX, full = f.brk >= CFG.BRK_COST, col = f.col;
+  const h = 16, r = f.brk / CFG.BRK_MAX, cost = brkCost(f), full = f.brk >= cost, col = f.col;
   c.save();
   c.fillStyle = 'rgba(13,10,9,.9)'; c.fillRect(x - 4, y - 4, w + 8, h + 8);
   if (full) { c.shadowColor = col; c.shadowBlur = 14 + Math.sin(G.frame * .2) * 8; }
   c.fillStyle = full ? col : 'rgba(239,233,223,.82)';
   if (side > 0) c.fillRect(x, y, w * r, h); else c.fillRect(x + w * (1 - r), y, w * r, h);
   c.shadowBlur = 0; c.fillStyle = 'rgba(13,10,9,.9)'; for (const q of [.25, .5, .75]) c.fillRect(x + w * q - 1, y, 2, h);
+  if (cost < CFG.BRK_MAX) { const q = cost / CFG.BRK_MAX, tx = side > 0 ? x + w * q : x + w * (1 - q); c.fillStyle = col; c.fillRect(tx - 2, y - 5, 4, h + 10); }
   c.textBaseline = 'alphabetic'; const lx = side > 0 ? x : x + w;
   txt(c, '破链', lx, y - 10, 26, FB, full ? col : BONE, side > 0 ? 'left' : 'right', 5);
   c.font = `600 15px ${FU}`; c.fillStyle = full ? BONE : MUTE; c.textAlign = side > 0 ? 'left' : 'right';
-  const k = brkKey(f); c.fillText(full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${CFG.BRK_COST}`, lx + (side > 0 ? 62 : -62), y - 13);
+  const k = brkKey(f); c.fillText(full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${cost}`, lx + (side > 0 ? 62 : -62), y - 13);
   c.restore();
 }
 function chainHUD(c, a) {
@@ -1165,6 +1593,8 @@ function chainHUD(c, a) {
 }
 function drawHUD(c) {
   const [A, B] = G.f;
+  let g = c.createLinearGradient(0, 0, 0, 150); g.addColorStop(0, 'rgba(10,8,7,.62)'); g.addColorStop(1, 'rgba(10,8,7,0)'); c.fillStyle = g; c.fillRect(0, 0, W, 150);
+  g = c.createLinearGradient(0, 620, 0, H); g.addColorStop(0, 'rgba(10,8,7,0)'); g.addColorStop(1, 'rgba(10,8,7,.6)'); c.fillStyle = g; c.fillRect(0, 620, W, 100);
   hpBar(c, A, 40, 24, 500, 1); hpBar(c, B, 740, 24, 500, -1);
   c.fillStyle = 'rgba(13,10,9,.9)'; c.fillRect(590, 14, 100, 68); c.strokeStyle = RED; c.lineWidth = 2; c.strokeRect(591, 15, 98, 66);
   c.textBaseline = 'middle'; c.textAlign = 'center'; c.font = `700 40px ${FN}`; c.fillStyle = BONE;
@@ -1174,9 +1604,11 @@ function drawHUD(c) {
   if (TOUCH) { brkGauge(c, A, 446, 676, 180, 1); brkGauge(c, B, 654, 676, 180, -1); }
   else { brkGauge(c, A, 40, 676, 380, 1); brkGauge(c, B, 860, 676, 380, -1); }
   for (const a of G.f) if (a.chain) chainHUD(c, a);
+  infoLine(c, A, 40, 1); infoLine(c, B, 1240, -1);
   for (const f of G.f) {
-    if (f.chainedBy && f.brk >= CFG.BRK_COST && isHuman(f)) { c.globalAlpha = .6 + .4 * Math.sin(G.frame * .3); txt(c, `按 ${brkKey(f)} 破链`, f.x, f.y - 240 * f.ch.scale, 34, FB, f.col); c.globalAlpha = 1; }
-    if (f.chain && f.chain.lv >= CFG.FIN_MIN_LV && isHuman(f)) txt(c, `按 ${finKey(f)} 终结`, f.x, f.y - 240 * f.ch.scale, 28, FB, RED);
+    const [sx, sy] = toScreen(f.x, f.y - 240 * f.ch.scale);
+    if (f.chainedBy && f.brk >= brkCost(f) && isHuman(f)) { c.globalAlpha = .6 + .4 * Math.sin(G.frame * .3); txt(c, `按 ${brkKey(f)} 破链`, sx, sy, 34, FB, f.col); c.globalAlpha = 1; }
+    if (f.chain && f.chain.lv >= CFG.FIN_MIN_LV && isHuman(f)) txt(c, `按 ${finKey(f)} 终结`, sx, sy, 28, FB, RED);
   }
   if (G.mode === 'train') {
     c.font = `500 14px ${FU}`; c.textAlign = 'center'; c.fillStyle = MUTE;
@@ -1187,9 +1619,10 @@ function drawHUD(c) {
     G.log.forEach((l, i) => { c.fillStyle = `rgba(239,233,223,${.8 - i * .1})`; c.fillText(l, W - 40, 360 + i * 18); });
   }
 }
-function drawPops(c) {
+function drawPops(c, world) {
   c.textBaseline = 'alphabetic';
   for (const p of G.pops) {
+    if (!!p.w !== world) continue;
     const a = Math.min(1, p.life / 18) * Math.min(1, (p.max - p.life) / 5 + .3), y = p.y - (1 - p.life / p.max) * 36;
     c.globalAlpha = a; txt(c, p.text, p.x, y, p.size, p.font, p.col, 'center', Math.max(4, p.size / 7), p.font === FN ? 700 : p.font === FU ? 700 : 400);
   }
@@ -1209,18 +1642,25 @@ function render() {
   const c = ctx; c.setTransform(DPR, 0, 0, DPR, 0, 0);
   c.save();
   if (G.shake) c.translate(rand(-1, 1) * G.shake, rand(-1, 1) * G.shake);
+  let tz = 1, tx = W / 2;
+  if (G.f.length === 2 && CFG.CAMERA && !G.demo) { const A = G.f[0], B = G.f[1], ch = A.chain || B.chain; tz = 1 + (ch ? .05 + ch.lv * .025 : 0) + Math.min(.04, G.hitstop * .004); tx = (A.x + B.x) / 2; }
+  G.cam.z += (tz - G.cam.z) * .08; G.cam.x += (tx - G.cam.x) * .1;
+  const z = G.cam.z, half = W / (2 * z), cx = clamp(G.cam.x, half, W - half), fy = H * .62;
+  G.camT = { cx, z, fy };
+  c.translate(W / 2, fy); c.scale(z, z); c.translate(-cx, -fy);
   drawStage(c);
   if (G.f.length) {
     drawShards(c);
     for (const f of G.f) { const h = clamp((CFG.GROUND - f.y) / 300, 0, .7); c.fillStyle = `rgba(0,0,0,${.35 - h * .3})`; c.beginPath(); c.ellipse(f.x, CFG.GROUND + 2, 46 * (1 - h * .5), 9, 0, 0, 7); c.fill(); }
     for (const a of G.f) if (a.chain) drawChainLinks(c, a);
+    drawEnts(c);
     const order = G.f.slice().sort((a, b) => (a.chainedBy ? 0 : 1) - (b.chainedBy ? 0 : 1) || (a.state === 'ST_ATTACK') - (b.state === 'ST_ATTACK'));
-    for (const f of order) drawFighter(c, f);
-    drawParts(c);
+    for (const f of order) { drawGhosts(c, f); drawSwoosh(c, f); drawFighter(c, f); }
+    drawMarks(c); drawParts(c); drawPops(c, true);
   }
   c.restore();
   if (G.f.length && !G.demo) drawHUD(c);
-  drawPops(c); drawBanner(c);
+  drawPops(c, false); drawBanner(c);
   if (G.flash > 0) { c.fillStyle = `rgba(255,250,240,${G.flash})`; c.fillRect(0, 0, W, H); }
   if (G.demo) { c.fillStyle = 'rgba(10,8,7,.25)'; c.fillRect(0, 0, W, H); }
 }
@@ -1257,16 +1697,25 @@ function portrait(cv, ch, alt) {
   for (let i = 0; i < 12; i++) f.updScarf();
   const s = h / 225; c.translate(w / 2, h * .97); c.scale(s, s); drawFighter(c, f);
 }
+function sideHTML(n) {
+  const slot = 'p' + n, ch = CHAR[G.sel[slot]], who = n === 1 ? '1P' : (G.mode === 'cpu' ? 'CPU' : G.mode === 'pvp' ? '2P' : '木桩');
+  const g = G.sel['g' + n], a = G.sel['a' + n];
+  return `<h3><b>${who}</b><span>${ch.name} · ${ch.title}　${Object.entries(ch.stats).map(([k, v]) => `${k}${'■'.repeat(v)}${'□'.repeat(5 - v)}`).join(' ')}</span></h3>
+  <div class="roster">${CHARS.map(c => `<button class="pc" data-slot="${slot}" data-id="${c.id}" aria-pressed="${c.id === ch.id}" aria-label="${c.name}"><canvas></canvas><b>${c.name}</b></button>`).join('')}</div>
+  <p class="detail">${ch.role}<br><span class="mech">特性「${ch.mech.name}」</span>${ch.mech.desc}</p>
+  <div class="chips"><span class="lab">道具</span>${GEAR.map(x => `<button class="chip" data-slot="g${n}" data-id="${x.id}" aria-pressed="${g === x.id}">${x.name}</button>`).join('')}</div>
+  <p class="hint">${GEAR_BY[g].desc}</p>
+  <div class="chips"><span class="lab">外援</span>${ASSISTS.map(x => `<button class="chip" data-slot="a${n}" data-id="${x.id}" aria-pressed="${a === x.id}">${x.name}</button>`).join('')}</div>
+  <p class="hint">${AS_BY[a].role}</p>`;
+}
 function buildSelect() {
-  const modeName = { cpu: '对战电脑', pvp: '双人对战', train: '训练模式' }[G.mode];
-  $('#selMode').textContent = modeName; $('#p2Who').textContent = G.mode === 'cpu' ? 'CPU' : G.mode === 'pvp' ? '2P' : '木桩';
+  $('#selMode').textContent = { cpu: '对战电脑', pvp: '双人对战', train: '训练模式' }[G.mode] + ' · 选角色、道具、外援和场景';
+  $('#sideP1').innerHTML = sideHTML(1); $('#sideP2').innerHTML = sideHTML(2);
   $('#dummyRow').hidden = G.mode !== 'train';
-  const charCards = (slot) => CHARS.map(ch => `<button class="card" data-slot="${slot}" data-id="${ch.id}" aria-pressed="${G.sel[slot] === ch.id}"><canvas></canvas><b>${ch.name}</b><span class="t">${ch.title} · ${ch.role.split('：')[0]}</span><span class="st">${Object.entries(ch.stats).map(([k, v]) => `${k} <i>${'■'.repeat(v)}${'□'.repeat(5 - v)}</i>`).join('')}</span></button>`).join('');
-  $('#pickP1').innerHTML = charCards('p1'); $('#pickP2').innerHTML = charCards('p2');
   $('#pickStage').innerHTML = STAGES.map(st => `<button class="card stage" data-slot="stage" data-id="${st.id}" aria-pressed="${G.sel.stage === st.id}"><canvas></canvas><b>${st.name}</b><span class="t">${st.desc}</span><span class="t">${st.id}</span></button>`).join('');
   $('#pickDummy').innerHTML = DUMMY.map(d => `<button class="card small" data-slot="dummy" data-id="${d.key}" aria-pressed="${G.sel.dummy === d.key}"><span><b style="font-size:1.25em">${d.name}</b></span><span class="t">${d.desc}</span></button>`).join('');
   requestAnimationFrame(() => {
-    $$('#pickP1 canvas, #pickP2 canvas').forEach((cv, i) => { const ch = CHARS[i % CHARS.length]; portrait(cv, ch, i >= CHARS.length && G.sel.p1 === ch.id); });
+    for (const n of [1, 2]) $$(`#sideP${n} .pc canvas`).forEach((cv, i) => portrait(cv, CHARS[i], n === 2 && G.sel.p1 === CHARS[i].id));
     $$('#pickStage canvas').forEach((cv, i) => { const w = cv.clientWidth || 128, h = cv.clientHeight || 72; cv.width = w * DPR; cv.height = h * DPR; cv.getContext('2d').drawImage(bgCanvas(STAGES[i].id), 0, 0, w * DPR, h * DPR); });
   });
 }
@@ -1283,17 +1732,26 @@ function buildMoves() {
     <p><b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，按破链键斩断连段。没结算的暂存伤害全部返还，攻方被弹开、硬直 ${CFG.BREAK_STAGGER} 帧。最划算的时机是<b>下一个阈值之前</b>。</p>
     <p><b>充能方式</b>：被连受击（阶段越高越多）、防御成功 +${CFG.GAIN.guard}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
     <p><b>终结技</b>：连段达到「${D[CFG.FIN_MIN_LV].name}」后可用，结算全部暂存伤害并造成重击，连段结束。到「${D[D.length - 1].name}」后伤害减半、对手充能加快，应尽快终结。</p>
-    <p><b>护架</b>：防御会消耗护架值（血条下的细条），耗尽即破防，短时间无法行动。</p>`;
+    <p><b>护架</b>：防御会消耗护架值（血条下的细条），耗尽即破防，短时间无法行动。</p>
+    <h3>进阶</h3>
+    ${MECHS.map(m => `<p><b>${m.name}</b>：${m.desc}</p>`).join('')}
+    <p><b>外援</b>：备战时选一名外援，对战中按外援键呼叫（冷却 ${CFG.ASSIST_CD / 60} 秒，被锁定时不能叫）。${ASSISTS.map(a => `「${a.name}」${a.role}`).join('；')}。</p>
+    <p><b>携带道具</b>：备战时选一件，整场生效。${GEAR.slice(1).map(g => `「${g.name}」${g.desc}`).join('；')}。</p>
+    <h3>角色特性</h3>
+    ${CHARS.map(c => `<p><b>${c.name}「${c.mech.name}」</b>：${c.mech.desc}</p>`).join('')}`;
   $('#mvTabs').innerHTML = CHARS.map(ch => `<button data-mvtab="${ch.id}" aria-selected="${G.mvTab === ch.id}">${ch.name} · ${ch.title}</button>`).join('');
   const ch = CHAR[G.mvTab];
   $('#mvTable').innerHTML = `<tr><th>输入</th><th>招式</th><th>ID</th><th class="num">发生</th><th class="num">持续</th><th class="num">收招</th><th class="num">伤害</th><th class="num">势</th></tr>` +
     Object.entries(ch.moves).map(([k, m]) => `<tr><td>${MOVE_INPUT[k]}</td><td>${m.name}</td><td><code>${m.id}</code></td><td class="num">${m.startup}</td><td class="num">${m.active}</td><td class="num">${m.recovery}</td><td class="num">${m.dmg}</td><td class="num">${m.mom}</td></tr>`).join('');
-  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr><tr><td>触屏</td><td colspan="2">左侧摇杆：左右移动 · 上推跳 · 下拉防御；右侧按键出招</td></tr>`;
+  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr><tr><td>冲刺 / 后撤步</td><td colspan="2">快速双击前 / 后方向</td></tr><tr><td>弹反</td><td colspan="2">被打中前一瞬间按下防御</td></tr><tr><td>触屏</td><td colspan="2">左侧摇杆：左右移动 · 上推跳 · 下拉防御 · 快速拨两下冲刺；右侧按键出招，「援」呼叫外援</td></tr>`;
 }
 const CODEX = {
   pages: { name: '页面 PG', note: '界面页面。PG_BATTLE 的内容画在 canvas 上。', cols: ['ID', '名称', '说明'], rows: () => PAGES.map(p => [p.id, p.name, p.desc]) },
-  chars: { name: '角色 CH', note: '角色属性；倍率 1 为基准。', cols: ['ID', '名称', '称号', '定位', '移速', '跳跃', '攻击', '受伤', '破链充能', '连段窗口', '护架'], rows: () => CHARS.map(c => [c.id, c.name, c.title, c.role, c.walk, c.jump, c.atk, c.def, c.brkGain, c.chainWin, c.grd]) },
-  moves: { name: '招式 MV', note: '帧数以 1/60 秒计；势 = 连段势，决定掉落阶段。', cols: ['ID', '角色', '名称', '输入', '发生', '持续', '收招', '伤害', '势', '削架', '距离'], rows: () => CHARS.flatMap(c => Object.entries(c.moves).map(([k, m]) => [m.id, c.name, m.name, MOVE_INPUT[k], m.startup, m.active, m.recovery, m.dmg, m.mom, m.grd, m.range])) },
+  chars: { name: '角色 CH', note: '角色属性；倍率 1 为基准。', cols: ['ID', '名称', '称号', '特性', '定位', '移速', '跳跃', '攻击', '受伤', '破链充能', '连段窗口', '护架'], rows: () => CHARS.map(c => [c.id, c.name, c.title, c.mech.name, c.role, c.walk, c.jump, c.atk, c.def, c.brkGain, c.chainWin, c.grd]) },
+  mechs: { name: '机制 MECH', note: '通用机制与角色专属特性。', cols: ['ID', '名称', '说明'], rows: () => [...MECHS.map(m => [m.id, m.name, m.desc]), ...CHARS.map(c => [c.mech.id, `${c.name} · ${c.mech.name}`, c.mech.desc])] },
+  gear: { name: '道具 GR', note: '备战时携带，整场生效。', cols: ['ID', '名称', '效果'], rows: () => GEAR.map(g => [g.id, g.name, g.desc]) },
+  assists: { name: '外援 AS', note: '与角色无关的外援，对战中按外援键呼叫。', cols: ['ID', '名称', '效果', '冷却（秒）'], rows: () => ASSISTS.map(a => [a.id, a.name, a.role, CFG.ASSIST_CD / 60]) },
+  moves: { name: '招式 MV', note: '帧数以 1/60 秒计；势 = 连段势，决定掉落阶段。外援招式与冲刺也在其中。', cols: ['ID', '角色', '名称', '输入', '发生', '持续', '收招', '伤害', '势', '削架', '距离'], rows: () => [...CHARS.flatMap(c => Object.entries(c.moves).map(([k, m]) => [m.id, c.name, m.name, MOVE_INPUT[k], m.startup, m.active, m.recovery, m.dmg, m.mom, m.grd, m.range])), ...Object.values(COMMON).map(m => [m.id, '通用', m.name, m.dash > 0 ? '双击前' : '双击后', m.startup, m.active, m.recovery, 0, 0, 0, 0]), ...Object.values(AS_MOVE).map(m => [m.id, '外援', m.name, '外援键', '-', '-', '-', m.dmg, m.mom, m.grd, '-'])] },
   drops: { name: '掉落阶段 DL', note: '连段势越过阈值即结算暂存伤害。', cols: ['ID', '名称', '阈值', '伤害倍率', '守方每击充能', '连段结束后', '硬直帧', '说明'], rows: () => DROP_LEVELS.map(d => [d.id, d.name, d.min, d.dmgMul, d.gain, STATES[d.end].name, d.stun, d.note]) },
   states: { name: '状态 ST', note: '角色状态机。', cols: ['ID', '名称', '说明'], rows: () => Object.entries(STATES).map(([k, v]) => [k, v.name, v.desc]) },
   world: { name: '场景与道具', note: 'STG 场景，IT 道具，DM 训练木桩。', cols: ['ID', '名称', '说明'], rows: () => [...STAGES.map(s => [s.id, s.name, s.desc]), ...ITEMS.map(i => [i.id, i.name, i.desc]), ...DUMMY.map(d => [d.id, d.name, d.desc])] },
@@ -1358,7 +1816,12 @@ function tryFullscreen() {
   if (!TOUCH || FS.app() || FS.on() || !FS.can() || window.self !== window.top) return;
   FS.enter().catch(() => {});
 }
-$('#btnFight').onclick = () => tryFullscreen() || startMatch({ mode: G.mode, p1: G.sel.p1, p2: G.sel.p2, stage: G.sel.stage, dummy: G.sel.dummy });
+$('#btnFight').onclick = () => tryFullscreen() || startMatch({ mode: G.mode, p1: G.sel.p1, p2: G.sel.p2, g1: G.sel.g1, g2: G.sel.g2, a1: G.sel.a1, a2: G.sel.a2, stage: G.sel.stage, dummy: G.sel.dummy });
+$('#btnVx').onclick = () => {
+  const t = 'VX18530993088';
+  const fallback = () => { try { const r = document.createRange(); r.selectNodeContents($('#sponsor .vx')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {} toast('已选中微信号，长按或 Ctrl+C 复制：' + t); };
+  try { navigator.clipboard.writeText(t).then(() => toast('已复制微信号：' + t), fallback); } catch (e) { fallback(); }
+};
 $('#btnResume').onclick = () => resume();
 $('#btnRestart').onclick = () => startMatch(G.lastOpts);
 $('#btnQuit').onclick = () => { G.running = false; startDemo(); go('PG_TITLE'); };
@@ -1405,10 +1868,11 @@ const zone = $('#stickZone'), stick = $('#stick');
 function stickHome() { STK.cx = zone.clientWidth * .3; STK.cy = zone.clientHeight * .62; stick.style.left = STK.cx + 'px'; stick.style.top = STK.cy + 'px'; }
 function stickSet(vx, vy) {
   const R = stick.offsetWidth * .34; stick.style.setProperty('--kx', vx * R + 'px'); stick.style.setProperty('--ky', vy * R + 'px');
-  const th = Input.touchHeld, was = { up: th.up, guard: th.guard };
+  const th = Input.touchHeld, was = { up: th.up, guard: th.guard, left: th.left, right: th.right };
   th.left = vx < -.3; th.right = vx > .3; th.up = vy < -.55; th.guard = vy > .55 && Math.abs(vx) < .8;
   if (th.up && !was.up) { Input.touchTaps.add('up'); buzz(8); }
   if (th.guard && !was.guard) buzz(5);
+  for (const k of ['left', 'right', 'guard']) if (th[k] && !was[k]) Input.touchTaps.add(k);
   for (const [c, k] of [['u', 'up'], ['d', 'guard'], ['l', 'left'], ['r', 'right']]) stick.querySelector('.' + c).classList.toggle('on', !!th[k]);
 }
 function stickReset() { STK.id = null; stick.classList.remove('on'); if (zone.clientWidth) stickHome(); stickSet(0, 0); }
