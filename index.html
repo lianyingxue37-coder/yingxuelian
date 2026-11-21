@@ -199,7 +199,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_CODEX">设定 ID 表</button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v0.8 · 背景为电脑自动对战演示</div>
+  <div class="ver">v0.8.1 · 背景为电脑自动对战演示</div>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
 </section>
 
@@ -278,7 +278,7 @@ const TOUCH = matchMedia('(pointer: coarse)').matches;
 /* ---------- 一、全局参数 CFG（帧 = 1/60 秒） ---------- */
 const CFG = {
   HP: 1600, ROUND_TIME: 99, ROUNDS_TO_WIN: 2,
-  GROUND: 620, WALL_L: 70, WALL_R: 1210, GRAVITY: 0.95, BUFFER: 8,
+  GROUND: 620, STAGE_W: 2400, WALL_L: 70, WALL_R: 2330, PARALLAX: 0.42, MAX_SEP: 1060, MOVE_MUL: 1.3, GRAVITY: 0.95, BUFFER: 8,
   BRK_MAX: 100, BRK_COST: 100, BRK_START: 20,
   GAIN: { guard: 6, landHit: 2, commit: 10, passive: 0.02 },
   CHAIN_WINDOW: 40, WINDOW_MUL: 1, CHAIN_DIST: 100,
@@ -292,12 +292,12 @@ const CFG = {
   EMBER_DMG: 12, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80, ELIXIR: 60,
   BURN_TIME: 360, BURN_MOM: 1.25, BURN_WIN: 1.25, BURN_DMG: 1.1, WALL_MOM: 25, THROW_RANGE: 112,
   FROST_MAX: 5, FROST_BRK: 0.12, FROST_SPD: 0.06, FREEZE_MOM: 40, ARMOR_DMG: 0.8, CHARGE_TIME: 75, CHARGE_MAX: 3, ZAP_DMG: 1.5, ZAP_MOM: 30, MONK_FREEZE: 50,
-  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float', CAMERA: true, TOUCH_LIFT: 76, SKETCH: true,
-  Z_MAX: 100, Z_Y0: 600, Z_Y1: 672, Z_SCALE0: 0.9, Z_SCALE1: 1.05, Z_SPEED: 2.3, Z_HIT: 22, SIDE_DIST: 46, BOUNCE_MOM: 20,
+  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float', CAMERA: true, TOUCH_LIFT: 96, SKETCH: true,
+  Z_MAX: 100, Z_Y0: 600, Z_Y1: 690, Z_SCALE0: 0.88, Z_SCALE1: 1.06, Z_SPEED: 2.3, Z_HIT: 22, SIDE_DIST: 46, BOUNCE_MOM: 20,
 };
 const CFG_DESC = {
   HP: '生命值上限', ROUND_TIME: '每回合秒数（0 = 不限时）', ROUNDS_TO_WIN: '获胜所需回合数',
-  GROUND: '地面高度（像素）', WALL_L: '左墙', WALL_R: '右墙', GRAVITY: '重力', BUFFER: '按键预输入缓存（帧）',
+  GROUND: '地面高度（像素）', STAGE_W: '场地宽度（像素）；大于 1280 时镜头横向跟随', WALL_L: '左墙', WALL_R: '右墙（自动 = 场地宽度 − 左墙）', PARALLAX: '远景视差（0 = 远景不动，1 = 和地面一起动）', MAX_SEP: '两人最远距离（保证两人都在画面里）', MOVE_MUL: '移动速度倍率（走路、纵深、跳跃、冲刺）', GRAVITY: '重力', BUFFER: '按键预输入缓存（帧）',
   BRK_MAX: '破链能量上限', BRK_COST: '破链一次消耗的能量', BRK_START: '每回合开局的破链能量',
   GAIN: '其他充能：防御成功 / 命中对手 / 每次掉落结算（守方）/ 每帧自然增长',
   CHAIN_WINDOW: '连段窗口（帧）：上一击命中后，下一击必须在这段时间内命中', WINDOW_MUL: '连段窗口倍率（设置页）', CHAIN_DIST: '连段中守方被锁定在攻方前方的距离',
@@ -477,7 +477,7 @@ const zs = z => CFG.Z_SCALE0 + (CFG.Z_SCALE1 - CFG.Z_SCALE0) * clamp(z, 0, CFG.Z
 function setZ(f, z) { const g = f.y >= gy(f.z) - .5 && (f.vy || 0) >= 0; f.z = clamp(z, 0, CFG.Z_MAX); if (g) f.y = gy(f.z); }
 const zNear = (a, b, r = CFG.Z_HIT) => Math.abs((a.z ?? 50) - (b.z ?? 50)) <= r;
 const bgain = f => f.ch.brkGain * (1 - CFG.FROST_BRK * (f.frost || 0));
-const spdMul = f => (1 - CFG.FROST_SPD * (f.frost || 0)) * (f.gear === 'GR_BOOTS' ? 1.12 : 1);
+const spdMul = f => CFG.MOVE_MUL * (1 - CFG.FROST_SPD * (f.frost || 0)) * (f.gear === 'GR_BOOTS' ? 1.12 : 1);
 function canThrow(f) {
   const op = G.f[1 - f.idx]; if (!op || f.chain || !f.grounded || !op.grounded) return false;
   return Math.abs(op.x - f.x) < CFG.THROW_RANGE * f.ch.scale && Math.abs(op.z - f.z) < 24 && !['ST_KNOCKDOWN', 'ST_WAKEUP', 'ST_KO', 'ST_BREAK'].includes(op.state) && op.inv <= 0;
@@ -974,6 +974,8 @@ const SETTINGS = [
   { id: 'SET_SOUND', label: '音效', key: 'SOUND', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '安卓有效', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_STICK', label: '触屏摇杆', key: 'STICK_MODE', note: '左半屏按下即出现摇杆', opts: [['float', '跟随手指'], ['fixed', '固定位置']] },
+  { id: 'SET_STAGE', label: '场地大小', key: 'STAGE_W', note: '大场地镜头会跟着角色横移，远景带视差', opts: [[1280, '小'], [2400, '大'], [3200, '超大']] },
+  { id: 'SET_SPEED', label: '移动速度', key: 'MOVE_MUL', note: '走路、纵深、跳跃和冲刺的速度', opts: [[1, '经典'], [1.3, '快'], [1.6, '很快']] },
   { id: 'SET_CAMERA', label: '动态镜头', key: 'CAMERA', note: '连段时镜头推近', opts: [[true, '开'], [false, '关']] },
   { id: 'SET_SKETCH', label: '画风', key: 'SKETCH', note: '手绘：毛笔线条 + 纸张纹理；简洁更省电', opts: [[true, '手绘'], [false, '简洁']] },
 ];
@@ -1129,7 +1131,7 @@ class Fighter {
     this.stats = { maxHits: 0, maxLv: 0, dmg: 0, breaks: 0, shards: 0, fins: 0, parries: 0, assists: 0 }; this.reset();
   }
   reset() {
-    Object.assign(this, { x: this.idx ? 850 : 430, z: 50, y: gy(50), vx: 0, vy: 0, airH: false, spiked: false, face: this.idx ? -1 : 1, hp: CFG.HP, trail: CFG.HP,
+    Object.assign(this, { x: CFG.STAGE_W / 2 + (this.idx ? 210 : -210), z: 50, y: gy(50), vx: 0, vy: 0, airH: false, spiked: false, face: this.idx ? -1 : 1, hp: CFG.HP, trail: CFG.HP,
       brk: Math.min(CFG.BRK_MAX, CFG.BRK_START + (this.gear === 'GR_BUCKLE' ? 30 : 0)),
       grdMax: this.ch.grd * (this.gear === 'GR_FAN' ? 1.4 : 1), state: 'ST_IDLE', t: 0, move: null, mt: 0, hitDone: false, blockHit: false, stun: 0, inv: 0, chain: null, chainedBy: null,
       flash: 0, buf: null, inp: EMPTY, airUsed: false, landed: false, walkPh: 0, hitAlt: false, refill: 0, denyT: 0, serial: -1,
@@ -1225,11 +1227,11 @@ class Fighter {
     const threat = op.state === 'ST_ATTACK' && op.move && op.move.dmg > 0 && op.mt <= op.move.startup + op.move.active && Math.abs(op.x - this.x) < 330 && Math.abs(op.z - this.z) < 50;
     if (inp.held.guard || (back && threat)) { if (this.state !== 'ST_GUARD') this.setState('ST_GUARD'); return; }
     const d = (inp.held.right ? 1 : 0) - (inp.held.left ? 1 : 0), dz = (inp.held.down ? 1 : 0) - (inp.held.up ? 1 : 0);
-    if (jumpNow) { this.vy = -this.ch.jump; this.vx = d * this.ch.walk * 1.15; this.y -= 1; this.airUsed = false; this.airH = false; this.squash = 3; this.setState('ST_JUMP'); return; }
+    if (jumpNow) { this.vy = -this.ch.jump; this.vx = d * this.ch.walk * 1.15 * CFG.MOVE_MUL; this.y -= 1; this.airUsed = false; this.airH = false; this.squash = 3; this.setState('ST_JUMP'); return; }
     if (d || dz) {
       if (d) this.x += d * this.ch.walk * spdMul(this) * (d === this.face ? 1 : .78);
       if (dz) setZ(this, this.z + dz * CFG.Z_SPEED * spdMul(this));
-      if (this.state !== 'ST_WALK') this.setState('ST_WALK'); this.walkPh += .2 * (d ? d * this.face : 1); if (this.t % 14 === 0) dust(this.x - d * 14, 1, this.y);
+      if (this.state !== 'ST_WALK') this.setState('ST_WALK'); this.walkPh += .2 * CFG.MOVE_MUL * (d ? d * this.face : 1); if (this.t % 14 === 0) dust(this.x - d * 14, 1, this.y);
     }
     else if (this.state !== 'ST_IDLE') this.setState('ST_IDLE');
   }
@@ -1255,7 +1257,7 @@ class Fighter {
     const act = m.startup + m.active, total = act + m.recovery;
     if (m.advance && this.mt <= act) this.x += this.face * m.advance / act;
     if (m.dash) {
-      const u = this.mt / total; this.x += this.face * m.dash * (m.dist * (this.gear === 'GR_BOOTS' ? 1.3 : 1) / total) * 2 * (1 - u);
+      const u = this.mt / total; this.x += this.face * m.dash * (m.dist * CFG.MOVE_MUL * (this.gear === 'GR_BOOTS' ? 1.3 : 1) / total) * 2 * (1 - u);
       if (this.mt % 4 === 1) dust(this.x - this.face * m.dash * 24, 1, this.y);
       if (this.buf && this.mt > 3 && m.dash > 0) { const b = this.buf; this.buf = null; if (this.startMove(b.act)) return; }
     }
@@ -1616,7 +1618,7 @@ function updEnts() {
     else if (e.id === 'ARROW') {
       e.x += e.vx;
       if (op.state !== 'ST_KO' && hitAt(e.x, e.y, 22, op, e, 16)) { e.life = e.t; assistHit(f, op, AS_MOVE.ARROW, e); }
-      if (e.x < -40 || e.x > W + 40) e.life = e.t;
+      if (e.x < CFG.WALL_L - 160 || e.x > CFG.WALL_R + 160) e.life = e.t;
     }
     else if (e.id === 'AS_HOUND') {
       e.face = op.x >= e.x ? 1 : -1;
@@ -1740,7 +1742,7 @@ const buzz = p => { if (!CFG.VIBRATE || G.demo || !navigator.vibrate) return; tr
 function spark(x, y, col, n = 12, spd = 8) { for (let i = 0; i < n; i++) { const a = rand(0, Math.PI * 2), v = rand(spd * .4, spd); G.parts.push({ k: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: .2, life: randi(12, 24), max: 24, col, sz: rand(2, 4.5) }); } }
 function ring(x, y, col, r0, r1, life) { G.parts.push({ k: 'ring', x, y, r0, r1, life, max: life, col }); }
 function dust(x, n, y = gy(50)) { for (let i = 0; i < n; i++) G.parts.push({ k: 'dust', x: x + rand(-30, 30), y: y - 4, vx: rand(-2.5, 2.5), vy: rand(-2, -.4), g: .02, life: randi(18, 30), max: 30, col: 'rgba(200,180,160,', sz: rand(4, 9) }); }
-function pop(text, x, y, col = BONE, size = 24, font = FU, life = 60) { if (G.demo) return; G.pops.push({ text, x: clamp(x, 110, W - 110), y, col, size, font, life, max: life, w: x !== 640 }); }
+function pop(text, x, y, col = BONE, size = 24, font = FU, life = 60) { if (G.demo) return; G.pops.push({ text, x: x === 640 ? x : clamp(x, CFG.WALL_L, CFG.WALL_R), y, col, size, font, life, max: life, w: x !== 640 }); }
 function banner(text, sub, col, life = 75, stamp = false) { if (!G.demo) G.banner = { text, sub, col, life, max: life, stamp }; }
 function updateFX() {
   G.shake *= .86; if (G.shake < .3) G.shake = 0;
@@ -1769,9 +1771,11 @@ function startDemo() {
   G.f = [new Fighter(0, a, false, pick(GEAR).id, pick(ASSISTS).id), new Fighter(1, b, a === b, pick(GEAR).id, pick(ASSISTS).id)]; G.ai = [new AI(1), new AI(1)]; G.round = 1; startRound();
 }
 function startRound() {
+  CFG.WALL_R = CFG.STAGE_W - CFG.WALL_L;
   for (const f of G.f) f.reset();
   Object.assign(G, { timer: CFG.ROUND_TIME * 60, rs: 'RS_INTRO', rsT: 0, shards: [], shardT: 0, parts: [], pops: [], ents: [], hitstop: 0, slow: 0, winner: null, banner: null, koFx: null });
-  if (G.demo) { G.f[0].x = 760; G.f[1].x = 1060; G.rsT = 80; return; }
+  G.cam.x = CFG.STAGE_W / 2;
+  if (G.demo) { G.f[0].x = CFG.STAGE_W / 2 + 120; G.f[1].x = CFG.STAGE_W / 2 + 420; G.rsT = 80; return; }
   banner(`第 ${G.round} 回合`, G.mode === 'train' ? '训练模式 · 不会被击倒' : '', BONE, 60); SFX.play('round'); emit('EV_ROUND_START', { text: `R${G.round}` });
 }
 function roundOver() {
@@ -1798,7 +1802,7 @@ function step() {
   if (G.page === 'PG_RESULT') { for (const f of G.f) { f.intake(EMPTY); f.update(G.f[1 - f.idx]); } updateFX(); Input.endFrame(); return; }
   const active = (G.running && !G.paused) || G.demo;
   if (!active) { Input.endFrame(); return; }
-  const [A, B] = G.f;
+  const [A, B] = G.f; A.px = A.x; B.px = B.x;
   const inA = (G.demo || G.autoP1) ? G.ai[0].think(A, B) : Input.read('P1');
   const inB = (G.demo || G.mode === 'cpu') ? G.ai[1].think(B, A) : G.mode === 'pvp' ? Input.read('P2') : dummyInput(B, A);
   Input.endFrame();
@@ -1823,7 +1827,7 @@ function step() {
   clampAll();
   for (const f of G.f) if (!f.chainedBy) f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.GAIN.passive);
   // 链晶
-  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? rand(780, 1060) : rand(360, 920); const r0 = Math.random(), type = r0 < .6 ? 'shard' : r0 < .82 ? 'elixir' : 'scroll'; const sz = rand(10, 90); G.shards.push({ x, z: sz, y: gy(sz) - 52, life: CFG.SHARD_LIFE, t: 0, type }); emit('EV_SHARD_SPAWN', { text: `${type} x=${Math.round(x)}` }); }
+  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? CFG.STAGE_W / 2 + rand(140, 420) : clamp((G.f[0].x + G.f[1].x) / 2 + rand(-420, 420), CFG.WALL_L + 60, CFG.WALL_R - 60); const r0 = Math.random(), type = r0 < .6 ? 'shard' : r0 < .82 ? 'elixir' : 'scroll'; const sz = rand(10, 90); G.shards.push({ x, z: sz, y: gy(sz) - 52, life: CFG.SHARD_LIFE, t: 0, type }); emit('EV_SHARD_SPAWN', { text: `${type} x=${Math.round(x)}` }); }
   for (const s of G.shards) {
     s.t++; s.life--;
     for (const f of G.f) {
@@ -1845,8 +1849,13 @@ function step() {
 function clampAll() {
   const [A, B] = G.f, dx = B.x - A.x, minD = 58;
   if (Math.abs(dx) < minD && Math.abs(A.y - B.y) < 120 && Math.abs(A.z - B.z) < 26 && A.state !== 'ST_KO' && B.state !== 'ST_KO') { const o = (minD - Math.abs(dx)) / 2, s = dx >= 0 ? 1 : -1; A.x -= o * s; B.x += o * s; }
-  const wl = G.demo ? 640 : CFG.WALL_L;
-  for (const f of G.f) f.x = clamp(f.x, wl, CFG.WALL_R);
+  const sep = Math.abs(B.x - A.x) - CFG.MAX_SEP;   // 两人最远距离：谁往外走就把谁拉回来
+  if (sep > 0 && !G.demo) {
+    const s = Math.sign(B.x - A.x) || 1, oa = Math.max(0, -(A.x - (A.px ?? A.x)) * s), ob = Math.max(0, (B.x - (B.px ?? B.x)) * s), t = oa + ob;
+    A.x += s * sep * (t > 0 ? oa / t : .5); B.x -= s * sep * (t > 0 ? ob / t : .5);
+  }
+  const wl = G.demo ? CFG.STAGE_W / 2 : CFG.WALL_L, wr = G.demo ? CFG.STAGE_W / 2 + W / 2 - 70 : CFG.WALL_R;
+  for (const f of G.f) f.x = clamp(f.x, wl, wr);
 }
 
 /* ============================================================
@@ -1854,62 +1863,61 @@ function clampAll() {
    ============================================================ */
 const cv = $('#cv'), ctx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
 cv.width = W * DPR; cv.height = H * DPR;
-const BG = {};
+const BG = {}, THUMB = {};
 function seeded(s) { return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+/* 远景按 1280 宽的构图来画；PX0..PX1 是这次要铺满的横向范围（宽场地时向两侧延伸） */
+let PX0 = 0, PX1 = W;
+const PSPAN = () => PX1 - PX0, PN = n => Math.round(n * PSPAN() / W);
 function ridge(c, r, y0, amp, col, step) {
-  c.fillStyle = col; c.beginPath(); c.moveTo(0, H);
-  let prev = y0 + (r() - .5) * amp; c.lineTo(0, prev);
-  for (let x = step; x <= W + step; x += step) { const y = y0 + (r() - .5) * amp; c.quadraticCurveTo(x - step / 2, prev, x, y); prev = y; }
-  c.lineTo(W, H); c.closePath(); c.fill();
+  c.fillStyle = col; c.beginPath(); c.moveTo(PX0, H);
+  let prev = y0 + (r() - .5) * amp; c.lineTo(PX0, prev);
+  for (let x = PX0 + step; x <= PX1 + step; x += step) { const y = y0 + (r() - .5) * amp; c.quadraticCurveTo(x - step / 2, prev, x, y); prev = y; }
+  c.lineTo(PX1 + step, H); c.closePath(); c.fill();
 }
 function paintBridge(c) {
   let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#2a1517'); g.addColorStop(.42, '#7e2c22'); g.addColorStop(.72, '#d4603d'); g.addColorStop(1, '#efbf94');
-  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = g; c.fillRect(PX0, 0, PSPAN(), H);
   g = c.createRadialGradient(930, 330, 0, 930, 330, 200); g.addColorStop(0, 'rgba(255,240,215,.9)'); g.addColorStop(.35, 'rgba(255,214,170,.45)'); g.addColorStop(1, 'rgba(255,190,140,0)');
   c.fillStyle = g; c.fillRect(700, 120, 460, 440); c.fillStyle = '#fbe6c8'; c.beginPath(); c.arc(930, 330, 60, 0, 7); c.fill();
-  c.fillStyle = 'rgba(60,20,18,.28)'; for (const [x, y, w] of [[120, 160, 380], [640, 210, 300], [860, 270, 260], [60, 300, 220]]) c.fillRect(x, y, w, 6);
+  c.fillStyle = 'rgba(60,20,18,.28)'; for (const [x, y, w] of [[120, 160, 380], [640, 210, 300], [860, 270, 260], [60, 300, 220], [-260, 240, 300], [1240, 190, 340], [1500, 280, 260]]) c.fillRect(x, y, w, 6);
   ridge(c, seeded(7), 440, 90, '#9a3f2b', 60); ridge(c, seeded(11), 485, 70, '#6a2820', 50);
   c.fillStyle = '#24120f';
-  c.beginPath(); c.moveTo(-10, 372); c.lineTo(505, 372); c.lineTo(522, 384); c.lineTo(498, 396); c.lineTo(514, 412); c.lineTo(-10, 412); c.fill();
-  c.beginPath(); c.moveTo(772, 372); c.lineTo(1290, 372); c.lineTo(1290, 412); c.lineTo(768, 412); c.lineTo(786, 397); c.lineTo(762, 384); c.fill();
-  for (const x of [150, 380, 900, 1140]) { c.fillRect(x - 24, 405, 48, 215); c.fillRect(x - 32, 405, 64, 12); }
-  c.strokeStyle = '#24120f'; c.lineWidth = 9; for (const [a, b] of [[174, 356], [924, 1116]]) { c.beginPath(); c.moveTo(a, 600); c.quadraticCurveTo((a + b) / 2, 420, b, 600); c.stroke(); }
-  c.fillStyle = '#24120f'; for (let x = 0; x < W; x += 34) if (x < 500 || x > 780) c.fillRect(x, 346, 5, 28); c.fillRect(0, 344, 505, 5); c.fillRect(772, 344, 520, 5);
+  c.beginPath(); c.moveTo(PX0 - 10, 372); c.lineTo(505, 372); c.lineTo(522, 384); c.lineTo(498, 396); c.lineTo(514, 412); c.lineTo(PX0 - 10, 412); c.fill();
+  c.beginPath(); c.moveTo(772, 372); c.lineTo(PX1 + 10, 372); c.lineTo(PX1 + 10, 412); c.lineTo(768, 412); c.lineTo(786, 397); c.lineTo(762, 384); c.fill();
+  const piers = []; for (let x = 380; x > PX0 - 60; x -= 230) piers.unshift(x); for (let x = 900; x < PX1 + 60; x += 240) piers.push(x);
+  for (const x of piers) { c.fillRect(x - 24, 405, 48, 215); c.fillRect(x - 32, 405, 64, 12); }
+  c.strokeStyle = '#24120f'; c.lineWidth = 9;
+  for (let i = 1; i < piers.length; i++) { const a = piers[i - 1] + 24, b = piers[i] - 24; if (b - a > 300) continue; c.beginPath(); c.moveTo(a, 600); c.quadraticCurveTo((a + b) / 2, 420, b, 600); c.stroke(); }
+  c.fillStyle = '#24120f'; for (let x = Math.floor(PX0 / 34) * 34; x < PX1; x += 34) if (x < 500 || x > 780) c.fillRect(x, 346, 5, 28);
+  c.fillRect(PX0, 344, 505 - PX0, 5); c.fillRect(772, 344, PX1 - 772, 5);
   ridge(c, seeded(23), 545, 40, '#3d1915', 40);
-  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#2a1714'); g.addColorStop(1, '#0f0908'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
-  c.fillStyle = '#6a3326'; c.fillRect(0, 600, W, 3);
-  c.strokeStyle = 'rgba(239,233,223,.06)'; c.lineWidth = 2;
-  for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 110, 603); c.lineTo(640 + i * 260, H); c.stroke(); }
-  for (const y of [640, 685]) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
 }
 function paintRain(c) {
   let g = c.createLinearGradient(0, 0, 0, 600); g.addColorStop(0, '#141d1c'); g.addColorStop(.6, '#2f4643'); g.addColorStop(1, '#58736e');
-  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = g; c.fillRect(PX0, 0, PSPAN(), H);
   g = c.createRadialGradient(330, 170, 0, 330, 170, 200); g.addColorStop(0, 'rgba(225,240,235,.35)'); g.addColorStop(1, 'rgba(225,240,235,0)'); c.fillStyle = g; c.fillRect(100, 0, 480, 400);
   const roof = (x, y, w, h, col) => {
     c.fillStyle = col; c.fillRect(x + w * .08, y + h * .3, w * .84, 600 - y);
     c.beginPath(); c.moveTo(x - 30, y + h * .32); c.quadraticCurveTo(x + w * .25, y + h * .1, x + w * .35, y - h * .2); c.lineTo(x + w * .65, y - h * .2);
     c.quadraticCurveTo(x + w * .75, y + h * .1, x + w + 30, y + h * .32); c.lineTo(x + w, y + h * .42); c.lineTo(x, y + h * .42); c.closePath(); c.fill();
   };
+  if (PX0 < 0) roof(-400, 395, 360, 95, '#22302f');
+  if (PX1 > W) { roof(1600, 385, 420, 100, '#22302f'); roof(1260, 418, 360, 84, '#1b2626'); }
   roof(40, 400, 360, 90, '#22302f'); roof(820, 380, 420, 100, '#22302f'); roof(430, 430, 400, 80, '#1b2626');
-  c.fillStyle = '#0f0c0b'; c.fillRect(70, 0, 60, 620); c.fillRect(1150, 0, 60, 620); c.fillRect(0, 40, W, 34); c.fillRect(0, 84, W, 10);
+  c.fillStyle = '#0f0c0b'; c.fillRect(70, 0, 60, 620); c.fillRect(1150, 0, 60, 620); c.fillRect(PX0, 40, PSPAN(), 34); c.fillRect(PX0, 84, PSPAN(), 10);
   for (const x of [210, 1070]) {
     c.strokeStyle = '#0f0c0b'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, 94); c.lineTo(x, 220); c.stroke();
     g = c.createRadialGradient(x, 252, 0, x, 252, 130); g.addColorStop(0, 'rgba(232,67,43,.45)'); g.addColorStop(1, 'rgba(232,67,43,0)'); c.fillStyle = g; c.fillRect(x - 130, 120, 260, 260);
     c.fillStyle = '#e8432b'; c.beginPath(); c.ellipse(x, 252, 26, 34, 0, 0, 7); c.fill(); c.fillStyle = '#0f0c0b'; c.fillRect(x - 16, 216, 32, 6); c.fillRect(x - 16, 282, 32, 6);
   }
-  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#26302f'); g.addColorStop(1, '#0b0f0f'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
-  c.fillStyle = 'rgba(232,67,43,.18)'; for (const x of [210, 1070]) { c.beginPath(); c.ellipse(x, 668, 30, 52, 0, 0, 7); c.fill(); }
-  c.fillStyle = 'rgba(225,240,235,.25)'; c.fillRect(0, 600, W, 2);
-  c.strokeStyle = 'rgba(225,240,235,.07)'; c.lineWidth = 2; for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 120, 603); c.lineTo(640 + i * 280, H); c.stroke(); }
 }
 function paintBamboo(c) {
-  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#d6e6d8'); g.addColorStop(.55, '#94b9a2'); g.addColorStop(1, '#4f7a64'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#d6e6d8'); g.addColorStop(.55, '#94b9a2'); g.addColorStop(1, '#4f7a64'); c.fillStyle = g; c.fillRect(PX0, 0, PSPAN(), H);
   g = c.createRadialGradient(980, 170, 0, 980, 170, 280); g.addColorStop(0, 'rgba(255,250,228,.75)'); g.addColorStop(1, 'rgba(255,250,228,0)'); c.fillStyle = g; c.fillRect(600, 0, 680, 520);
   const layer = (seed, n, col, wMin, wMax, alpha) => {
     const r = seeded(seed); c.globalAlpha = alpha;
-    for (let i = 0; i < n; i++) {
-      const x = r() * W, w = wMin + r() * (wMax - wMin), lean = (r() - .5) * 40;
+    for (let i = 0; i < PN(n); i++) {
+      const x = PX0 + r() * PSPAN(), w = wMin + r() * (wMax - wMin), lean = (r() - .5) * 40;
       c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'butt'; c.beginPath(); c.moveTo(x, 640); c.quadraticCurveTo(x + lean * .4, 300, x + lean, -20); c.stroke();
       c.strokeStyle = 'rgba(20,40,28,.3)'; c.lineWidth = 2;
       for (let y = 600; y > 0; y -= 55 + r() * 50) { const xx = x + lean * ((640 - y) / 660); c.beginPath(); c.moveTo(xx - w / 2 - 1, y); c.lineTo(xx + w / 2 + 1, y); c.stroke(); }
@@ -1919,15 +1927,12 @@ function paintBamboo(c) {
     c.globalAlpha = 1;
   };
   layer(3, 26, '#b4d1bd', 4, 8, .7); layer(5, 18, '#78a389', 7, 12, .85);
-  g = c.createLinearGradient(0, 380, 0, 580); g.addColorStop(0, 'rgba(232,242,234,0)'); g.addColorStop(1, 'rgba(232,242,234,.6)'); c.fillStyle = g; c.fillRect(0, 380, W, 200);
+  g = c.createLinearGradient(0, 380, 0, 580); g.addColorStop(0, 'rgba(232,242,234,0)'); g.addColorStop(1, 'rgba(232,242,234,.6)'); c.fillStyle = g; c.fillRect(PX0, 380, PSPAN(), 200);
   layer(9, 9, '#2f5440', 12, 18, 1);
-  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#3d4c36'); g.addColorStop(1, '#192117'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
-  c.fillStyle = '#62765a'; c.fillRect(0, 600, W, 3);
-  const r = seeded(13); c.fillStyle = 'rgba(200,205,130,.35)'; for (let i = 0; i < 70; i++) { c.beginPath(); c.ellipse(r() * W, 612 + r() * 100, 7, 2.2, r() * 3, 0, 7); c.fill(); }
 }
 function paintSnow(c) {
-  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#0d131e'); g.addColorStop(.6, '#243149'); g.addColorStop(1, '#4b5b76'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-  const r = seeded(21); c.fillStyle = '#f0f3fa'; for (let i = 0; i < 90; i++) { c.globalAlpha = .25 + r() * .7; c.fillRect(r() * W, r() * 330, 1.6, 1.6); } c.globalAlpha = 1;
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#0d131e'); g.addColorStop(.6, '#243149'); g.addColorStop(1, '#4b5b76'); c.fillStyle = g; c.fillRect(PX0, 0, PSPAN(), H);
+  const r = seeded(21); c.fillStyle = '#f0f3fa'; for (let i = 0; i < PN(90); i++) { c.globalAlpha = .25 + r() * .7; c.fillRect(PX0 + r() * PSPAN(), r() * 330, 1.6, 1.6); } c.globalAlpha = 1;
   g = c.createRadialGradient(250, 150, 0, 250, 150, 130); g.addColorStop(0, 'rgba(240,244,255,.9)'); g.addColorStop(.3, 'rgba(220,230,255,.3)'); g.addColorStop(1, 'rgba(220,230,255,0)'); c.fillStyle = g; c.fillRect(100, 0, 320, 300);
   c.fillStyle = '#f2f4fa'; c.beginPath(); c.arc(250, 150, 42, 0, 7); c.fill();
   ridge(c, seeded(27), 470, 80, '#34415c', 70);
@@ -1941,9 +1946,8 @@ function paintSnow(c) {
   const pine = (x, y, s) => { c.fillStyle = '#0c121b'; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(x, y - s * (1 - i * .2)); c.lineTo(x - s * (.22 + i * .1), y - s * (.5 - i * .16)); c.lineTo(x + s * (.22 + i * .1), y - s * (.5 - i * .16)); c.fill(); } c.fillRect(x - 4, y - s * .2, 8, s * .2);
     c.fillStyle = 'rgba(223,230,242,.75)'; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(x, y - s * (1 - i * .2)); c.lineTo(x - s * (.1 + i * .05), y - s * (.82 - i * .18)); c.lineTo(x + s * (.1 + i * .05), y - s * (.82 - i * .18)); c.fill(); } };
   pine(110, 610, 250); pine(215, 610, 180); pine(690, 610, 150);
-  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#c4cfdf'); g.addColorStop(1, '#76839a'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
-  c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(0, 600, W, 3);
-  c.strokeStyle = 'rgba(40,52,74,.12)'; c.lineWidth = 2; for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 120, 603); c.lineTo(640 + i * 280, H); c.stroke(); }
+  if (PX0 < 0) { pine(-120, 610, 210); pine(-30, 610, 140); }
+  if (PX1 > W) { pine(1330, 610, 220); pine(1450, 610, 160); pine(1640, 610, 240); }
 }
 function lantern(c, x, y, s = 1, glow = true) {
   if (glow) { const g = c.createRadialGradient(x, y, 0, x, y, 60 * s); g.addColorStop(0, 'rgba(255,150,80,.45)'); g.addColorStop(1, 'rgba(255,120,60,0)'); c.fillStyle = g; c.fillRect(x - 60 * s, y - 60 * s, 120 * s, 120 * s); }
@@ -1954,11 +1958,11 @@ function lantern(c, x, y, s = 1, glow = true) {
   c.strokeStyle = '#e8b04a'; c.lineWidth = 1.5 * s; line(c, [x, y + 19 * s], [x, y + 30 * s]);
 }
 function paintLantern(c) {
-  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#0b0a1a'); g.addColorStop(.55, '#2a1530'); g.addColorStop(1, '#5a2430'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-  let r = seeded(31); c.fillStyle = '#f5e9d0'; for (let i = 0; i < 70; i++) { c.globalAlpha = .2 + r() * .6; c.fillRect(r() * W, r() * 240, 1.5, 1.5); } c.globalAlpha = 1;
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#0b0a1a'); g.addColorStop(.55, '#2a1530'); g.addColorStop(1, '#5a2430'); c.fillStyle = g; c.fillRect(PX0, 0, PSPAN(), H);
+  let r = seeded(31); c.fillStyle = '#f5e9d0'; for (let i = 0; i < PN(70); i++) { c.globalAlpha = .2 + r() * .6; c.fillRect(PX0 + r() * PSPAN(), r() * 240, 1.5, 1.5); } c.globalAlpha = 1;
   const houses = (y0, col, seed, hmin, hmax, win) => {
-    const q = seeded(seed); let x = -30;
-    while (x < W + 40) {
+    const q = seeded(seed); let x = PX0 - 30;
+    while (x < PX1 + 40) {
       const w = 90 + q() * 130, h = hmin + q() * (hmax - hmin);
       c.fillStyle = col; c.fillRect(x, y0 - h, w, h + 300);
       c.beginPath(); c.moveTo(x - 18, y0 - h + 6); c.quadraticCurveTo(x + w * .2, y0 - h - 4, x + w / 2, y0 - h - 22); c.quadraticCurveTo(x + w * .8, y0 - h - 4, x + w + 18, y0 - h + 6); c.closePath(); c.fill();
@@ -1968,50 +1972,97 @@ function paintLantern(c) {
   };
   houses(430, '#1c1226', 41, 70, 160, v => `rgba(255,${170 + v * 60 | 0},90,${.35 + v * .35})`);
   houses(520, '#120b17', 43, 60, 150, v => `rgba(255,${150 + v * 70 | 0},80,${.5 + v * .4})`);
-  for (const [y0, sag, n, seed] of [[150, 70, 8, 51], [250, 56, 10, 53]]) {
-    c.strokeStyle = '#3a1c18'; c.lineWidth = 2; c.beginPath(); c.moveTo(-20, y0); c.quadraticCurveTo(W / 2, y0 + sag * 2, W + 20, y0); c.stroke();
-    for (let i = 0; i < n; i++) { const u = (i + .5) / n, x = lerp(-20, W + 20, u), y = (1 - u) * (1 - u) * y0 + 2 * u * (1 - u) * (y0 + sag * 2) + u * u * y0; lantern(c, x, y + 28, y0 < 200 ? .9 : 1.1); }
+  for (const [y0, sag, n] of [[150, 70, 8], [250, 56, 10]]) {
+    const a = PX0 - 20, b = PX1 + 20, N = PN(n);
+    c.strokeStyle = '#3a1c18'; c.lineWidth = 2; c.beginPath(); c.moveTo(a, y0); c.quadraticCurveTo((a + b) / 2, y0 + sag * 2, b, y0); c.stroke();
+    for (let i = 0; i < N; i++) { const u = (i + .5) / N, x = lerp(a, b, u), y = (1 - u) * (1 - u) * y0 + 2 * u * (1 - u) * (y0 + sag * 2) + u * u * y0; lantern(c, x, y + 28, y0 < 200 ? .9 : 1.1); }
   }
-  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#3a1c22'); g.addColorStop(1, '#140a0d'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
-  c.fillStyle = '#7a3a34'; c.fillRect(0, 600, W, 3);
-  r = seeded(57); for (let i = 0; i < 14; i++) { c.fillStyle = `rgba(255,120,80,${.06 + r() * .08})`; c.fillRect(r() * W, 606, 10 + r() * 14, 40 + r() * 60); }
-  c.strokeStyle = 'rgba(239,233,223,.06)'; c.lineWidth = 2; for (let i = -7; i <= 7; i++) { c.beginPath(); c.moveTo(640 + i * 120, 603); c.lineTo(640 + i * 270, H); c.stroke(); }
-  for (const y of [645, 690]) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
 }
 function paintDesert(c) {
-  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#86b0d3'); g.addColorStop(.5, '#e7d6ae'); g.addColorStop(1, '#f0c688'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  let g = c.createLinearGradient(0, 0, 0, 620); g.addColorStop(0, '#86b0d3'); g.addColorStop(.5, '#e7d6ae'); g.addColorStop(1, '#f0c688'); c.fillStyle = g; c.fillRect(PX0, 0, PSPAN(), H);
   g = c.createRadialGradient(330, 130, 0, 330, 130, 220); g.addColorStop(0, 'rgba(255,252,236,.95)'); g.addColorStop(.25, 'rgba(255,244,210,.5)'); g.addColorStop(1, 'rgba(255,240,200,0)'); c.fillStyle = g; c.fillRect(100, 0, 460, 360);
   c.fillStyle = '#fffbea'; c.beginPath(); c.arc(330, 130, 38, 0, 7); c.fill();
   c.fillStyle = '#c9a477'; c.beginPath(); c.moveTo(780, 420); c.lineTo(820, 330); c.lineTo(980, 322); c.lineTo(1010, 420); c.fill();
   c.beginPath(); c.moveTo(1040, 420); c.lineTo(1066, 352); c.lineTo(1170, 348); c.lineTo(1196, 420); c.fill();
+  if (PX0 < 0) { c.beginPath(); c.moveTo(-300, 420); c.lineTo(-262, 360); c.lineTo(-150, 356); c.lineTo(-118, 420); c.fill(); }
+  if (PX1 > W) { c.beginPath(); c.moveTo(1380, 420); c.lineTo(1420, 318); c.lineTo(1600, 312); c.lineTo(1636, 420); c.fill(); }
   ridge(c, seeded(61), 440, 60, '#e2b77a', 90); ridge(c, seeded(63), 490, 46, '#d39e5e', 70);
   c.fillStyle = '#8d6238';
   for (const [x, h, br] of [[760, 200, 18], [850, 150, -12], [1120, 230, 10]]) { c.beginPath(); c.moveTo(x - 22, 600); c.lineTo(x - 22, 600 - h); c.lineTo(x, 600 - h - br); c.lineTo(x + 22, 600 - h + 8); c.lineTo(x + 22, 600); c.fill(); c.fillRect(x - 30, 600 - h + 4, 60, 10); }
   c.lineWidth = 34; c.strokeStyle = '#8d6238'; c.beginPath(); c.arc(985, 470, 90, Math.PI * 1.08, Math.PI * 1.62); c.stroke();
   c.strokeStyle = '#5a4028'; c.lineCap = 'round';
   const br = (x, y, a, l, w) => { if (l < 10) return; const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l; c.lineWidth = w; line(c, [x, y], [x2, y2]); br(x2, y2, a - .45, l * .7, w * .65); br(x2, y2, a + .38, l * .62, w * .6); };
-  br(170, 600, -1.62, 90, 12);
-  g = c.createLinearGradient(0, 600, 0, H); g.addColorStop(0, '#c98f52'); g.addColorStop(1, '#7d5129'); c.fillStyle = g; c.fillRect(0, 600, W, 120);
-  c.fillStyle = '#e6b27a'; c.fillRect(0, 600, W, 3);
-  const r = seeded(67); c.strokeStyle = 'rgba(80,50,25,.35)'; c.lineWidth = 2;
-  for (let i = 0; i < 16; i++) { let x = r() * W, y = 612 + r() * 96; c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += rand(10, 24); y += rand(-6, 6); c.lineTo(x, y); } c.stroke(); }
-  c.fillStyle = 'rgba(90,60,30,.5)'; for (let i = 0; i < 40; i++) { c.beginPath(); c.ellipse(r() * W, 614 + r() * 100, 3 + r() * 5, 2 + r() * 2, 0, 0, 7); c.fill(); }
+  br(170, 600, -1.62, 90, 12); if (PX1 > W) br(1460, 600, -1.5, 72, 10);
 }
 const PAINT = { STG_01: paintBridge, STG_02: paintRain, STG_03: paintBamboo, STG_04: paintSnow, STG_05: paintLantern, STG_06: paintDesert };
+/* 地面层：画在世界坐标里，跟着角色一起移动；透视线的消失点跟着镜头走 */
+const FLOOR = {
+  STG_01: { g: ['#2a1714', '#0f0908'], top: '#6a3326', th: 3, ln: 'rgba(239,233,223,.06)', sp: [110, 260], hl: [640, 685] },
+  STG_02: { g: ['#26302f', '#0b0f0f'], top: 'rgba(225,240,235,.25)', th: 2, ln: 'rgba(225,240,235,.07)', sp: [120, 280], deco: 'puddle' },
+  STG_03: { g: ['#3d4c36', '#192117'], top: '#62765a', th: 3, deco: 'leaf' },
+  STG_04: { g: ['#c4cfdf', '#76839a'], top: 'rgba(255,255,255,.6)', th: 3, ln: 'rgba(40,52,74,.12)', sp: [120, 280] },
+  STG_05: { g: ['#3a1c22', '#140a0d'], top: '#7a3a34', th: 3, ln: 'rgba(239,233,223,.06)', sp: [120, 270], hl: [645, 690], deco: 'glow' },
+  STG_06: { g: ['#c98f52', '#7d5129'], top: '#e6b27a', th: 3, deco: 'crack' },
+};
+const FL_Y = 600, FL_H = 290;
+function paintFloor(c, id, x0, x1) {
+  const F = FLOOR[id] || FLOOR.STG_01, span = x1 - x0, n = k => Math.round(k * span / W), r = seeded(id.charCodeAt(5) * 977 + 13);
+  const g = c.createLinearGradient(0, FL_Y, 0, H); g.addColorStop(0, F.g[0]); g.addColorStop(1, F.g[1]); c.fillStyle = g; c.fillRect(x0, FL_Y, span, FL_H);
+  c.fillStyle = 'rgba(10,8,7,.35)'; c.fillRect(x0, H, span, FL_Y + FL_H - H);
+  c.fillStyle = F.top; c.fillRect(x0, FL_Y, span, F.th);
+  if (F.deco === 'leaf') { c.fillStyle = 'rgba(200,205,130,.35)'; for (let i = 0; i < n(70); i++) { c.beginPath(); c.ellipse(x0 + r() * span, 612 + r() * 100, 7, 2.2, r() * 3, 0, 7); c.fill(); } }
+  else if (F.deco === 'glow') { for (let i = 0; i < n(14); i++) { c.fillStyle = `rgba(255,120,80,${.06 + r() * .08})`; c.fillRect(x0 + r() * span, 606, 10 + r() * 14, 40 + r() * 60); } }
+  else if (F.deco === 'puddle') { for (let i = 0; i < n(9); i++) { c.fillStyle = `rgba(225,240,235,${.03 + r() * .04})`; c.beginPath(); c.ellipse(x0 + r() * span, 632 + r() * 76, 40 + r() * 70, 4 + r() * 5, 0, 0, 7); c.fill(); } }
+  else if (F.deco === 'crack') {
+    c.strokeStyle = 'rgba(80,50,25,.35)'; c.lineWidth = 2;
+    for (let i = 0; i < n(16); i++) { let x = x0 + r() * span, y = 612 + r() * 96; c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += 10 + r() * 14; y += (r() - .5) * 12; c.lineTo(x, y); } c.stroke(); }
+    c.fillStyle = 'rgba(90,60,30,.5)'; for (let i = 0; i < n(40); i++) { c.beginPath(); c.ellipse(x0 + r() * span, 614 + r() * 100, 3 + r() * 5, 2 + r() * 2, 0, 0, 7); c.fill(); }
+  }
+}
+function floorLines(c, id, vx, x0, x1, y1, o) {
+  const F = FLOOR[id] || FLOOR.STG_01; if (!F.ln) return;
+  const [s0, s1] = F.sp, k = s1 / s0, t = (y1 - 603) / (H - 603);
+  c.strokeStyle = F.ln; c.lineWidth = 2; c.beginPath();
+  for (let xt = o + Math.ceil((x0 - o) / s0) * s0; xt <= x1; xt += s0) { const xb = vx + (xt - vx) * k; c.moveTo(xt, 603); c.lineTo(xt + (xb - xt) * t, y1); }
+  for (const y of F.hl || []) { c.moveTo(x0, y); c.lineTo(x1, y); }
+  c.stroke();
+}
+function stageBG(id) {
+  const BW = Math.ceil(W + Math.max(0, CFG.STAGE_W - W) * CFG.PARALLAX) + 80, key = `${id}|${BW}|${CFG.STAGE_W}`;
+  if (BG.key === key) return BG;
+  const ox = (BW - W) / 2, b = document.createElement('canvas'); b.width = Math.ceil(BW * DPR); b.height = H * DPR;
+  let c = b.getContext('2d'); c.scale(DPR, DPR); c.translate(ox, 0); PX0 = -ox; PX1 = W + ox; (PAINT[id] || paintBridge)(c); PX0 = 0; PX1 = W;
+  const FD = Math.min(DPR, 1.5), flW = CFG.STAGE_W + 160, f = document.createElement('canvas'); f.width = Math.ceil(flW * FD); f.height = Math.ceil(FL_H * FD);
+  c = f.getContext('2d'); c.scale(FD, FD); c.translate(80, -FL_Y); paintFloor(c, id, -80, CFG.STAGE_W + 80);
+  return Object.assign(BG, { key, bg: b, fl: f, BW, ox, flW });
+}
+function stageThumb(id) {   // 选关缩略图：只画 1280 宽的主构图
+  if (THUMB[id]) return THUMB[id];
+  const b = document.createElement('canvas'); b.width = 384; b.height = 216; const c = b.getContext('2d'); c.scale(384 / W, 216 / H);
+  PX0 = 0; PX1 = W; (PAINT[id] || paintBridge)(c); paintFloor(c, id, 0, W); floorLines(c, id, W / 2, 0, W, H, W / 2);
+  return (THUMB[id] = b);
+}
 const FW = [];
 const SAND = Array.from({ length: 90 }, () => ({ x: rand(0, W), y: rand(260, 700), v: rand(4, 10), l: rand(10, 40) }));
-function bgCanvas(id) {
-  if (BG[id]) return BG[id];
-  const b = document.createElement('canvas'); b.width = W * DPR; b.height = H * DPR; const c = b.getContext('2d'); c.scale(DPR, DPR);
-  (PAINT[id] || paintBridge)(c); return (BG[id] = b);
-}
 const AMB = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.3, 1.2), ph: rand(0, 6), sz: rand(1, 3) }));
 const RAIN = Array.from({ length: 150 }, () => ({ x: rand(0, W + 200), y: rand(0, H), l: rand(14, 30), v: rand(14, 22) }));
 const LEAF = Array.from({ length: 34 }, () => ({ x: rand(0, W), y: rand(-H, H), v: rand(.6, 1.6), ph: rand(0, 6), r: rand(0, 6), sz: rand(5, 10) }));
 const SNOW = Array.from({ length: 130 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.6, 2), ph: rand(0, 6), sz: rand(1.2, 3.4) }));
 function drawStage(c) {
-  const bg = bgCanvas(G.stage); c.drawImage(bg, 0, 0, W, H);
-  if (G.camT.ly > .5) { c.drawImage(bg, 0, bg.height - 2, bg.width, 2, 0, H - 1, W, 150); c.fillStyle = 'rgba(10,8,7,.35)'; c.fillRect(0, H, W, 150); }
+  const S = stageBG(G.stage), t = G.camT, mid = CFG.STAGE_W / 2;
+  const bx = t.cx - S.BW / 2 - (t.cx - mid) * CFG.PARALLAX;   // 远景视差：镜头横移时远景只跟着挪一部分
+  c.drawImage(S.bg, bx, 0, S.BW, H);
+  if (G.stage === 'STG_01') {
+    c.save(); c.translate(bx + S.ox, 0); c.strokeStyle = '#1a0d0b'; c.lineWidth = 3;
+    for (const [ax, ph] of [[506, 0], [770, 2]]) {
+      const sw = Math.sin(G.frame * .02 + ph) * .1;
+      for (let i = 0; i < 11; i++) { const x = ax + Math.sin(sw) * i * 14, y = 398 + Math.cos(sw) * i * 14; c.beginPath(); c.ellipse(x, y, i % 2 ? 2.5 : 5, 8, sw, 0, 7); c.stroke(); }
+    }
+    c.restore();
+  }
+  c.drawImage(S.fl, -80, FL_Y, S.flW, FL_H);
+  const hw = W / (2 * t.z) + 40; floorLines(c, G.stage, t.cx, t.cx - hw, t.cx + hw, FL_Y + FL_H, mid);
+  c.save(); c.translate(t.cx - W / 2, 0);   // 天气粒子贴着镜头画，任何位置都铺满画面
   if (G.stage === 'STG_02') {
     c.strokeStyle = 'rgba(220,235,230,.32)'; c.lineWidth = 1.5; c.beginPath();
     for (const r of RAIN) { r.y += r.v * .5; r.x -= r.v * .12; if (r.y > 640) { r.y = rand(-60, 0); r.x = rand(0, W + 200); } c.moveTo(r.x, r.y); c.lineTo(r.x + r.l * .25, r.y - r.l); }
@@ -2037,13 +2088,9 @@ function drawStage(c) {
     c.fillStyle = 'rgba(244,247,255,.85)';
     for (const s of SNOW) { s.y += s.v; s.x += Math.sin(G.frame * .02 + s.ph) * .6; if (s.y > 660) { s.y = rand(-40, 0); s.x = rand(0, W); } c.beginPath(); c.arc(s.x, s.y, s.sz, 0, 7); c.fill(); }
   } else {
-    c.strokeStyle = '#1a0d0b'; c.lineWidth = 3;
-    for (const [ax, ph] of [[506, 0], [770, 2]]) {
-      const sw = Math.sin(G.frame * .02 + ph) * .1;
-      for (let i = 0; i < 11; i++) { const x = ax + Math.sin(sw) * i * 14, y = 398 + Math.cos(sw) * i * 14; c.beginPath(); c.ellipse(x, y, i % 2 ? 2.5 : 5, 8, sw, 0, 7); c.stroke(); }
-    }
     for (const e of AMB) { e.y -= e.v; e.x += Math.sin(G.frame * .02 + e.ph) * .4; if (e.y < 0) { e.y = H; e.x = rand(0, W); } c.fillStyle = `rgba(255,${150 + e.sz * 30},90,${.35 + .3 * Math.sin(G.frame * .1 + e.ph)})`; c.fillRect(e.x, e.y, e.sz, e.sz); }
   }
+  c.restore();
 }
 function line(c, a, b) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); }
 const rgbp = hex => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},`; };
@@ -2521,7 +2568,8 @@ function drawPops(c, world) {
   for (const p of G.pops) {
     if (!!p.w !== world) continue;
     const a = Math.min(1, p.life / 18) * Math.min(1, (p.max - p.life) / 5 + .3), y = p.y - (1 - p.life / p.max) * 36;
-    c.globalAlpha = a; txt(c, p.text, p.x, y, p.size, p.font, p.col, 'center', Math.max(4, p.size / 7), p.font === FN ? 700 : p.font === FU ? 700 : 400);
+    const t = G.camT, hw = W / (2 * t.z), x = world ? clamp(p.x, t.cx - hw + 110 / t.z, t.cx + hw - 110 / t.z) : p.x;
+    c.globalAlpha = a; txt(c, p.text, x, y, p.size, p.font, p.col, 'center', Math.max(4, p.size / 7), p.font === FN ? 700 : p.font === FU ? 700 : 400);
   }
   c.globalAlpha = 1;
 }
@@ -2541,12 +2589,12 @@ function render() {
   const c = ctx; c.setTransform(DPR, 0, 0, DPR, 0, 0);
   c.save();
   if (G.shake) c.translate(rand(-1, 1) * G.shake, rand(-1, 1) * G.shake);
-  let tz = 1, tx = W / 2;
-  if (G.f.length === 2 && CFG.CAMERA && !G.demo) { const A = G.f[0], B = G.f[1], ch = A.chain || B.chain; tz = 1 + (ch ? .05 + ch.lv * .025 : 0) + Math.min(.04, G.hitstop * .004); tx = (A.x + B.x) / 2;
-    if (G.rs === 'RS_KO' && G.koFx && G.rsT < 110) { tz = 1.3; tx = G.koFx.x; } }
-  G.cam.z += (tz - G.cam.z) * .08; G.cam.x += (tx - G.cam.x) * .1;
+  let tz = 1, tx = CFG.STAGE_W / 2;
+  if (G.f.length === 2 && !G.demo) { const A = G.f[0], B = G.f[1], ch = A.chain || B.chain; tx = (A.x + B.x) / 2;
+    if (CFG.CAMERA) { tz = 1 + (ch ? .05 + ch.lv * .025 : 0) + Math.min(.04, G.hitstop * .004); if (G.rs === 'RS_KO' && G.koFx && G.rsT < 110) { tz = 1.3; tx = G.koFx.x; } } }
+  G.cam.z += (tz - G.cam.z) * .08; G.cam.x += (tx - G.cam.x) * .14;
   G.cam.ly += ((G.demo || G.f.length < 2 ? 0 : G.liftT) - G.cam.ly) * .15;
-  const z = G.cam.z, half = W / (2 * z), cx = clamp(G.cam.x, half, W - half), fy = H * .62, ly = G.cam.ly;
+  const z = G.cam.z, half = W / (2 * z), cx = clamp(G.cam.x, half, Math.max(half, CFG.STAGE_W - half)), fy = H * .62, ly = G.cam.ly;
   G.camT = { cx, z, fy, ly };
   c.translate(W / 2, fy - ly); c.scale(z, z); c.translate(-cx, -fy);
   drawStage(c);
@@ -2631,7 +2679,7 @@ function buildSelect() {
   $('#pickDummy').innerHTML = DUMMY.map(d => `<button class="card small" data-slot="dummy" data-id="${d.key}" aria-pressed="${G.sel.dummy === d.key}"><span><b style="font-size:1.25em">${d.name}</b></span><span class="t">${d.desc}</span></button>`).join('');
   requestAnimationFrame(() => {
     for (const n of [1, 2]) $$(`#sideP${n} .pc canvas`).forEach((cv, i) => portrait(cv, CHARS[i], n === 2 && G.sel.p1 === CHARS[i].id));
-    $$('#pickStage canvas').forEach((cv, i) => { const w = cv.clientWidth || 128, h = cv.clientHeight || 72; cv.width = w * DPR; cv.height = h * DPR; cv.getContext('2d').drawImage(bgCanvas(STAGES[i].id), 0, 0, w * DPR, h * DPR); });
+    $$('#pickStage canvas').forEach((cv, i) => { const w = cv.clientWidth || 128, h = cv.clientHeight || 72; cv.width = w * DPR; cv.height = h * DPR; cv.getContext('2d').drawImage(stageThumb(STAGES[i].id), 0, 0, w * DPR, h * DPR); });
   });
 }
 function buildMoves() {
