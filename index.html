@@ -108,6 +108,25 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 #touch .pad.r button{position:absolute;border-radius:50%;border:2px solid rgba(239,233,223,.45);background:rgba(20,17,16,.28);color:var(--bone);font-size:1em;font-weight:700;text-shadow:0 1px 3px #000;touch-action:none;pointer-events:auto;padding:0;opacity:.9;transition:opacity .18s}
 #touch .pad.r button.on{background:rgba(232,67,43,.7);border-color:var(--bone);opacity:1}
 #touch .pad.r button.thru:not(.on){opacity:.2}
+#touch .pad.r button .ic{position:absolute;left:17%;top:10%;width:66%;height:66%;pointer-events:none}
+#touch .pad.r button b{position:absolute;left:0;right:0;bottom:9%;font-size:.62em;line-height:1;letter-spacing:.04em;pointer-events:none;text-shadow:0 1px 2px #000,0 0 3px #000}
+#touch .pad.r button i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:1.25em;pointer-events:none;text-shadow:0 1px 3px #000}
+#touch .pad.r button::after{content:'';position:absolute;inset:-2px;border-radius:50%;pointer-events:none;background:conic-gradient(rgba(13,10,9,.68) calc(var(--cd,0) * 1turn),transparent 0)}
+#touch .pad.r button.b-brk::after{inset:-5px;background:conic-gradient(var(--red) calc(var(--bk,0) * 1turn),rgba(239,233,223,.12) 0);-webkit-mask:radial-gradient(circle,transparent 64%,#000 65%);mask:radial-gradient(circle,transparent 64%,#000 65%)}
+#touch .pad.r button.rdy{box-shadow:0 0 0 2px var(--rc,#efe9df),0 0 .9em var(--rc,#efe9df);opacity:1}
+#touch .pad.r button.hot{animation:hot .5s ease-in-out infinite alternate}
+@keyframes hot{to{box-shadow:0 0 0 3px var(--rc),0 0 1.6em var(--rc);transform:scale(1.07)}}
+#touch .pad.r button.off{filter:grayscale(.9);opacity:.42}
+.ic{width:1.6em;height:1.6em;vertical-align:middle;flex:none}
+.chip .ic{width:1.55em;height:1.55em;margin:-.25em .3em -.2em -.5em}
+.chip{display:inline-flex;align-items:center}
+.detail .mech .ic{width:1.5em;height:1.5em;margin:-.2em .25em 0 0}
+.mvn{white-space:nowrap}.mvn .ic{width:1.9em;height:1.9em;margin:-.3em .45em -.25em 0}
+#cxTable code .ic{width:1.7em;height:1.7em;margin:-.3em .45em -.25em 0}
+#sysText .ic{width:1.45em;height:1.45em;margin:-.2em .3em 0 0}
+.icgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.2em,1fr));gap:.6em;padding:.3em 0}
+.icgrid figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:.3em;padding:.6em .3em;background:rgba(239,233,223,.04);border-radius:.6em}
+.icgrid .ic{width:3.4em;height:3.4em}.icgrid figcaption{font-size:.72em;text-align:center;line-height:1.35}.icgrid code{font-size:.9em;color:var(--mute)}
 #touch .b-l{right:.6em;bottom:.6em;width:5.4em;height:5.4em}
 #touch .b-h{right:6.6em;bottom:.5em;width:4.5em;height:4.5em}
 #touch .b-fin{right:11.6em;bottom:.7em;width:4em;height:4em}
@@ -177,7 +196,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_CODEX">设定 ID 表</button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v0.5.1 · 背景为电脑自动对战演示</div>
+  <div class="ver">v0.6 · 背景为电脑自动对战演示</div>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
 </section>
 
@@ -430,6 +449,291 @@ const ASSISTS = [
   { id: 'AS_HEALER', name: '药师', role: '回复 80 生命与 15 破链能量', col: '#6fd39a' },
 ];
 const AS_BY = Object.fromEntries(ASSISTS.map(a => [a.id, a]));
+
+/* ---------- 图标 IC：全部为原创矢量，按 ID 取用 ---------- */
+const IC_PAL = {
+  CH_JIN:  { c: '#ef4a2e', d: '#2a0f0a', e: '#ffb347' },
+  CH_LAN:  { c: '#2cb7b2', d: '#0a2627', e: '#a6f0e6' },
+  CH_YUE:  { c: '#d79a3c', d: '#291e0e', e: '#9a9186' },
+  CH_YING: { c: '#8399de', d: '#121828', e: '#d3dbff' },
+  CH_LING: { c: '#4fc08a', d: '#0e2519', e: '#f0cf63' },
+  AS:      { c: '#d6a44a', d: '#1d1814', e: '#efe9df' },
+  GR:      { c: '#cdb27a', d: '#1d1814', e: '#7fe0a8' },
+  SYS:     { c: '#e8432b', d: '#1d1814', e: '#bfe9ff' },
+  IT:      { c: '#9fd3d0', d: '#13201f', e: '#7fe0a8' },
+};
+const IC_TOK = { b: '#efe9df', k: '#0d0a09', r: '#e8432b', w: '#ffffff', g: '#7fe0a8', y: '#f0cf63', p: '#e9d8a6' };
+const IC_FRAME = {
+  CH_JIN: 'M24 3.5C35.3 3.5 44.5 12.7 44.5 24S35.3 44.5 24 44.5 3.5 35.3 3.5 24 12.7 3.5 24 3.5Z',
+  CH_LAN: 'M24 3.5C39 3.5 44.5 9 44.5 24S39 44.5 24 44.5 3.5 39 3.5 24 9 3.5 24 3.5Z',
+  CH_YUE: 'M24 3.5L42 13.75V34.25L24 44.5L6 34.25V13.75Z',
+  CH_YING: 'M24 2.5L45.5 24L24 45.5L2.5 24Z',
+  CH_LING: 'M24 3.5C34.5 3.5 39.5 10.5 39.5 20V29.5L44.5 37V43H3.5V37L8.5 29.5V20C8.5 10.5 13.5 3.5 24 3.5Z',
+  AS: 'M24 3.5L42 9.5V24C42 34 34.5 41 24 45C13.5 41 6 34 6 24V9.5Z',
+  GR: 'M11 4.5H37Q43.5 4.5 43.5 11V37Q43.5 43.5 37 43.5H11Q4.5 43.5 4.5 37V11Q4.5 4.5 11 4.5Z',
+  SYS: 'M24 3.5C35.3 3.5 44.5 12.7 44.5 24S35.3 44.5 24 44.5 3.5 35.3 3.5 24 12.7 3.5 24 3.5Z',
+  IT: 'M24 3.5L38.5 9.5L44.5 24L38.5 38.5L24 44.5L9.5 38.5L3.5 24L9.5 9.5Z',
+};
+
+/* 母题：以原点为中心，只用 M L C Q Z，可平移 / 缩放 / 旋转 */
+const MOTIF = {
+  FLAME: 'M0 0C-5.5 0 -8 -4 -7 -8.5C-6.4 -11.2 -4.6 -12.4 -3.6 -14.8C-2.6 -12.6 -2.2 -11 -1.6 -9.6C-0.4 -13.2 1.6 -16.4 4.4 -20C4.6 -15.6 7.6 -12.6 8 -8C8.4 -3.4 5 0 0 0Z',
+  DROP: 'M0 -11C0 -11 -7 -2.5 -7 2.5C-7 6.5 -4 9.5 0 9.5C4 9.5 7 6.5 7 2.5C7 -2.5 0 -11 0 -11Z',
+  BELL: 'M-7.5 5.5C-7.5 1 -7.2 -2.5 -6.6 -4.8C-5.6 -8.6 -3.4 -10.2 0 -10.2C3.4 -10.2 5.6 -8.6 6.6 -4.8C7.2 -2.5 7.5 1 7.5 5.5L10 8.4L-10 8.4Z',
+  ROCK: 'M-9 6L-10.5 -1.5L-5 -8.5L3.5 -9.5L9.5 -4L10.5 4.5L5 9.5L-4.5 9.5Z',
+  BLADE: 'M0 -23L2.8 -6.5L-2.8 -6.5Z',
+  FIST: 'M-8 -7.5L4.5 -7.5C7.3 -7.5 9 -5.6 9 -2.8L9 3.2C9 6 7 8 4.2 8L-5 8C-7.3 8 -9 6.3 -9 4L-9 -6C-9 -6.9 -8.7 -7.5 -8 -7.5Z',
+  FIST_LN: 'M-1.6 -7.5L-1.6 -0.5M3.6 -7.5L3.6 -0.5M-9 1L0 1C2.2 1 2.2 4.4 0 4.4L-8.4 4.4',
+  FOOT: 'M0 -9C3.4 -9 4.6 -4.8 4.1 0C3.6 5 2.4 9 0 9C-2.4 9 -3.6 5 -4.1 0C-4.6 -4.8 -3.4 -9 0 -9Z',
+  LINK: 'M-8 -5.5L8 -5.5C11 -5.5 13.5 -3 13.5 0C13.5 3 11 5.5 8 5.5L-8 5.5C-11 5.5 -13.5 3 -13.5 0C-13.5 -3 -11 -5.5 -8 -5.5Z',
+  STAR4: 'M0 -12L2.4 -2.4L12 0L2.4 2.4L0 12L-2.4 2.4L-12 0L-2.4 -2.4Z',
+};
+function icT(path, x, y, s = 1, r = 0) {
+  const a = r * Math.PI / 180, cs = Math.cos(a) * s, sn = Math.sin(a) * s;
+  if (/[^MLCQZ\d\s.\-]/.test(path)) throw new Error('icT: only M L C Q Z');
+  const nums = []; let out = '';
+  for (const tok of path.match(/[MLCQZ]|-?\d*\.?\d+/g)) {
+    if (/[MLCQZ]/.test(tok)) { out += tok; continue; }
+    nums.push(+tok);
+    if (nums.length === 2) { const [px, py] = nums; out += `${+(px * cs - py * sn + x).toFixed(2)} ${+(px * sn + py * cs + y).toFixed(2)} `; nums.length = 0; }
+  }
+  return out.trim();
+}
+const icC = (x, y, r) => `M${x - r} ${y}A${r} ${r} 0 1 0 ${x + r} ${y}A${r} ${r} 0 1 0 ${x - r} ${y}Z`;
+const MO = MOTIF;
+
+/* 层：[路径, 填充, 描边, 线宽, 透明度, 虚线] —— 颜色 c / d / e 取自所属调色板，b k r w g y p 为公共色 */
+const ICONS = {
+  /* —— 烬：火 —— */
+  MV_JIN_L: { fam: 'CH_JIN', l: [
+    [icT(MO.FLAME, 19, 18.5, .5, -90), 'c'], [icT(MO.FLAME, 19, 24.5, .66, -90), 'e'], [icT(MO.FLAME, 19, 30.5, .5, -90), 'c'],
+    [icT(MO.FIST, 29, 24.5, 1.15), 'b'], [icT(MO.FIST_LN, 29, 24.5, 1.15), null, 'k', 1.9]] },
+  MV_JIN_H: { fam: 'CH_JIN', l: [
+    ['M7.5 33C7.5 21 16 11.5 28 9', null, 'c', 3], ['M11.5 37C12 27 18 19 26 15.5', null, 'e', 2, .7],
+    ['M16 42L22.5 30C23.5 27.5 25 26 27 24.6L33.4 13.4C34.6 11.4 37.4 11.6 38.2 13.8L40 18.6C40.6 20.6 39.2 22.4 37.2 22.2L31.4 21.6L28.6 30.4C27.8 32.8 26.6 34.6 24.8 36L22 43.6Z', 'b'],
+    ['M23.4 31L28.2 33M25.2 27.2L29.8 29.2', null, 'c', 2], ['M33.6 14.6L39.2 19', null, 'k', 1.6], [icT(MO.FLAME, 40.5, 13, .46, 40), 'c']] },
+  MV_JIN_S: { fam: 'CH_JIN', l: [
+    [icT(MO.FLAME, 24, 17.5, .62), 'c'], [icT(MO.FLAME, 24, 17.5, .36), 'e'], [icT(MO.FLAME, 16.5, 21, .36, -18), 'e'], [icT(MO.FLAME, 31.5, 21, .36, 18), 'e'],
+    ['M18.5 33V24.5M23 32.5V21.5M27.5 32.5V22M32 33V25.5', null, 'b', 4.4],
+    ['M16 30.5H34.5V35.5C34.5 40 31 43 25.5 43C20 43 16 40 16 36Z', 'b'], ['M16.5 35L12 30', null, 'b', 4.4]] },
+  MV_JIN_FS: { fam: 'CH_JIN', l: [
+    ['M5 16H13M4 32H12', null, 'b', 2, .6],
+    [icT(MO.FLAME, 28, 24, 1.05, -90), 'c'], [icT(MO.FLAME, 28, 24, .62, -90), 'e'],
+    ['M41 24L27.5 16Q30.5 24 27.5 32Z', 'b']] },
+  MV_JIN_AIR: { fam: 'CH_JIN', l: [
+    [icT(MO.FLAME, 30.5, 30.5, 1.15, -45), 'c'], [icT(MO.FLAME, 30.5, 30.5, .7, -45), 'e'],
+    [icC(30.5, 30.5, 6.4), 'b'], ['M12 41H22M30 42H40', null, 'c', 2.2, .7]] },
+  MV_JIN_FIN: { fam: 'CH_JIN', l: [
+    [icT(MO.FLAME, 24, 43, 1.75), 'c'], [icT(MO.FLAME, 24, 43, 1.1), 'e'],
+    ['M16 23C16 20.6 17.8 19 20 19H30.6C33 19 34.6 20.8 34.6 23V31.4C34.6 35.8 31.2 39.4 26.6 39.4H22C18.6 39.4 16 36.8 16 33.4Z', 'b'],
+    ['M20.6 19V25.6M25.3 19V25.6M30 19V25.6M16.2 28.6H26.8C28.6 28.6 28.6 32 26.8 32H16.6', null, 'k', 1.8]] },
+  MECH_EMBER: { fam: 'CH_JIN', l: [
+    [icT(MO.FLAME, 24, 32, .82), 'c'], [icT(MO.FLAME, 24, 32, .46), 'e'],
+    ...[0, 1, 2, 3, 4, 5].map(i => { const a = (i / 6) * Math.PI * 2 - Math.PI / 2; return [icC(24 + Math.cos(a) * 15.5, 24 + Math.sin(a) * 15.5, i < 3 ? 2.7 : 2.2), i < 3 ? 'e' : 'c', null, 0, i < 3 ? 1 : .55]; })] },
+
+  /* —— 澜：水 —— */
+  MV_LAN_L: { fam: 'CH_LAN', l: [
+    [icT(MO.DROP, 24, 20, 1.08), 'b'], ['M20.6 15.5C18.9 18 18 20.5 18.4 23', null, 'c', 1.8],
+    ['M10.5 33.5C15 30.2 33 30.2 37.5 33.5', null, 'c', 2.6], ['M15 38.5C19 36.4 29 36.4 33 38.5', null, 'c', 2.2, .65]] },
+  MV_LAN_H: { fam: 'CH_LAN', l: [
+    ['M9 35.5C9 21.5 21 10.5 36.5 11.5C30.5 14 27 18.5 26.4 23C30.5 20.4 36 20.8 40 24.3C33 24.3 27.5 28.3 25 33.8C22 40 13 41 9 35.5Z', 'b'],
+    ['M13.2 33.4C14.4 24.6 21 17.4 29.4 15.2', null, 'c', 2.2], ['M31.5 27.5C33.5 26.6 35.5 26.6 37.5 27.4', null, 'c', 2, .7]] },
+  MV_LAN_S: { fam: 'CH_LAN', l: [
+    ['M24 24C24 22 26 21.2 27.5 22.5C29.5 24.4 28.2 28.4 24.6 29C20.2 29.6 17.6 25.6 18.5 21.6C19.8 16.2 26.8 14.4 31 17.9C35.6 21.8 34.6 29.8 29.2 33.4C22.8 37.6 13.6 34.6 11.6 27.2', null, 'b', 3.6],
+    ['M35.4 11.8C40.4 16.6 41.6 25.4 37.8 31.6', null, 'c', 2.4], ['M12.8 36.4C7.6 31.6 6.6 22.6 10.4 16.4', null, 'c', 2.4, .7]] },
+  MV_LAN_FS: { fam: 'CH_LAN', l: [
+    ['M6 17.5C10 14.5 13.5 20.5 17.5 17.5S25 14.5 29 17.5', null, 'c', 2.6], ['M4.5 24.5C8.5 21.5 12 27.5 16 24.5S23.5 21.5 27.5 24.5S33.5 27 36 24.5', null, 'b', 3],
+    ['M6 31.5C10 28.5 13.5 34.5 17.5 31.5S25 28.5 29 31.5', null, 'c', 2.6], ['M33.5 13.5L42 24.5L33.5 35.5', null, 'b', 3.6]] },
+  MV_LAN_AIR: { fam: 'CH_LAN', l: [
+    ['M17 6L13.5 13M23.5 4.5L21 10M30 6L28 10.5', null, 'b', 2, .6],
+    [icT(MO.DROP, 25, 23, 1.05, 18), 'b'], ['M22.6 18.5C21 20.4 20.4 22.4 20.8 24.4', null, 'c', 1.8],
+    ['M10.5 41C12.5 36 15 37 16.5 39.5M31.5 39.5C33 37 35.5 36 37.5 41', null, 'c', 2.4], ['M14 42.5H34', null, 'c', 2.4]] },
+  MV_LAN_FIN: { fam: 'CH_LAN', l: [
+    ['M5.5 41C5.5 24.5 16.5 9 32.5 9C40.5 9 44.5 15 42.5 21C41 25.6 35 26.4 33.4 22.6C32.2 19.8 34.6 17.6 37 18.6C35.4 14.6 30.4 13.4 26.4 16.4C20 21.2 19 31 23.6 36.8C26 39.8 29.6 41 33.4 41Z', 'b'],
+    ['M10.5 39.5C11 27 18.5 16 29 13.6', null, 'c', 2.4], ['M33 41H43M36.5 36.5H43', null, 'c', 2.4, .75],
+    ['M37 18.6L39.4 15.4M35 19L36.2 15', null, 'c', 1.6]] },
+  MECH_FLOW: { fam: 'CH_LAN', l: [
+    ['M12.5 21C14.6 13.6 21 9.6 28.6 10.6', null, 'b', 3.2], ['M25.6 6.6L29.6 10.6L25.2 14', null, 'b', 3.2],
+    ['M35.5 27C33.4 34.4 27 38.4 19.4 37.4', null, 'b', 3.2], ['M22.4 41.4L18.4 37.4L22.8 34', null, 'b', 3.2],
+    [icT(MO.DROP, 24, 24.5, .62), 'c']] },
+
+  /* —— 岳：山石 —— */
+  MV_YUE_L: { fam: 'CH_YUE', l: [
+    ['M38.5 15L42.5 12M40 24.5H45.5M38.5 34L42.5 37', null, 'c', 2.6],
+    [icT(MO.FIST, 24, 24.5, 1.32), 'b'], [icT(MO.FIST_LN, 24, 24.5, 1.32), null, 'k', 2.1],
+    [icC(17, 18.6, 1.1), 'e'], [icC(29.5, 30.5, 1.1), 'e'], [icC(21, 31, .9), 'e']] },
+  MV_YUE_H: { fam: 'CH_YUE', l: [
+    ['M7 31C7.6 21.4 12.4 14 19.6 10.6', null, 'c', 2.8], [icC(10, 37.5, 1.6), 'e'], [icC(15, 40.5, 1.2), 'e'],
+    [icT(MO.ROCK, 27, 25.5, 1.3), 'b'], ['M25.4 13.6L28.4 21.2L24 26.6L27.2 34.6', null, 'k', 2], ['M28.4 21.2L33.6 23', null, 'k', 1.6]] },
+  MV_YUE_S: { fam: 'CH_YUE', l: [
+    ['M8 36.5L18.5 18L23.5 25.5L29.5 14.5L40.5 36.5Z', 'b'], ['M18.5 18L15.2 24L18 23L19.8 25.6M29.5 14.5L26.4 20.4L29.6 19.2L31.4 22', null, 'k', 1.6],
+    ['M5 31C3 27 3 22 5 18M43 31C45 27 45 22 43 18', null, 'c', 2.6], ['M3.5 40H44.5', null, 'c', 2.8]] },
+  MV_YUE_FS: { fam: 'CH_YUE', l: [
+    ['M3.5 21H10M5 27H12M3.5 33H9', null, 'c', 2.4],
+    [icT(MO.ROCK, 14.5, 17, .42, 20), 'e'], [icT(MO.ROCK, 17.5, 33, .55, -25), 'e'], [icT(MO.ROCK, 31, 25, .98, 10), 'b'],
+    ['M28 17.5L31.2 25.4L27.4 30', null, 'k', 1.8]] },
+  MV_YUE_AIR: { fam: 'CH_YUE', l: [
+    ['M16 5V12M24.5 3.5V11M33 5V12', null, 'c', 2.4],
+    [icT(MO.ROCK, 24.5, 26.5, 1.08, 14), 'b'], ['M22 18.5L25.4 25L22.6 30', null, 'k', 1.8],
+    ['M12 42C16 38.5 33 38.5 37 42', null, 'c', 2.4]] },
+  MV_YUE_FIN: { fam: 'CH_YUE', l: [
+    [icC(31.5, 16.5, 7), 'c'],
+    ['M4.5 38L16.5 19.5L22.5 28L29.5 17L43.5 38Z', 'b'], ['M16.5 19.5L13.4 24.6L16.4 23.6L18 26M29.5 17L26.4 22L29.6 21L31.4 23.6', null, 'k', 1.6],
+    ['M10 43L13.5 39M24 44.5V40M37.5 43L34 39', null, 'c', 2.2]] },
+  MECH_ARMOR: { fam: 'CH_YUE', l: [
+    ['M13.5 9.5H34.5L37 37.5H11Z', 'b'], ['M18 31.5V22.5M24 31.5V15.5M30 31.5V22.5M16.6 31.5H31.4', null, 'k', 2.8],
+    ['M7 42H41', null, 'c', 3], [icC(16, 13.4, .9), 'e'], [icC(33, 35, .9), 'e']] },
+
+  /* —— 影：刃与月 —— */
+  MV_YING_L: { fam: 'CH_YING', l: [
+    ['M8 40L38 10', null, 'c', 1.3, .7],
+    [icT(MO.BLADE, 20, 28, 1.25, 45), 'b'], [icT('M-6.5 -6.5L6.5 -6.5', 20, 28, 1.25, 45), null, 'c', 2.6],
+    [icT('M0 -5.5L0 3.5', 20, 28, 1.25, 45), null, 'e', 3], [icT(MO.STAR4, 39, 9, .38), 'w']] },
+  MV_YING_H: { fam: 'CH_YING', l: [
+    ['M30.5 7.5C21.5 8.6 14 16 14 25.2C14 34.4 21.5 41.6 30.5 41.6C24.4 38.4 20.8 32.4 20.8 24.8C20.8 17.4 24.4 11 30.5 7.5Z', 'b'],
+    ['M33.5 13.5C38.4 17.6 39.6 27 35.6 33.6', null, 'c', 2.4], ['M37.4 9.6C44 15.6 45 29 39.6 37.6', null, 'c', 1.8, .55]] },
+  MV_YING_S: { fam: 'CH_YING', l: [
+    [icT(MO.BLADE, 13.6, 38, 1.25, 42), 'c', null, 0, .45], [icT(MO.BLADE, 37.6, 38, 1.25, -42), 'c', null, 0, .45],
+    [icT(MO.BLADE, 12, 37, 1.25, 42), 'b'], [icT(MO.BLADE, 36, 37, 1.25, -42), 'b'],
+    [icT('M-6 -6.5L6 -6.5', 12, 37, 1.25, 42), null, 'c', 2.6], [icT('M-6 -6.5L6 -6.5', 36, 37, 1.25, -42), null, 'c', 2.6],
+    [icT('M0 -5.5L0 2', 12, 37, 1.25, 42), null, 'e', 3], [icT('M0 -5.5L0 2', 36, 37, 1.25, -42), null, 'e', 3],
+    [icT(MO.STAR4, 24, 23.7, .3), 'w']] },
+  MV_YING_FS: { fam: 'CH_YING', l: [
+    ['M4 20.5H13M3 26H10', null, 'c', 2.2, .8],
+    ['M6 32C16 21.5 29.5 16.5 43 17C31.5 20.5 19.5 26 8.5 35Z', 'b'], ['M13 29C21 23.4 30 20.2 38 19.2', null, 'c', 1.5],
+    [icT(MO.STAR4, 41.5, 16.5, .34), 'w']] },
+  MV_YING_AIR: { fam: 'CH_YING', l: [
+    ['M17 5V15M31 5V15', null, 'c', 1.8, .6], ['M24 3.5V12', null, 'c', 2.2],
+    [icT(MO.BLADE, 24, 16, 1.12, 180), 'b'], ['M17 16.8H31', null, 'c', 2.6], ['M24 9.5V15.5', null, 'e', 3],
+    ['M15 42.5L19 39.5M33 42.5L29 39.5', null, 'c', 2]] },
+  MV_YING_FIN: { fam: 'CH_YING', l: [
+    [icC(24, 24, 15), null, 'c', 2, .8, '3 3.4'],
+    [icT(MO.BLADE, 24, 29, 1.2, 0), null, 'e', 1.6, .9, '2.4 2'],
+    [icT(MO.STAR4, 24, 24, .95), 'b'], [icT(MO.STAR4, 24, 24, .42, 45), 'w']] },
+  MECH_SHADOW: { fam: 'CH_YING', l: [
+    [icT(MO.FOOT, 15, 31.5, .9, -16), 'c', null, 0, .6], ...[[11.2, 21.6, 1.5], [14.4, 20.6, 1.3], [17.2, 21, 1.15], [19.4, 22.4, 1]].map(([x, y, r]) => [icC(x, y, r), 'c', null, 0, .6]),
+    [icT(MO.FOOT, 33, 22.5, .9, 16), 'b'], ...[[28.6, 12.8, 1], [30.8, 11.4, 1.15], [33.6, 11, 1.3], [36.8, 12, 1.5]].map(([x, y, r]) => [icC(x, y, r), 'b']),
+    ['M18.6 42C26.6 43.4 33.6 39.4 35.2 33.4', null, 'b', 2.2, .9, '2.6 2.6'], ['M31.4 34.6L35.4 32.6L37.4 36.6', null, 'b', 2.4]] },
+
+  /* —— 铃：铃与声 —— */
+  MV_LING_L: { fam: 'CH_LING', l: [
+    [icT(MO.BELL, 23, 25, 1.25), 'b'], ['M23 12.2V8.6', null, 'b', 3], [icC(23, 37.6, 2.4), 'c'],
+    ['M33.5 13.5L37.5 9.5M36.5 18.5L41.5 17', null, 'e', 2.4]] },
+  MV_LING_H: { fam: 'CH_LING', l: [
+    [icC(10.5, 24, 3.4), 'c'],
+    ['M17.5 17C20.6 21 20.6 27 17.5 31', null, 'b', 3], ['M24.5 12C29.6 19 29.6 29 24.5 36', null, 'b', 3], ['M32 7.5C39 16.5 39 31.5 32 40.5', null, 'e', 3]] },
+  MV_LING_S: { fam: 'CH_LING', l: [
+    ['M8.5 16C5 21 5 27 8.5 32M39.5 16C43 21 43 27 39.5 32', null, 'c', 2.6], ['M13 19.6C11.4 22.4 11.4 25.6 13 28.4M35 19.6C36.6 22.4 36.6 25.6 35 28.4', null, 'e', 2.2],
+    [icT(MO.BELL, 24, 24.5, 1.2), 'b'], ['M24 12.2V8.4', null, 'b', 3], [icC(24, 37, 2.4), 'c'], [icT(MO.STAR4, 24, 22, .32), 'e']] },
+  MV_LING_FS: { fam: 'CH_LING', l: [
+    ['M5 18H13M3.5 25H12.5M5 32H13', null, 'c', 2.4],
+    [icT(MO.BELL, 28, 25, 1.08, 14), 'b'], [icT('M0 -10.2L0 -13.6', 28, 25, 1.08, 14), null, 'b', 3], [icC(25.2, 36.4, 2.2), 'c']] },
+  MV_LING_AIR: { fam: 'CH_LING', l: [
+    ['M16 4.5V10.5M24 3V9M32 4.5V10.5', null, 'c', 2.2],
+    [icT(MO.BELL, 24, 24, 1.05), 'b'], ['M24 13.3V10', null, 'b', 2.8], [icC(24, 35, 2.1), 'c'],
+    ['M11 42.5C16 39 32 39 37 42.5', null, 'e', 2.4]] },
+  MV_LING_FIN: { fam: 'CH_LING', l: [
+    ['M6.5 14C2.5 20 2.5 28 6.5 34M41.5 14C45.5 20 45.5 28 41.5 34', null, 'c', 2.2, .7],
+    ['M20 12.5C20 7.6 28 7.6 28 12.5', null, 'b', 3],
+    ['M15.5 12.5H32.5C33.6 12.5 34.5 13.4 34.5 14.5V32.5C34.5 34.6 36 36.2 38 36.8V39.5H10V36.8C12 36.2 13.5 34.6 13.5 32.5V14.5C13.5 13.4 14.4 12.5 15.5 12.5Z', 'b'],
+    ['M13.5 19H34.5M13.5 30H34.5', null, 'k', 1.8], [icC(19, 24.5, 1.4), 'k'], [icC(24, 24.5, 1.4), 'k'], [icC(29, 24.5, 1.4), 'k'],
+    ['M18 43.5H30', null, 'e', 2.6]] },
+  MECH_BELL: { fam: 'CH_LING', l: [
+    [icT(MO.BELL, 24, 17, .66), 'e', 'k', 1.4], [icT(MO.BELL, 15, 31, .66), 'e', 'k', 1.4], [icT(MO.BELL, 33, 31, .66), 'e', 'k', 1.4],
+    [icC(24, 23.7, 1.4), 'c'], [icC(15, 37.7, 1.4), 'c'], [icC(33, 37.7, 1.4), 'c']] },
+
+  /* —— 通用 —— */
+  SK_BRK: { fam: 'SYS', l: [
+    ['M22 14.5H13C8.6 14.5 5.5 17.6 5.5 21.6C5.5 25.6 8.6 28.6 13 28.6H19.5', null, 'b', 3.8],
+    ['M26 19.4H35C39.4 19.4 42.5 22.4 42.5 26.4C42.5 30.4 39.4 33.5 35 33.5H28.5', null, 'b', 3.8],
+    ['M25.5 7.5L21.6 19.4L27 22L22.4 40.5', null, 'c', 2.8], [icC(30, 11, 1.4), 'e'], [icC(17.6, 37.4, 1.2), 'e']] },
+  MV_DASH: { fam: 'SYS', l: [
+    ['M3.5 24H9', null, 'c', 2.6], ['M12.5 14L22.5 24L12.5 34', null, 'b', 4], ['M24 14L34 24L24 34', null, 'b', 4], ['M35.5 14L44 24L35.5 34', null, 'c', 3, .65]] },
+  MV_BDASH: { fam: 'SYS', l: [
+    ['M39 24H44.5', null, 'c', 2.6], ['M35.5 14L25.5 24L35.5 34', null, 'b', 4], ['M24 14L14 24L24 34', null, 'b', 4], ['M12.5 14L4 24L12.5 34', null, 'c', 3, .65]] },
+  MECH_PARRY: { fam: 'SYS', l: [
+    ['M27.5 8.5L39.5 13V23.5C39.5 31.5 34 37 27.5 40C21 37 15.5 31.5 15.5 23.5V13Z', 'b'], ['M27.5 14.5V34', null, 'k', 1.6, .5],
+    ['M3.5 33L13 26.5', null, 'e', 2.8], ['M13.5 21.5L5.5 14.5M8.6 13.6L5.2 14.2L5.8 17.6', null, 'e', 2.4], [icT(MO.STAR4, 14.5, 24.5, .5), 'w']] },
+  MECH_CANCEL: { fam: 'SYS', l: [
+    ['M28 5.5L14 26H23.4L19.4 42.5L35.5 19.5H25.6Z', 'b', 'c', 1.8]] },
+
+  /* —— 外援 —— */
+  AS_GUARD: { fam: 'AS', col: '#aab3bd', l: [
+    ['M13.5 8H34.5V29.5C34.5 35.5 29.5 39.6 24 42C18.5 39.6 13.5 35.5 13.5 29.5Z', 'b'], ['M24 8V42M13.5 21H34.5', null, 'c', 2.4],
+    [icC(24, 21, 3.4), 'c'], [icC(17, 12, 1), 'k'], [icC(31, 12, 1), 'k'], [icC(17, 30, 1), 'k'], [icC(31, 30, 1), 'k']] },
+  AS_ARCHER: { fam: 'AS', col: '#d6a44a', l: [
+    ['M15 7C27.5 13 27.5 35 15 41', null, 'b', 3.2], ['M15 7V41', null, 'e', 1.2, .8],
+    ['M8 24H39', null, 'b', 2.4], ['M41.5 24L34.5 19.8V28.2Z', 'b'], ['M7.5 24L4.5 20.5M7.5 24L4.5 27.5M11 24L8 20.5M11 24L8 27.5', null, 'c', 2]] },
+  AS_HOUND: { fam: 'AS', col: '#c08a54', l: [
+    ['M12 40L13.8 28C14 23 16 19.6 19.2 17.4L20.4 8L25.8 14.6C29.2 14.2 32.2 15.4 34.6 17.8L41.6 20.4C43.2 21 43.6 23 42.4 24.2L40 26.4L34.8 26.6C33.4 30.2 30.2 32.8 26.2 33.6L23.4 40Z', 'b'],
+    ['M20.4 8L25.8 14.6L21.2 16.8Z', 'c'], [icC(30.8, 20.6, 1.6), 'k'], [icC(42.6, 21.8, 1.4), 'k'], ['M34.6 26.6C32.8 27.6 30.6 27.8 28.6 27.4', null, 'k', 1.4],
+    ['M14.6 33.6L25.8 35.6', null, 'c', 3.2], [icC(20.4, 37.6, 1.6), 'y']] },
+  AS_HEALER: { fam: 'AS', col: '#6fd39a', l: [
+    ['M24 11C21.4 11 20.4 13.6 21.2 16.4C17.2 18.4 15.4 22.4 16.8 25.6C13.4 28.4 12.8 33.4 15.2 37.2C18.4 41.6 29.6 41.6 32.8 37.2C35.2 33.4 34.6 28.4 31.2 25.6C32.6 22.4 30.8 18.4 26.8 16.4C27.6 13.6 26.6 11 24 11Z', 'b'],
+    ['M17.6 25.4H30.4', null, 'c', 2.4], ['M24 11C26.6 6.4 31.6 5.4 35 7.4C32 10.4 27.6 11.4 24 11Z', 'c'], ['M24 29.5V36.5M20.5 33H27.5', null, 'c', 2.2]] },
+
+  /* —— 携带道具 —— */
+  GR_NONE: { fam: 'GR', l: [[icC(24, 24, 12), null, 'b', 2.4, .55, '3.2 3.2'], ['M17 31L31 17', null, 'b', 2.4, .55]] },
+  GR_JADE: { fam: 'GR', l: [
+    [icC(24, 22, 13), 'g'], [icC(24, 22, 4.8), 'd'], [icC(24, 22, 9), null, 'k', 1, .35],
+    [icC(24, 11.8, 1.1), 'k'], [icC(33.6, 25.4, 1.1), 'k'], [icC(14.4, 25.4, 1.1), 'k'], ['M24 35V44', null, 'r', 2.6]] },
+  GR_GLASS: { fam: 'GR', l: [
+    ['M13.5 8H34.5M13.5 40H34.5', null, 'c', 3.2],
+    ['M16.5 9C16.5 17 22.4 19.8 22.4 24C22.4 28.2 16.5 31 16.5 39H31.5C31.5 31 25.6 28.2 25.6 24C25.6 19.8 31.5 17 31.5 9Z', null, 'b', 2.4],
+    ['M19 38.4C19.6 34.6 22.4 32.4 24 31.4C25.6 32.4 28.4 34.6 29 38.4Z', 'y'], ['M19.4 13.4H28.6C27.6 16.6 25 18.4 24 19.2C23 18.4 20.4 16.6 19.4 13.4Z', 'y'], ['M24 22.5V30', null, 'y', 1.4]] },
+  GR_BUCKLE: { fam: 'GR', l: [
+    ['M9 15H27C30.4 15 32.5 17.2 32.5 20.4V27.6C32.5 30.8 30.4 33 27 33H9C5.8 33 4 30.8 4 27.6V20.4C4 17.2 5.8 15 9 15Z', null, 'b', 3.2], ['M18.2 18.5V29.5', null, 'b', 3],
+    ['M33.5 24H38.5', null, 'c', 3], ['M38.5 18.4C42.6 18.4 44.4 21 44.4 24C44.4 27 42.6 29.6 38.5 29.6', null, 'c', 3], ['M36.6 14.6L39.8 12M37.6 33.4L40.6 36', null, 'r', 1.8]] },
+  GR_FAN: { fam: 'GR', l: [
+    ['M24 39L7 20.5C13.5 10.5 34.5 10.5 41 20.5Z', 'b'],
+    ['M24 39L12.5 15.6M24 39L18 12.8M24 39L24 12M24 39L30 12.8M24 39L35.5 15.6', null, 'k', 1.3, .6],
+    ['M7 20.5L24 39L41 20.5', null, 'c', 2.6], [icC(24, 38.4, 2.6), 'c']] },
+  GR_TALISMAN: { fam: 'GR', l: [
+    ['M15.5 6.5H32.5V39.5L24 43.5L15.5 39.5Z', 'p'],
+    ['M19.5 11.5H28.5M24 11.5V19M19 19H29M20.6 25.4C22.6 23.4 25.4 23.4 27.4 25.4M19.5 31H28.5M24 31V37', null, 'r', 2.3]] },
+
+  /* —— 场上道具 —— */
+  IT_SHARD: { fam: 'IT', l: [
+    ['M24 5L35 18.5L24 43L13 18.5Z', 'c'], ['M24 5L28.5 18.5L24 43L19.5 18.5Z', 'w', null, 0, .55], ['M13 18.5H35', null, 'k', 1.4, .5]] },
+  IT_ELIXIR: { fam: 'IT', l: [
+    [icC(24, 27, 13), '#3a9a6a'], ['M13.2 25H34.8', null, 'r', 3.2], [icC(19.4, 21, 2.6), 'w', null, 0, .6],
+    ['M24 14C26 8.6 31.6 7 35.4 9.2C32.4 12.6 27.6 14.2 24 14Z', 'g']] },
+};
+ICONS.MECH_DASH = ICONS.MV_DASH;
+ICONS.MV_YING_BS = ICONS.MECH_SHADOW;
+function icSVG(id, o = {}) {
+  const ic = ICONS[id]; if (!ic) return '';
+  const P = { ...IC_PAL[ic.fam], ...(ic.col ? { c: ic.col } : {}) }, col = t => t == null ? 'none' : (P[t] || IC_TOK[t] || t);
+  const sz = o.px ? ` width="${o.px}" height="${o.px}"` : '';
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" class="ic" viewBox="0 0 48 48"${sz} aria-hidden="true">`;
+  if (o.grey) s += '<defs><filter id="g"><feColorMatrix type="saturate" values="0"/></filter></defs><g filter="url(#g)" opacity=".5">';
+  if (o.badge !== false) s += `<path d="${IC_FRAME[ic.fam]}" fill="${P.d}" stroke="${P.c}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  else s += '<g transform="translate(24 24) scale(1.12) translate(-24 -24)">';
+  for (const [d, f, st, w, op, dash] of ic.l)
+    s += `<path d="${d}" fill="${col(f)}"${st ? ` stroke="${col(st)}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"` : ''}${op != null && op < 1 ? ` opacity="${op}"` : ''}${dash ? ` stroke-dasharray="${dash}"` : ''}/>`;
+  if (o.badge === false) s += '</g>';
+  if (o.grey) s += '</g>';
+  return s + '</svg>';
+}
+
+const IC_ALIAS = { MV_AS_ARROW: 'AS_ARCHER', MV_AS_HOUND: 'AS_HOUND' };
+const icFor = id => ICONS[id] ? id : IC_ALIAS[id] || null;
+const IC_CV = {};
+function icCanvas(id, badge = true, grey = false) {
+  const k = id + (badge ? '' : '~n') + (grey ? '~g' : '');
+  if (k in IC_CV) return IC_CV[k];
+  IC_CV[k] = null;
+  const im = new Image();
+  im.onload = () => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; cv.getContext('2d').drawImage(im, 0, 0, 128, 128); IC_CV[k] = cv; };
+  im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(icSVG(id, { badge, grey, px: 128 }));
+  return null;
+}
+function drawIc(c, id, x, y, size, badge = true, grey = false) {
+  id = icFor(id); if (!id) return;
+  const cv = icCanvas(id, badge, grey); if (cv) c.drawImage(cv, x - size / 2, y - size / 2, size, size);
+}
+for (const id of Object.keys(ICONS)) { icCanvas(id); icCanvas(id, true, true); }
+
 const PAGES = [
   { id: 'PG_TITLE', name: '标题 / 模式选择', desc: '对战电脑、双人对战、训练模式与各子页面入口；左栏底部是赞助作者；背景是电脑自动对战演示' },
   { id: 'PG_SELECT', name: '备战（角色 / 道具 / 外援 / 场景）', desc: '双方各选角色、携带道具与外援，再选场景；训练模式下选择木桩行为' },
@@ -839,6 +1143,7 @@ function chainHit(a, d, m) {
   if (m.finisher) return finisherHit(a, d, m);
   c.rep = c.last === m.id ? c.rep + 1 : 1; c.last = m.id;
   const DL = DROP_LEVELS[c.lv], rp = c.rep >= 2;
+  (c.route = c.route || []).push({ id: m.id, rp, t: G.frame }); if (c.route.length > 8) c.route.shift();
   const dmg = m.dmg * DL.dmgMul * a.ch.atk * d.ch.def * gearAtk(a) * gearDef(d) * (rp ? CFG.REPEAT_DMG_MUL : 1);
   const imm = dmg * CFG.IMMEDIATE_RATIO;
   d.hp = Math.max(0, d.hp - imm); c.pending += dmg - imm; c.hits++;
@@ -1511,19 +1816,39 @@ function mechText(f) {
   }
   return '';
 }
+function mechShort(f) {
+  const op = G.f[1 - f.idx];
+  switch (f.ch.mech.id) {
+    case 'MECH_EMBER': return { t: '●'.repeat(f.ember) + '○'.repeat(6 - f.ember), on: f.ember > 0 };
+    case 'MECH_FLOW': return f.flowT > 0 ? { t: '回流生效', on: true } : { t: `破链 ${brkCost(f)}`, on: false };
+    case 'MECH_ARMOR': return { t: '起手霸体', on: f.state === 'ST_ATTACK' && f.move && f.move.armor && f.mt <= f.move.startup };
+    case 'MECH_SHADOW': return { t: '后+特 瞬移', on: f.inv > 0 && f.state === 'ST_ATTACK' };
+    case 'MECH_BELL': return { t: `音 ×${op ? op.marks || 0 : 0}`, on: op && op.marks > 0 };
+  }
+  return { t: '', on: false };
+}
 function infoLine(c, f, x, side) {
-  const y = 118, a = AS_BY[f.assist], ready = f.astCD <= 0, r = 1 - f.astCD / CFG.ASSIST_CD, ix = side > 0 ? x + 12 : x - 12;
-  c.save(); c.globalAlpha = hudA('inf' + f.idx, side > 0 ? x : x - 400, 100, side > 0 ? x + 400 : x, 128);
-  c.beginPath(); c.arc(ix, y - 5, 12, 0, 7); c.fillStyle = 'rgba(13,10,9,.88)'; c.fill();
-  c.beginPath(); c.moveTo(ix, y - 5); c.arc(ix, y - 5, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * r); c.closePath(); c.fillStyle = ready ? a.col : 'rgba(239,233,223,.32)'; c.fill();
-  if (ready) { c.strokeStyle = a.col; c.lineWidth = 2; c.globalAlpha = .5 + .5 * Math.sin(G.frame * .2); c.beginPath(); c.arc(ix, y - 5, 15, 0, 7); c.stroke(); c.globalAlpha = 1; }
-  c.font = `700 12px ${FU}`; c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('援', ix, y - 5);
-  c.textBaseline = 'alphabetic'; c.textAlign = side > 0 ? 'left' : 'right'; c.font = `500 13px ${FU}`;
-  const k = astKey(f), parts = [`${a.name}${ready ? (k ? ' · 按 ' + k : ' · 就绪') : ' · ' + Math.ceil(f.astCD / 60) + 's'}`];
-  if (f.gear !== 'GR_NONE') parts.push(GEAR_BY[f.gear].name + (f.gear === 'GR_JADE' && f.jadeUsed ? '（已用）' : ''));
-  parts.push(mechText(f));
-  c.fillStyle = ready ? BONE : MUTE; otxt(c, parts.join('  ·  '), side > 0 ? ix + 20 : ix - 20, y);
-  c.restore();
+  const y = 121, a = AS_BY[f.assist], ready = f.astCD <= 0, s = side;
+  c.save(); c.globalAlpha = hudA('inf' + f.idx, s > 0 ? x : x - 330, 98, s > 0 ? x + 330 : x, 142);
+  const A0 = c.globalAlpha;
+  let cx = x + s * 17;
+  drawIc(c, f.assist, cx, y, 34);
+  if (!ready) {
+    c.fillStyle = 'rgba(13,10,9,.66)'; c.beginPath(); c.moveTo(cx, y); c.arc(cx, y, 17.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (f.astCD / CFG.ASSIST_CD)); c.closePath(); c.fill();
+    c.font = `700 14px ${FN}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = BONE; otxt(c, Math.ceil(f.astCD / 60), cx, y + 1);
+  } else {
+    c.strokeStyle = a.col; c.lineWidth = 2.2; c.globalAlpha = A0 * (.5 + .5 * Math.sin(G.frame * .2)); c.beginPath(); c.arc(cx, y, 20.5, 0, 7); c.stroke(); c.globalAlpha = A0;
+    const k = astKey(f);
+    if (k && !TOUCH) { c.font = `700 11px ${FN}`; c.textAlign = 'center'; c.textBaseline = 'middle'; const kw = Math.max(15, c.measureText(k).width + 7); c.fillStyle = a.col; c.fillRect(cx + s * 12 - kw / 2, y + 7, kw, 14); c.fillStyle = INK; c.fillText(k, cx + s * 12, y + 14.5); }
+  }
+  cx += s * 37;
+  if (f.gear !== 'GR_NONE') { drawIc(c, f.gear, cx, y, 28, true, f.gear === 'GR_JADE' && f.jadeUsed); cx += s * 32; }
+  const ms = mechShort(f);
+  if (ms.on) { c.strokeStyle = f.col; c.lineWidth = 2; c.globalAlpha = A0 * (.55 + .45 * Math.sin(G.frame * .25)); c.beginPath(); c.arc(cx, y, 17.5, 0, 7); c.stroke(); c.globalAlpha = A0; }
+  drawIc(c, f.ch.mech.id, cx, y, 30);
+  c.textBaseline = 'middle'; c.textAlign = s > 0 ? 'left' : 'right'; c.font = `600 13px ${FU}`; c.fillStyle = ms.on ? BONE : MUTE;
+  otxt(c, `${f.ch.mech.name}  ${ms.t}`, cx + s * 20, y + 1);
+  c.restore(); c.textBaseline = 'alphabetic';
 }
 const otxt = (c, s, x, y) => { c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(13,10,9,.8)'; c.strokeText(s, x, y); c.fillText(s, x, y); };
 const txt = (c, s, x, y, size, font, fill, align = 'center', stroke = 6, weight = 400) => {
@@ -1570,20 +1895,29 @@ function brkGauge(c, f, x, y, w, side) {
   c.shadowBlur = 0; c.fillStyle = 'rgba(13,10,9,.9)'; for (const q of [.25, .5, .75]) c.fillRect(x + w * q - 1, y, 2, h);
   if (cost < CFG.BRK_MAX) { const q = cost / CFG.BRK_MAX, tx = side > 0 ? x + w * q : x + w * (1 - q); c.fillStyle = col; c.fillRect(tx - 2, y - 5, 4, h + 10); }
   c.textBaseline = 'alphabetic'; const lx = side > 0 ? x : x + w;
-  txt(c, '破链', lx, y - 10, 26, FB, full ? col : BONE, side > 0 ? 'left' : 'right', 5);
+  if (full) { c.save(); c.globalAlpha = .55 + .45 * Math.sin(G.frame * .25); c.strokeStyle = col; c.lineWidth = 2.5; c.beginPath(); c.arc(lx + side * 14, y - 19, 17, 0, 7); c.stroke(); c.restore(); }
+  drawIc(c, 'SK_BRK', lx + side * 14, y - 19, 30);
+  txt(c, '破链', lx + side * 33, y - 10, 24, FB, full ? col : BONE, side > 0 ? 'left' : 'right', 5);
   c.font = `600 15px ${FU}`; c.fillStyle = full ? BONE : MUTE; c.textAlign = side > 0 ? 'left' : 'right';
-  const k = brkKey(f); otxt(c, full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${cost}`, lx + (side > 0 ? 62 : -62), y - 13);
+  const k = brkKey(f); otxt(c, full ? (k ? `可破链 · 按 ${k}` : '可破链') : `${Math.floor(f.brk)} / ${cost}`, lx + side * 88, y - 13);
   c.restore();
 }
 function chainHUD(c, a) {
   const ch = a.chain, DL = DROP_LEVELS[ch.lv], L = a.idx === 0, x = L ? 48 : W - 48, al = L ? 'left' : 'right';
   c.save(); c.textBaseline = 'alphabetic';
-  c.globalAlpha = hudA('ch' + a.idx, L ? 40 : W - 340, 125, L ? 340 : W - 40, 312);
+  c.globalAlpha = hudA('ch' + a.idx, L ? 40 : W - 340, 125, L ? 340 : W - 40, 362);
   txt(c, String(ch.hits), x, 222, 96, FN, BONE, al, 9, 700);
   const nw = c.measureText(String(ch.hits)).width;
   txt(c, '连', L ? x + nw + 12 : x - nw - 12, 218, 38, FB, BONE, al, 6);
   txt(c, DL.name, x, 278, 52, FB, DL.color, al, 7);
   c.font = `600 16px ${FU}`; c.textAlign = al; c.fillStyle = BONE; c.fillText(`掉落 Lv.${DL.lv} · 暂存 ${Math.round(ch.pending)}`, x, 306);
+  const rt = ch.route || [], n = rt.length;
+  rt.forEach((e, i) => {
+    const pos = L ? x + 14 + i * 31 : x - 14 - (n - 1 - i) * 31, age = G.frame - e.t, sz = 27 * (1 + .45 * Math.max(0, 1 - age / 8));
+    drawIc(c, e.id, pos, 334, sz, true, e.rp);
+    if (e.rp) { c.font = `700 11px ${FN}`; c.textAlign = 'center'; c.fillStyle = RED; otxt(c, '重复', pos, 358); }
+  });
+  c.textAlign = al;
   const bx = 390, bw = 500, by = 102, bh = 12, max = DROP_LEVELS[DROP_LEVELS.length - 1].min * 1.15;
   c.globalAlpha = hudA('mom', bx - 6, by - 6, bx + bw + 6, by + bh + 30);
   c.fillStyle = 'rgba(13,10,9,.85)'; c.fillRect(bx - 6, by - 6, bw + 12, bh + 36);
@@ -1622,8 +1956,8 @@ function drawHUD(c) {
   infoLine(c, A, 40, 1); infoLine(c, B, 1240, -1);
   for (const f of G.f) {
     const [sx, sy] = toScreen(f.x, f.y - 240 * f.ch.scale);
-    if (f.chainedBy && f.brk >= brkCost(f) && isHuman(f)) { c.globalAlpha = .6 + .4 * Math.sin(G.frame * .3); txt(c, `按 ${brkKey(f)} 破链`, sx, sy, 34, FB, f.col); c.globalAlpha = 1; }
-    if (f.chain && f.chain.lv >= CFG.FIN_MIN_LV && isHuman(f)) txt(c, `按 ${finKey(f)} 终结`, sx, sy, 28, FB, RED);
+    if (f.chainedBy && f.brk >= brkCost(f) && isHuman(f)) { const k = .6 + .4 * Math.sin(G.frame * .3); c.globalAlpha = k; drawIc(c, 'SK_BRK', sx, sy - 44, 44 + k * 6); txt(c, `按 ${brkKey(f)} 破链`, sx, sy, 34, FB, f.col); c.globalAlpha = 1; }
+    if (f.chain && f.chain.lv >= CFG.FIN_MIN_LV && isHuman(f)) { drawIc(c, f.ch.moves.FIN.id, sx, sy - 40, 42 + Math.sin(G.frame * .3) * 3); txt(c, `按 ${finKey(f)} 终结`, sx, sy, 28, FB, RED); }
   }
   if (G.mode === 'train') {
     c.font = `500 14px ${FU}`; c.textAlign = 'center'; c.fillStyle = MUTE;
@@ -1718,10 +2052,10 @@ function sideHTML(n) {
   const g = G.sel['g' + n], a = G.sel['a' + n];
   return `<h3><b>${who}</b><span>${ch.name} · ${ch.title}　${Object.entries(ch.stats).map(([k, v]) => `${k}${'■'.repeat(v)}${'□'.repeat(5 - v)}`).join(' ')}</span></h3>
   <div class="roster">${CHARS.map(c => `<button class="pc" data-slot="${slot}" data-id="${c.id}" aria-pressed="${c.id === ch.id}" aria-label="${c.name}"><canvas></canvas><b>${c.name}</b></button>`).join('')}</div>
-  <p class="detail">${ch.role}<br><span class="mech">特性「${ch.mech.name}」</span>${ch.mech.desc}</p>
-  <div class="chips"><span class="lab">道具</span>${GEAR.map(x => `<button class="chip" data-slot="g${n}" data-id="${x.id}" aria-pressed="${g === x.id}">${x.name}</button>`).join('')}</div>
+  <p class="detail">${ch.role}<br><span class="mech">${icSVG(ch.mech.id)}特性「${ch.mech.name}」</span>${ch.mech.desc}</p>
+  <div class="chips"><span class="lab">道具</span>${GEAR.map(x => `<button class="chip" data-slot="g${n}" data-id="${x.id}" aria-pressed="${g === x.id}">${icSVG(x.id)}${x.name}</button>`).join('')}</div>
   <p class="hint">${GEAR_BY[g].desc}</p>
-  <div class="chips"><span class="lab">外援</span>${ASSISTS.map(x => `<button class="chip" data-slot="a${n}" data-id="${x.id}" aria-pressed="${a === x.id}">${x.name}</button>`).join('')}</div>
+  <div class="chips"><span class="lab">外援</span>${ASSISTS.map(x => `<button class="chip" data-slot="a${n}" data-id="${x.id}" aria-pressed="${a === x.id}">${icSVG(x.id)}${x.name}</button>`).join('')}</div>
   <p class="hint">${AS_BY[a].role}</p>`;
 }
 function buildSelect() {
@@ -1745,20 +2079,20 @@ function buildMoves() {
     <div class="dlbar">${D.map((d, i) => `<div style="flex:${((D[i + 1] ? D[i + 1].min : max) - d.min)};background:${d.color}"><b>${d.name}</b>${d.min}</div>`).join('')}</div>
     <div class="tablewrap"><table><tr><th>阶段</th><th class="num">阈值</th><th class="num">伤害倍率</th><th class="num">守方每击充能</th><th>连段结束后</th></tr>
     ${D.map(d => `<tr><td>${d.name} <span style="color:var(--mute)">${d.id}</span></td><td class="num">${d.min}</td><td class="num">${d.dmgMul}×</td><td class="num">+${d.gain}</td><td>${STATES[d.end].name} ${d.stun} 帧</td></tr>`).join('')}</table></div>
-    <p><b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，按破链键斩断连段。没结算的暂存伤害全部返还，攻方被弹开、硬直 ${CFG.BREAK_STAGGER} 帧。最划算的时机是<b>下一个阈值之前</b>。</p>
+    <p>${icSVG('SK_BRK')}<b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，按破链键斩断连段。没结算的暂存伤害全部返还，攻方被弹开、硬直 ${CFG.BREAK_STAGGER} 帧。最划算的时机是<b>下一个阈值之前</b>。</p>
     <p><b>充能方式</b>：被连受击（阶段越高越多）、防御成功 +${CFG.GAIN.guard}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
     <p><b>终结技</b>：连段达到「${D[CFG.FIN_MIN_LV].name}」后可用，结算全部暂存伤害并造成重击，连段结束。到「${D[D.length - 1].name}」后伤害减半、对手充能加快，应尽快终结。</p>
     <p><b>护架</b>：防御会消耗护架值（血条下的细条），耗尽即破防，短时间无法行动。</p>
     <h3>进阶</h3>
-    ${MECHS.map(m => `<p><b>${m.name}</b>：${m.desc}</p>`).join('')}
+    ${MECHS.map(m => `<p>${icSVG(m.id)}<b>${m.name}</b>：${m.desc}</p>`).join('')}
     <p><b>外援</b>：备战时选一名外援，对战中按外援键呼叫（冷却 ${CFG.ASSIST_CD / 60} 秒，被锁定时不能叫）。${ASSISTS.map(a => `「${a.name}」${a.role}`).join('；')}。</p>
     <p><b>携带道具</b>：备战时选一件，整场生效。${GEAR.slice(1).map(g => `「${g.name}」${g.desc}`).join('；')}。</p>
     <h3>角色特性</h3>
-    ${CHARS.map(c => `<p><b>${c.name}「${c.mech.name}」</b>：${c.mech.desc}</p>`).join('')}`;
+    ${CHARS.map(c => `<p>${icSVG(c.mech.id)}<b>${c.name}「${c.mech.name}」</b>：${c.mech.desc}</p>`).join('')}`;
   $('#mvTabs').innerHTML = CHARS.map(ch => `<button data-mvtab="${ch.id}" aria-selected="${G.mvTab === ch.id}">${ch.name} · ${ch.title}</button>`).join('');
   const ch = CHAR[G.mvTab];
   $('#mvTable').innerHTML = `<tr><th>输入</th><th>招式</th><th>ID</th><th class="num">发生</th><th class="num">持续</th><th class="num">收招</th><th class="num">伤害</th><th class="num">势</th></tr>` +
-    Object.entries(ch.moves).map(([k, m]) => `<tr><td>${MOVE_INPUT[k]}</td><td>${m.name}</td><td><code>${m.id}</code></td><td class="num">${m.startup}</td><td class="num">${m.active}</td><td class="num">${m.recovery}</td><td class="num">${m.dmg}</td><td class="num">${m.mom}</td></tr>`).join('');
+    Object.entries(ch.moves).map(([k, m]) => `<tr><td>${MOVE_INPUT[k]}</td><td class="mvn">${icSVG(m.id)}${m.name}</td><td><code>${m.id}</code></td><td class="num">${m.startup}</td><td class="num">${m.active}</td><td class="num">${m.recovery}</td><td class="num">${m.dmg}</td><td class="num">${m.mom}</td></tr>`).join('');
   $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr><tr><td>冲刺 / 后撤步</td><td colspan="2">快速双击前 / 后方向</td></tr><tr><td>弹反</td><td colspan="2">被打中前一瞬间按下防御</td></tr><tr><td>触屏</td><td colspan="2">左侧摇杆：左右移动 · 上推跳 · 下拉防御 · 快速拨两下冲刺；右侧按键出招，「援」呼叫外援</td></tr>`;
 }
 const CODEX = {
@@ -1768,6 +2102,7 @@ const CODEX = {
   gear: { name: '道具 GR', note: '备战时携带，整场生效。', cols: ['ID', '名称', '效果'], rows: () => GEAR.map(g => [g.id, g.name, g.desc]) },
   assists: { name: '外援 AS', note: '与角色无关的外援，对战中按外援键呼叫。', cols: ['ID', '名称', '效果', '冷却（秒）'], rows: () => ASSISTS.map(a => [a.id, a.name, a.role, CFG.ASSIST_CD / 60]) },
   moves: { name: '招式 MV', note: '帧数以 1/60 秒计；势 = 连段势，决定掉落阶段。外援招式与冲刺也在其中。', cols: ['ID', '角色', '名称', '输入', '发生', '持续', '收招', '伤害', '势', '削架', '距离'], rows: () => [...CHARS.flatMap(c => Object.entries(c.moves).map(([k, m]) => [m.id, c.name, m.name, MOVE_INPUT[k], m.startup, m.active, m.recovery, m.dmg, m.mom, m.grd, m.range])), ...Object.values(COMMON).map(m => [m.id, '通用', m.name, m.dash > 0 ? '双击前' : '双击后', m.startup, m.active, m.recovery, 0, 0, 0, 0]), ...Object.values(AS_MOVE).map(m => [m.id, '外援', m.name, '外援键', '-', '-', '-', m.dmg, m.mom, m.grd, '-'])] },
+  icons: { name: '图标 IC', note: '全部招式、特性、外援、道具的专属图标。每名角色有自己的徽章外形：烬圆、澜方圆、岳六角、影菱形、铃钟形。', cols: [], rows: () => [] },
   drops: { name: '掉落阶段 DL', note: '连段势越过阈值即结算暂存伤害。', cols: ['ID', '名称', '阈值', '伤害倍率', '守方每击充能', '连段结束后', '硬直帧', '说明'], rows: () => DROP_LEVELS.map(d => [d.id, d.name, d.min, d.dmgMul, d.gain, STATES[d.end].name, d.stun, d.note]) },
   states: { name: '状态 ST', note: '角色状态机。', cols: ['ID', '名称', '说明'], rows: () => Object.entries(STATES).map(([k, v]) => [k, v.name, v.desc]) },
   world: { name: '场景与道具', note: 'STG 场景，IT 道具，DM 训练木桩。', cols: ['ID', '名称', '说明'], rows: () => [...STAGES.map(s => [s.id, s.name, s.desc]), ...ITEMS.map(i => [i.id, i.name, i.desc]), ...DUMMY.map(d => [d.id, d.name, d.desc])] },
@@ -1779,7 +2114,13 @@ const CODEX = {
 function buildCodex() {
   $('#cxTabs').innerHTML = Object.entries(CODEX).map(([k, v]) => `<button data-cxtab="${k}" aria-selected="${G.cxTab === k}">${v.name}</button>`).join('');
   const t = CODEX[G.cxTab]; $('#cxNote').textContent = t.note;
-  $('#cxTable').innerHTML = `<tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr>` + t.rows().map(r => `<tr>${r.map((v, i) => i === 0 ? `<td><code>${v}</code></td>` : `<td class="${typeof v === 'number' ? 'num' : String(v).length > 14 ? 'w' : ''}">${v}</td>`).join('')}</tr>`).join('');
+  if (G.cxTab === 'icons') {
+    const nm = id => { for (const c of CHARS) { for (const m of Object.values(c.moves)) if (m.id === id) return `${c.name} · ${m.name}`; if (c.mech.id === id) return `${c.name} · ${c.mech.name}`; }
+      const x = [...MECHS, ...GEAR, ...ASSISTS, ...ITEMS].find(o => o.id === id) || Object.values(COMMON).find(m => m.id === id); return x ? x.name : id === 'SK_BRK' ? '破链' : ''; };
+    $('#cxTable').innerHTML = `<tr><td><div class="icgrid">${Object.keys(ICONS).filter(id => id !== 'MECH_DASH' && id !== 'MV_YING_BS').map(id => `<figure>${icSVG(id)}<figcaption>${nm(id)}<br><code>${id}</code></figcaption></figure>`).join('')}</div></td></tr>`;
+    return;
+  }
+  $('#cxTable').innerHTML = `<tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr>` + t.rows().map(r => `<tr>${r.map((v, i) => i === 0 ? `<td><code>${icFor(v) ? icSVG(icFor(v)) : ''}${v}</code></td>` : `<td class="${typeof v === 'number' ? 'num' : String(v).length > 14 ? 'w' : ''}">${v}</td>`).join('')}</tr>`).join('');
 }
 function buildSettings() {
   $('#setList').innerHTML = SETTINGS.map(s => {
@@ -1919,9 +2260,28 @@ function calcLift() {
   G.liftT = clamp(CFG.GROUND - top + 24, 0, CFG.TOUCH_LIFT);
 }
 const DIM_ELS = [...$$('#touch .pad.r button'), stick];
+const PADB = Object.fromEntries([...$$('#touch .pad.r button')].map(b => [b.dataset.k, b]));
+function padSet(k, id, label, extra = '') {
+  const b = PADB[k]; if (!b || b.dataset.ic === id + label) return;
+  b.dataset.ic = id + label; b.innerHTML = icSVG(id, { badge: false }) + `<b>${label}</b>` + extra; b.setAttribute('aria-label', label);
+}
+function padUI(f) {
+  const mv = f.ch.moves, inp = f.inp || EMPTY, fwd = f.face > 0 ? inp.held.right : inp.held.left, back = f.face > 0 ? inp.held.left : inp.held.right, air = !f.grounded && mv.AIR;
+  padSet('l', air ? mv.AIR.id : mv.L.id, air ? '空中' : '轻');
+  padSet('h', air ? mv.AIR.id : mv.H.id, air ? '空中' : '重');
+  if (back && mv.BS) padSet('s', mv.BS.id, mv.BS.name); else if (fwd) padSet('s', mv.FS.id, mv.FS.name); else padSet('s', mv.S.id, '特');
+  padSet('fin', mv.FIN.id, '终结'); padSet('brk', 'SK_BRK', '破链'); padSet('ast', f.assist, AS_BY[f.assist].name, '<i></i>');
+  const ast = PADB.ast, brk = PADB.brk, fin = PADB.fin, cost = brkCost(f), canFin = !!(f.chain && f.chain.lv >= CFG.FIN_MIN_LV);
+  ast.style.setProperty('--cd', (f.astCD / CFG.ASSIST_CD).toFixed(3)); ast.style.setProperty('--rc', AS_BY[f.assist].col); ast.classList.toggle('rdy', f.astCD <= 0);
+  const it = ast.querySelector('i'); if (it) it.textContent = f.astCD > 0 ? Math.ceil(f.astCD / 60) : '';
+  brk.style.setProperty('--bk', Math.min(1, f.brk / cost).toFixed(3)); brk.style.setProperty('--rc', f.col); brk.classList.toggle('rdy', f.brk >= cost); brk.classList.toggle('hot', !!f.chainedBy && f.brk >= cost);
+  fin.style.setProperty('--rc', '#e8432b'); fin.classList.toggle('rdy', canFin); fin.classList.toggle('hot', canFin); fin.classList.toggle('off', !canFin);
+}
 let dimN = 0;
 function touchDim() {
-  if (!TOUCH || G.page !== 'PG_BATTLE' || G.f.length < 2 || ++dimN % 4) return;
+  if (!TOUCH || G.page !== 'PG_BATTLE' || G.f.length < 2) return;
+  padUI(G.f[0]);
+  if (++dimN % 4) return;
   const ar = $('#app').getBoundingClientRect(), k = ar.width / W;
   const fr = fighterRects().map(([x0, y0, x1, y1]) => [ar.left + x0 * k, ar.top + y0 * k, ar.left + x1 * k, ar.top + y1 * k]);
   for (const el of DIM_ELS) { const r = el.getBoundingClientRect(); el.classList.toggle('thru', fr.some(q => q[0] < r.right && q[2] > r.left && q[1] < r.bottom && q[3] > r.top)); }
