@@ -50,7 +50,8 @@ jobs:
           cd app
           echo '{"name":"duanlian-android","private":true,"version":"1.0.0"}' > package.json
           echo '{"appId":"com.duanlian.game","appName":"断链","webDir":"www","backgroundColor":"#0a0807","android":{"backgroundColor":"#0a0807"}}' > capacitor.config.json
-          npm install --no-audit --no-fund @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          npm install --no-audit --no-fund @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @supabase/supabase-js@2
+          cp node_modules/@supabase/supabase-js/dist/umd/supabase.js www/supabase.min.js   # 账户和联机用的库打进安装包，不依赖 CDN
           npx cap add android
 
       - name: 横屏、沉浸式全屏、常亮、振动
