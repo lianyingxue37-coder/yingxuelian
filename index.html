@@ -139,6 +139,28 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .hudbtn:hover{border-color:var(--bone)}.hudbtn svg{width:62%;height:62%}
 #tPause{left:42.9%}#bFs{left:54.3%}
 #titleTools{position:absolute;top:1.1em;right:1.2em;display:flex;gap:.6em}
+#accChip{display:flex;align-items:center;gap:.5em;background:rgba(13,10,9,.6);border:1px solid var(--line);border-radius:.25em;padding:.3em .9em .3em .4em;min-height:2.4em;max-width:14em}
+#accChip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#accChip svg{width:1.2em;height:1.2em;margin-left:.4em}#accChip:hover{border-color:var(--bone)}
+.av{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--c);color:#fff;font:400 1em/1 "Ma Shan Zheng",serif;flex:none;box-shadow:inset 0 0 0 2px rgba(13,10,9,.35)}
+.av.sm{width:1.35em;height:1.35em;font-size:.9em;margin-right:.35em;vertical-align:-.3em}.av.lg{width:3.2em;height:3.2em;font-size:1.7em}
+.form{display:grid;gap:.6em;max-width:34em}.form label{display:grid;grid-template-columns:4.2em minmax(0,1fr);align-items:center;gap:.8em}.form label span{color:var(--mute)}
+.form input,.join input{font:inherit;color:var(--bone);background:rgba(239,233,223,.06);border:1px solid var(--line);border-radius:.2em;padding:.5em .7em;min-height:2.5em;min-width:0;user-select:text;-webkit-user-select:text}
+.form input:focus,.join input:focus{outline:2px solid var(--red);outline-offset:0;border-color:transparent}
+.err{color:#ff8f7a;min-height:1.2em;margin:0}.hint{color:var(--mute);font-size:.88em}.mute{color:var(--mute);font-weight:400;font-size:.85em}
+.prof{display:flex;align-items:center;gap:1em;flex-wrap:wrap;padding:.4em 0 .2em}.pinfo{display:grid;gap:.1em;flex:1;min-width:12em}.pnick{font-size:1.5em}
+.ptitle{display:inline-block;margin-left:.5em;font-size:.78em;color:#fff;background:var(--red);padding:.05em .55em;border-radius:99em;vertical-align:.25em}.pinfo small,.prow small{color:var(--mute)}.pinfo .ptitle,.prow .ptitle,.ibox .ptitle{justify-self:start;width:fit-content;margin:.1em 0}.pbtn{display:flex;gap:.5em}
+.statgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.45em}.statgrid div{background:rgba(239,233,223,.05);border:1px solid var(--line);padding:.45em .7em;display:grid}.statgrid b{font:600 1.45em/1.2 "Oswald","Noto Sans SC",sans-serif}.statgrid small{color:var(--mute);font-size:.8em}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:1.3em}
+.achgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5em,1fr));gap:.4em}.ach{display:grid;grid-template-columns:2.4em minmax(0,1fr);grid-template-rows:auto auto;column-gap:.5em;align-items:center;padding:.35em .5em;border:1px solid var(--line);opacity:.5}
+.ach.on{opacity:1;border-color:rgba(232,67,43,.55);background:rgba(232,67,43,.07)}.ach .ic{grid-row:span 2;width:2.4em;height:2.4em}.ach b{font-size:.92em}.ach small{color:var(--mute);font-size:.75em;line-height:1.3}
+.res{display:inline-block;width:1.7em;text-align:center;font-weight:700;border-radius:.2em}.res.w{background:var(--red);color:#fff}.res.l{background:#3a3330}.res.d{background:#5a524b}
+.onact{display:flex;flex-wrap:wrap;gap:.6em;align-items:center}.join{display:flex;gap:.4em}.join input{width:7em;text-align:center;letter-spacing:.2em}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(17em,1fr));gap:.45em}.prow{display:flex;align-items:center;gap:.7em;border:1px solid var(--line);padding:.45em .6em;background:rgba(239,233,223,.03)}.prow>div{flex:1;display:grid;min-width:0}.prow .btn{min-height:2.2em;padding:.3em .9em}
+.rdy{font-style:normal;font-size:.75em;color:#fff;background:#2f8f5b;padding:.05em .5em;border-radius:99em;margin-left:.5em}.code{font:600 1.3em "Oswald",sans-serif;color:var(--red);letter-spacing:.12em}
+.btn:disabled,.chip:disabled,.pc:disabled,.card:disabled{opacity:.45;cursor:default}
+#modal{position:absolute;inset:0;z-index:30;background:rgba(10,8,7,.72);display:grid;place-items:center;font-size:max(12px,1.35cqw)}#modal[hidden]{display:none}
+.ibox{background:#1a1614;border-top:.3em solid var(--red);padding:1.2em 1.5em;display:flex;flex-wrap:wrap;align-items:center;gap:1em;max-width:min(90%,32em);box-shadow:0 1em 3em #000c}.ibox p{margin:.2em 0 0}.ibtn{display:flex;gap:.6em;width:100%;justify-content:flex-end}
+@media(max-width:700px){.statgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.cols2{grid-template-columns:1fr}}
 #dlTitle{display:flex;align-items:center;gap:.45em;background:rgba(232,67,43,.85);border:1px solid var(--red);border-radius:.25em;padding:.35em .9em;min-height:2.4em;color:#fff;text-decoration:none;font-weight:700}
 #dlTitle svg{width:1.1em;height:1.1em}#dlTitle:hover{border-color:var(--bone)}
 #fsTitle{display:flex;align-items:center;gap:.45em;background:rgba(13,10,9,.6);border:1px solid var(--line);border-radius:.25em;padding:.35em .9em;min-height:2.4em}
@@ -196,14 +218,15 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   </div>
   <nav class="menu">
     <button data-mode="cpu">对战电脑<small>1P 对 CPU</small></button>
+    <button data-go="PG_ONLINE">联机对战<small>登录后和在线玩家实时对战</small></button>
     <button data-mode="pvp">双人对战<small>同一键盘 1P 对 2P</small></button>
     <button data-mode="train">训练模式<small>对木桩练连段与破链时机</small></button>
     <button data-go="PG_MOVES">招式与系统</button>
-    <button data-go="PG_CODEX">设定 ID 表</button>
+    
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v0.8.1 · 背景为电脑自动对战演示</div>
-  <div id="titleTools"><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
+  <div class="ver">v0.9 · 背景为电脑自动对战演示</div>
+  <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
 
@@ -212,7 +235,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   <div class="sides"><div class="side" id="sideP1"></div><div class="side" id="sideP2"></div></div>
   <div class="selrow"><div class="who">场景</div><div class="cards" id="pickStage"></div></div>
   <div class="selrow" id="dummyRow"><div class="who">木桩</div><div class="cards" id="pickDummy"></div></div>
-  <div class="actions"><button class="btn" data-go="PG_TITLE">返回</button><button class="btn primary" id="btnFight">开战</button></div>
+  <div class="actions"><button class="btn" id="btnSelBack">返回</button><button class="btn primary" id="btnFight">开战</button></div>
 </div></section>
 
 <section class="page" id="PG_BATTLE">
@@ -229,7 +252,20 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   <h2 id="resTitle"></h2><p id="resSub"></p>
   <div class="tablewrap"><table id="resTable"></table></div>
   <div class="best" id="resBest"></div>
+  <div id="resAch"></div>
   <div class="actions"><button class="btn" id="btnToTitle">返回标题</button><button class="btn" id="btnReselect">重选角色</button><button class="btn primary" id="btnRematch">再战</button></div>
+</div></section>
+
+<section class="page" id="PG_ACCOUNT"><div class="panel">
+  <h2>账户 <small id="accSub"></small></h2>
+  <div id="accBody"></div>
+  <div class="actions"><button class="btn" data-go="PG_TITLE">返回</button></div>
+</div></section>
+
+<section class="page" id="PG_ONLINE"><div class="panel">
+  <h2>联机对战 <small id="onSub"></small></h2>
+  <div id="onBody"></div>
+  <div class="actions"><button class="btn" data-go="PG_ACCOUNT">我的账户</button><button class="btn" id="onBack">返回</button></div>
 </div></section>
 
 <section class="page" id="PG_MOVES"><div class="panel">
@@ -239,7 +275,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <div><h3>招式表</h3><div class="tabs" id="mvTabs"></div><div class="tablewrap"><table id="mvTable"></table></div>
       <h3>操作</h3><div class="tablewrap"><table id="keyTable"></table></div></div>
   </div>
-  <div class="actions"><button class="btn" data-back>返回</button></div>
+  <div class="actions"><button class="btn" data-go="PG_CODEX">设定 ID 表</button><button class="btn" data-back>返回</button></div>
 </div></section>
 
 <section class="page" id="PG_CODEX"><div class="panel">
@@ -256,6 +292,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   <div class="actions"><button class="btn" id="setReset">恢复默认</button><button class="btn primary" data-back>完成</button></div>
 </div></section>
 <div id="toast" role="status"></div>
+<div id="modal" role="dialog" aria-modal="true" hidden></div>
 </div>
   <div id="touch">
     <div id="stickZone"><div id="stick"><div class="ring"><i class="u">▲</i><i class="d">▼</i><i class="l">◀</i><i class="r">▶</i></div><div class="knob"></div></div></div>
@@ -272,6 +309,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
    ============================================================ */
 const W = 1280, H = 720;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const grand = (a, b) => a + (G.rng ? G.rng() : Math.random()) * (b - a);   // 影响胜负的随机数（联机双方同种子）
 const rand = (a, b) => a + Math.random() * (b - a), randi = (a, b) => Math.floor(rand(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t;
 const FB = '"Ma Shan Zheng","Noto Sans SC",serif', FN = '"Oswald","Noto Sans SC",sans-serif', FU = '"Noto Sans SC",system-ui,sans-serif';
@@ -1000,7 +1038,8 @@ const G = {
   sel: { p1: 'CH_JIN', p2: 'CH_LAN', g1: 'GR_NONE', g2: 'GR_NONE', a1: 'AS_ARCHER', a2: 'AS_HOUND', stage: 'STG_01', dummy: 'stand' }, lastOpts: null,
   mvTab: 'CH_JIN', cxTab: 'pages',
 };
-const isHuman = f => !G.demo && (f.idx === 0 ? !G.autoP1 : G.mode === 'pvp');
+const isHuman = f => !G.demo && (G.mode === 'online' ? f.idx === LS.me : f.idx === 0 ? !G.autoP1 : G.mode === 'pvp');
+const isLocal1 = f => f.idx === (LS.on ? LS.me : 0), kmOf = f => KEYMAP[f.idx && !LS.on ? 'P2' : 'P1'];
 function emit(ev, d) {
   if (G.mode === 'train' && !G.demo) { G.log.unshift(`${ev}${d && d.text ? ' · ' + d.text : ''}`); G.log.length = Math.min(G.log.length, 7); }
   (HOOKS[ev] || []).forEach(fn => { try { fn(d); } catch (e) { console.error(e); } });
@@ -1265,7 +1304,7 @@ class Fighter {
       if (this.mt % 4 === 1) dust(this.x - this.face * m.dash * 24, 1, this.y);
       if (this.buf && this.mt > 3 && m.dash > 0) { const b = this.buf; this.buf = null; if (this.startMove(b.act)) return; }
     }
-    if (m.side) { const u = this.mt / total; setZ(this, this.z + m.side * (m.dist / total) * 2 * (1 - u)); if (this.mt % 4 === 1) dust(this.x, 1, this.y); }
+    if (m.side) { if (this.mt === 1) this.stats.sides = (this.stats.sides || 0) + 1; const u = this.mt / total; setZ(this, this.z + m.side * (m.dist / total) * 2 * (1 - u)); if (this.mt % 4 === 1) dust(this.x, 1, this.y); }
     if (m.teleport && this.mt === m.startup) {
       const op = G.f[1 - this.idx], side = op.x >= this.x ? 1 : -1;
       let nx = op.x + side * 95; if (nx < CFG.WALL_L + 10 || nx > CFG.WALL_R - 10) nx = op.x - side * 95;
@@ -1764,13 +1803,13 @@ function updateFX() {
 
 /* ---------- 回合流程 ---------- */
 function startMatch(o) {
-  G.lastOpts = o; G.mode = o.mode; G.demo = false; G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
+  G.lastOpts = o; G.mode = o.mode; G.demo = false; G.rng = mulberry32((Math.random() * 2 ** 31) | 0); G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
   G.f = [new Fighter(0, CHAR[o.p1], false, o.g1 || 'GR_NONE', o.a1 || 'AS_ARCHER'), new Fighter(1, CHAR[o.p2], o.p1 === o.p2, o.g2 || 'GR_NONE', o.a2 || 'AS_HOUND')];
   G.ai = [new AI(CFG.AI_LEVEL), new AI(o.mode === 'train' ? 1 : CFG.AI_LEVEL)];
   G.round = 1; G.log = []; G.lastMove = null; startRound(); go('PG_BATTLE'); SFX.init();
 }
 function startDemo() {
-  G.demo = true; G.running = false; G.paused = false; G.mode = 'cpu'; G.autoP1 = false; G.stage = pick(STAGES).id;
+  G.demo = true; G.running = false; G.paused = false; G.autoP1 = false; G.rng = null; G.stage = pick(STAGES).id;
   const a = pick(CHARS), b = pick(CHARS);
   G.f = [new Fighter(0, a, false, pick(GEAR).id, pick(ASSISTS).id), new Fighter(1, b, a === b, pick(GEAR).id, pick(ASSISTS).id)]; G.ai = [new AI(1), new AI(1)]; G.round = 1; startRound();
 }
@@ -1784,19 +1823,25 @@ function startRound() {
 }
 function roundOver() {
   const [A, B] = G.f;
+  if (!G.demo && G.winner && G.winner.hp >= CFG.HP) G.winner.stats.perfects = (G.winner.stats.perfects || 0) + 1;
   if (G.demo) { if (A.wins >= 2 || B.wins >= 2) startDemo(); else { G.round++; startRound(); } return; }
   if (A.wins >= CFG.ROUNDS_TO_WIN || B.wins >= CFG.ROUNDS_TO_WIN || G.round >= 9) endMatch();
   else { G.round++; startRound(); }
 }
 function endMatch() {
   G.running = false; const [A, B] = G.f, w = A.wins > B.wins ? A : B.wins > A.wins ? B : null;
-  const who = f => f.idx === 0 ? '1P' : G.mode === 'cpu' ? 'CPU' : '2P';
+  const who = f => G.mode === 'online' ? (f.idx === LS.me ? '你' : esc((LS.peer || ROOM.peer || {}).nick || '对手')) : f.idx === 0 ? '1P' : G.mode === 'cpu' ? 'CPU' : '2P';
   $('#resTitle').textContent = w ? `${w.ch.name} 胜` : '平局';
   $('#resSub').textContent = w ? `${who(w)} · ${w.ch.title}　回合 ${w.wins} : ${(w === A ? B : A).wins}` : `回合 ${A.wins} : ${B.wins}`;
   const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['弹反', f => f.stats.parries], ['终结技', f => f.stats.fins], ['呼叫外援', f => f.stats.assists], ['燃链', f => f.stats.burns || 0], ['拾取道具', f => f.stats.shards]];
   $('#resTable').innerHTML = `<tr><th></th><th class="num">${who(A)} · ${A.ch.name}</th><th class="num">${who(B)} · ${B.ch.name}</th></tr>` + rows.map(([n, fn]) => `<tr><td>${n}</td><td class="num">${fn(A)}</td><td class="num">${fn(B)}</td></tr>`).join('');
   $('#resBest').innerHTML = [A, B].map(f => { const b = f.stats.best; return `<div><b>${who(f)} · 最佳连段</b>${b ? `<small>${b.hits} 连 · ${DROP_LEVELS[b.lv].name}</small>${b.route.map(e => icSVG(icFor(e.id) || '')).join('')}` : '<small>没有打出连段</small>'}</div>`; }).join('');
   if (w) { w.move = null; w.setState('ST_WIN'); }
+  const rec = recMatch(), onl = G.mode === 'online';
+  if (onl) { lsStop(); $('#resTitle').textContent = w ? (w.idx === LS.me ? '胜利' : '败北') : '平局'; }
+  $('#resAch').innerHTML = rec && rec.fresh.length ? `<h3>解锁成就</h3><div class="achgrid">${rec.fresh.map(a => `<div class="ach on">${icSVG(a.ic)}<b>${a.name}</b><small>${a.desc}</small></div>`).join('')}</div>` : '';
+  if (rec && rec.fresh.length) toast('解锁成就：' + rec.fresh.map(a => a.name).join('、'));
+  $('#btnReselect').hidden = onl; $('#btnToTitle').textContent = onl ? '离开房间' : '返回标题'; $('#btnRematch').textContent = onl ? '再来一局' : '再战';
   go('PG_RESULT');
 }
 
@@ -1806,10 +1851,15 @@ function step() {
   if (G.page === 'PG_RESULT') { for (const f of G.f) { f.intake(EMPTY); f.update(G.f[1 - f.idx]); } updateFX(); Input.endFrame(); return; }
   const active = (G.running && !G.paused) || G.demo;
   if (!active) { Input.endFrame(); return; }
-  const [A, B] = G.f; A.px = A.x; B.px = B.x;
+  const [A, B] = G.f;
   const inA = (G.demo || G.autoP1) ? G.ai[0].think(A, B) : Input.read('P1');
   const inB = (G.demo || G.mode === 'cpu') ? G.ai[1].think(B, A) : G.mode === 'pvp' ? Input.read('P2') : dummyInput(B, A);
   Input.endFrame();
+  simStep(inA, inB);
+}
+/* 推演一帧（只依赖双方输入和种子随机数，联机双方结果一致） */
+function simStep(inA, inB) {
+  const [A, B] = G.f; A.px = A.x; B.px = B.x;
   updateFX();
   if (G.rs !== 'RS_FIGHT') {
     G.rsT++;
@@ -1831,7 +1881,7 @@ function step() {
   clampAll();
   for (const f of G.f) if (!f.chainedBy) f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.GAIN.passive);
   // 链晶
-  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? CFG.STAGE_W / 2 + rand(140, 420) : clamp((G.f[0].x + G.f[1].x) / 2 + rand(-420, 420), CFG.WALL_L + 60, CFG.WALL_R - 60); const r0 = Math.random(), type = r0 < .6 ? 'shard' : r0 < .82 ? 'elixir' : 'scroll'; const sz = rand(10, 90); G.shards.push({ x, z: sz, y: gy(sz) - 52, life: CFG.SHARD_LIFE, t: 0, type }); emit('EV_SHARD_SPAWN', { text: `${type} x=${Math.round(x)}` }); }
+  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? CFG.STAGE_W / 2 + grand(140, 420) : clamp((G.f[0].x + G.f[1].x) / 2 + grand(-420, 420), CFG.WALL_L + 60, CFG.WALL_R - 60); const r0 = grand(0, 1), type = r0 < .6 ? 'shard' : r0 < .82 ? 'elixir' : 'scroll'; const sz = grand(10, 90); G.shards.push({ x, z: sz, y: gy(sz) - 52, life: CFG.SHARD_LIFE, t: 0, type }); emit('EV_SHARD_SPAWN', { text: `${type} x=${Math.round(x)}` }); }
   for (const s of G.shards) {
     s.t++; s.life--;
     for (const f of G.f) {
@@ -2400,7 +2450,7 @@ function drawMarks(c) {
   }
 }
 const toScreen = (x, y) => { const t = G.camT; return [(x - t.cx) * t.z + W / 2, (y - t.fy) * t.z + t.fy - t.ly]; };
-const astKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「援」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].ast[0]);
+const astKey = f => !isHuman(f) ? '' : (TOUCH && isLocal1(f)) ? '「援」' : keyName(kmOf(f).ast[0]);
 function mechText(f) {
   switch (f.ch.mech.id) {
     case 'MECH_EMBER': return `余烬 ${'●'.repeat(f.ember)}${'○'.repeat(6 - f.ember)}`;
@@ -2459,8 +2509,8 @@ function stripes(c) {
   x.beginPath(); x.moveTo(-3, 15); x.lineTo(15, -3); x.moveTo(9, 15); x.lineTo(15, 9); x.moveTo(-3, 3); x.lineTo(3, -3); x.stroke();
   return (STRIPES = c.createPattern(p, 'repeat'));
 }
-const brkKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「破链」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].brk[0]);
-const finKey = f => !isHuman(f) ? '' : (TOUCH && f.idx === 0) ? '「终结」' : keyName(KEYMAP[f.idx ? 'P2' : 'P1'].fin[0]);
+const brkKey = f => !isHuman(f) ? '' : (TOUCH && isLocal1(f)) ? '「破链」' : keyName(kmOf(f).brk[0]);
+const finKey = f => !isHuman(f) ? '' : (TOUCH && isLocal1(f)) ? '「终结」' : keyName(kmOf(f).fin[0]);
 function hpBar(c, f, x, y, w, side) {
   const h = 24, r = f.hp / CFG.HP, tr = f.trail / CFG.HP, pend = (f.chainedBy && f.chainedBy.chain ? f.chainedBy.chain.pending : 0) / CFG.HP;
   const seg = (a, b) => { if (b <= a) return; if (side > 0) c.fillRect(x + w - w * b, y, w * (b - a), h); else c.fillRect(x + w * a, y, w * (b - a), h); };
@@ -2475,7 +2525,7 @@ function hpBar(c, f, x, y, w, side) {
   c.textBaseline = 'alphabetic';
   txt(c, f.ch.name, side > 0 ? x : x + w, y + h + 46, 30, FB, f.col, side > 0 ? 'left' : 'right', 5);
   c.font = `500 14px ${FU}`; c.fillStyle = MUTE; c.textAlign = side > 0 ? 'left' : 'right';
-  otxt(c, f.ch.title, side > 0 ? x + 40 : x + w - 40, y + h + 42);
+  otxt(c, G.mode === 'online' ? (f.idx === LS.me ? `${(ACC.profile || {}).nickname || '你'}（你）` : (ROOM.peer ? ROOM.peer.nick : '对手')) : f.ch.title, side > 0 ? x + 40 : x + w - 40, y + h + 42);
   c.font = `600 15px ${FN}`; c.textAlign = side > 0 ? 'right' : 'left'; c.fillStyle = BONE; otxt(c, Math.ceil(f.hp), side > 0 ? x + w : x, y + h + 30);
   for (let i = 0; i < CFG.ROUNDS_TO_WIN; i++) {
     const cx = side > 0 ? x + w - 52 - i * 18 : x + 52 + i * 18, cy = y + h + 40;
@@ -2613,7 +2663,7 @@ function render() {
     drawMarks(c); drawParts(c); drawPops(c, true);
   }
   c.restore();
-  if (G.f.length && !G.demo) { drawHUD(c); touchDim(); }
+  if (G.f.length && !G.demo) { drawHUD(c); lsHUD(c); touchDim(); }
   drawPops(c, false); drawBanner(c); drawPaper(c);
   if (G.flash > 0) { c.fillStyle = `rgba(255,250,240,${G.flash})`; c.fillRect(0, 0, W, H); }
   if (G.demo) { c.fillStyle = 'rgba(10,8,7,.25)'; c.fillRect(0, 0, W, H); }
@@ -2637,7 +2687,8 @@ function loop(now) {
   const dt = Math.min(100, now - last); last = now;
   if (G.slow > 0) G.slow -= dt / 16.67;
   acc += dt / 16.667 * (G.slow > 0 ? .33 : 1);
-  let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0;
+  if (LS.on) lsTick(dt);
+  else { let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0; }
   render();
 }
 
@@ -2649,7 +2700,7 @@ function go(id) {
   if (SUB.includes(id) && !SUB.includes(G.page)) G.prev = G.page;
   G.page = id;
   $$('.page').forEach(p => p.classList.toggle('on', p.id === id));
-  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings })[id]?.();
+  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings, PG_ACCOUNT: buildAccount, PG_ONLINE: buildOnline })[id]?.();
   Input.clear();
   $('#wrap').classList.toggle('battle', id === 'PG_BATTLE' && TOUCH);
   if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); calcLift(); } catch (e) {} });
@@ -2665,7 +2716,9 @@ function portrait(cv, ch, alt) {
   const s = h / 225; c.translate(w / 2, h * .97); c.scale(s, s); drawFighter(c, f);
 }
 function sideHTML(n) {
-  const slot = 'p' + n, ch = CHAR[G.sel[slot]], who = n === 1 ? '1P' : (G.mode === 'cpu' ? 'CPU' : G.mode === 'pvp' ? '2P' : '木桩');
+  const slot = 'p' + n, ch = CHAR[G.sel[slot]];
+  let who = n === 1 ? '1P' : (G.mode === 'cpu' ? 'CPU' : G.mode === 'pvp' ? '2P' : '木桩');
+  if (G.mode === 'online') { const mine = (n === 1) === ROOM.host, info = mine ? myInfo() : ROOM.peer; who = `${avHTML(info ? info.avatar : 'CH_JIN', 'sm')}${esc(info ? info.nick : '?')}${mine ? '（你）' : ''}${ROOM.ready[n - 1] ? '<em class="rdy">已准备</em>' : ''}`; }
   const g = G.sel['g' + n], a = G.sel['a' + n];
   return `<h3><b>${who}</b><span>${ch.name} · ${ch.title}　${Object.entries(ch.stats).map(([k, v]) => `${k}${'■'.repeat(v)}${'□'.repeat(5 - v)}`).join(' ')}</span></h3>
   <div class="roster">${CHARS.map(c => `<button class="pc" data-slot="${slot}" data-id="${c.id}" aria-pressed="${c.id === ch.id}" aria-label="${c.name}"><canvas></canvas><b>${c.name}</b></button>`).join('')}</div>
@@ -2677,11 +2730,19 @@ function sideHTML(n) {
   <p class="hint">${AS_BY[a].role}</p>`;
 }
 function buildSelect() {
-  $('#selMode').textContent = { cpu: '对战电脑', pvp: '双人对战', train: '训练模式' }[G.mode] + ' · 选角色、道具、外援和场景';
+  const onl = G.mode === 'online';
+  $('#selMode').textContent = onl ? roomTitle() : { cpu: '对战电脑', pvp: '双人对战', train: '训练模式' }[G.mode] + ' · 选角色、道具、外援和场景';
   $('#sideP1').innerHTML = sideHTML(1); $('#sideP2').innerHTML = sideHTML(2);
   $('#dummyRow').hidden = G.mode !== 'train';
   $('#pickStage').innerHTML = STAGES.map(st => `<button class="card stage" data-slot="stage" data-id="${st.id}" aria-pressed="${G.sel.stage === st.id}"><canvas></canvas><b>${st.name}</b><span class="t">${st.desc}</span><span class="t">${st.id}</span></button>`).join('');
   $('#pickDummy').innerHTML = DUMMY.map(d => `<button class="card small" data-slot="dummy" data-id="${d.key}" aria-pressed="${G.sel.dummy === d.key}"><span><b style="font-size:1.25em">${d.name}</b></span><span class="t">${d.desc}</span></button>`).join('');
+  $('#btnFight').textContent = onl ? (ROOM.ready[ROOM.host ? 0 : 1] ? '取消准备' : '准备') : '开战';
+  if (onl) {
+    const theirs = ROOM.host ? 2 : 1;
+    $$(`#sideP${theirs} button`).forEach(b => b.disabled = true);
+    if (!ROOM.host) $$('#pickStage button').forEach(b => b.disabled = true);
+    if (!ROOM.peer) $(`#sideP${theirs}`).innerHTML = `<h3><b>等待对手加入…</b></h3><p>把房间号 <b class="code">${ROOM.code}</b> 发给好友，让对方在「联机对战 → 加入房间」里输入。</p><p class="hint">也可以回大厅直接邀请在线玩家。</p>`;
+  }
   requestAnimationFrame(() => {
     for (const n of [1, 2]) $$(`#sideP${n} .pc canvas`).forEach((cv, i) => portrait(cv, CHARS[i], n === 2 && G.sel.p1 === CHARS[i].id));
     $$('#pickStage canvas').forEach((cv, i) => { const w = cv.clientWidth || 128, h = cv.clientHeight || 72; cv.width = w * DPR; cv.height = h * DPR; cv.getContext('2d').drawImage(stageThumb(STAGES[i].id), 0, 0, w * DPR, h * DPR); });
@@ -2755,7 +2816,7 @@ document.addEventListener('click', e => {
   if (b.dataset.mode) { G.mode = b.dataset.mode; go('PG_SELECT'); }
   else if (b.dataset.go) go(b.dataset.go);
   else if (b.hasAttribute('data-back')) go(G.prev || 'PG_TITLE');
-  else if (b.dataset.slot) { G.sel[b.dataset.slot] = b.dataset.id; buildSelect(); requestAnimationFrame(() => { const n = $(`[data-slot="${b.dataset.slot}"][data-id="${b.dataset.id}"]`); n && n.focus({ preventScroll: true }); }); }
+  else if (b.dataset.slot) { if (G.mode === 'online') { if (!mySlots().includes(b.dataset.slot)) return; ROOM.ready[ROOM.host ? 0 : 1] = false; roomSend('sel', { sel: { [b.dataset.slot]: b.dataset.id } }); } G.sel[b.dataset.slot] = b.dataset.id; buildSelect(); requestAnimationFrame(() => { const n = $(`[data-slot="${b.dataset.slot}"][data-id="${b.dataset.id}"]`); n && n.focus({ preventScroll: true }); }); }
   else if (b.dataset.mvtab) { G.mvTab = b.dataset.mvtab; buildMoves(); $(`[data-mvtab="${G.mvTab}"]`).focus(); }
   else if (b.dataset.cxtab) { G.cxTab = b.dataset.cxtab; buildCodex(); $(`[data-cxtab="${G.cxTab}"]`).focus(); }
 });
@@ -2791,7 +2852,8 @@ function tryFullscreen() {
   if (!TOUCH || FS.app() || FS.on() || !FS.can() || window.self !== window.top) return;
   FS.enter().catch(() => {});
 }
-$('#btnFight').onclick = () => tryFullscreen() || startMatch({ mode: G.mode, p1: G.sel.p1, p2: G.sel.p2, g1: G.sel.g1, g2: G.sel.g2, a1: G.sel.a1, a2: G.sel.a2, stage: G.sel.stage, dummy: G.sel.dummy });
+$('#btnSelBack').onclick = () => { if (G.mode === 'online') { roomLeave(); go('PG_ONLINE'); } else go('PG_TITLE'); };
+$('#btnFight').onclick = () => G.mode === 'online' ? (tryFullscreen(), roomToggleReady()) : tryFullscreen() || startMatch({ mode: G.mode, p1: G.sel.p1, p2: G.sel.p2, g1: G.sel.g1, g2: G.sel.g2, a1: G.sel.a1, a2: G.sel.a2, stage: G.sel.stage, dummy: G.sel.dummy });
 $('#btnVx').onclick = () => {
   const t = 'VX18530993088';
   const fallback = () => { try { const r = document.createRange(); r.selectNodeContents($('#sponsor .vx')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {} toast('已选中微信号，长按或 Ctrl+C 复制：' + t); };
@@ -2800,20 +2862,21 @@ $('#btnVx').onclick = () => {
 $('#btnResume').onclick = () => resume();
 $('#btnRestart').onclick = () => startMatch(G.lastOpts);
 $('#btnQuit').onclick = () => { G.running = false; startDemo(); go('PG_TITLE'); };
-$('#btnToTitle').onclick = () => { startDemo(); go('PG_TITLE'); };
+$('#btnToTitle').onclick = () => { if (G.mode === 'online') { roomLeave(); startDemo(); go('PG_ONLINE'); return; } startDemo(); go('PG_TITLE'); };
 $('#btnReselect').onclick = () => { startDemo(); go('PG_SELECT'); };
-$('#btnRematch').onclick = () => startMatch(G.lastOpts);
-$('#tPause').onclick = () => pause();
+$('#btnRematch').onclick = () => { if (G.mode === 'online') { if (!ROOM.peer) { toast('对手已经离开房间'); return; } roomSend('again'); startDemo(); G.mode = 'online'; go('PG_SELECT'); return; } startMatch(G.lastOpts); };
+$('#tPause').onclick = () => pause(true);
 $('#setReset').onclick = () => { Object.assign(CFG, DEFAULTS); saveSettings(); buildSettings(); };
 $('#setList').addEventListener('change', e => { const s = SETTINGS.find(x => x.key === e.target.dataset.key); if (s) { CFG[s.key] = s.opts[+e.target.value][0]; saveSettings(); } });
-function pause() { if (!G.running || G.paused) return; G.paused = true; go('PG_PAUSE'); }
+function pause(manual) { if (!G.running || G.paused) return; if (G.mode === 'online') { if (manual && LS.on) lsAskQuit(); return; } G.paused = true; go('PG_PAUSE'); }
 function resume() { G.paused = false; go('PG_BATTLE'); }
 const GAME_CODES = new Set(Object.values(KEYMAP).flatMap(m => Object.values(m).flat()));
 addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input,textarea')) return;
   SFX.init();
   if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey) { e.preventDefault(); FS.toggle(); return; }
   if (G.page === 'PG_BATTLE') {
-    if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); pause(); return; }
+    if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); pause(true); return; }
     if (GAME_CODES.has(e.code) || e.code === 'Space') e.preventDefault();
     if (!e.repeat) Input.taps.add(e.code); Input.held.add(e.code); return;
   }
@@ -2825,10 +2888,10 @@ addEventListener('keydown', e => {
   if (/^(ArrowDown|ArrowRight)$/.test(e.code)) { e.preventDefault(); (items[i + 1] || items[0])?.focus(); }
   else if (/^(ArrowUp|ArrowLeft)$/.test(e.code)) { e.preventDefault(); (items[i - 1] || items[items.length - 1])?.focus(); }
   else if (e.code === 'KeyJ') document.activeElement?.click?.();
-  else if (e.code === 'Escape') (page.querySelector('[data-back]') || page.querySelector('[data-go="PG_TITLE"]'))?.click();
+  else if (e.code === 'Escape') (page.querySelector('[data-back]') || page.querySelector('[data-go="PG_TITLE"]') || page.querySelector('#btnSelBack, #onBack'))?.click();
 });
 addEventListener('keyup', e => Input.held.delete(e.code));
-addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('contextmenu', e => { if (!(e.target.closest && e.target.closest('input,textarea'))) e.preventDefault(); });
 addEventListener('blur', () => { Input.clear(); pause(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 $$('#touch button').forEach(b => {
@@ -2897,14 +2960,511 @@ function padUI(f) {
 let dimN = 0;
 function touchDim() {
   if (!TOUCH || G.page !== 'PG_BATTLE' || G.f.length < 2) return;
-  padUI(G.f[0]);
+  padUI(G.f[LS.on ? LS.me : 0]);
   if (++dimN % 4) return;
   const ar = $('#app').getBoundingClientRect(), k = ar.width / W;
   const fr = fighterRects().map(([x0, y0, x1, y1]) => [ar.left + x0 * k, ar.top + y0 * k, ar.left + x1 * k, ar.top + y1 * k]);
   for (const el of DIM_ELS) { const r = el.getBoundingClientRect(); el.classList.toggle('thru', fr.some(q => q[0] < r.right && q[2] > r.left && q[1] < r.bottom && q[3] > r.top)); }
 }
 
-window.DUANLIAN = { G, CFG, DROP_LEVELS, CHARS, STAGES, KEYMAP, EVENTS, on, startMatch, step, go, callAssist, tryBurn };
+/* ============================================================
+   账户 · 战绩 · 成就 · 联机（Supabase）
+   SUPA 填好项目网址和公开 key（anon / publishable）即可启用；留空时这些功能显示为「未开通」。
+   ============================================================ */
+const SUPA = { URL: '', KEY: '', ...(window.DUANLIAN_SUPA || {}) };
+const ACC = { sb: null, user: null, profile: null, state: 'off', err: '', tab: 'in', edit: false, recent: null };
+const UNAME = /^[a-z0-9_]{3,16}$/;
+const uEmail = u => `${u}@players.duanlian.game`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SB_SRC = ['supabase.min.js', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+  'https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'];
+function loadSupabase() {
+  if (window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
+  return SB_SRC.reduce((p, src) => p.catch(() => new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src; s.async = true;
+    s.onload = () => window.supabase && window.supabase.createClient ? res(window.supabase) : rej(new Error('no lib'));
+    s.onerror = () => { s.remove(); rej(new Error('load ' + src)); };
+    document.head.appendChild(s);
+  })), Promise.reject(new Error('start')));
+}
+const ERR_CN = [[/Invalid login credentials/i, '账号名或密码不对'], [/already registered|already been registered|already exists/i, '这个账号名已经被注册了'],
+  [/Password should be at least/i, '密码至少要 6 位'], [/rate limit|too many/i, '操作太频繁，请稍后再试'], [/Email not confirmed/i, '服务器还开着邮箱验证，请让作者在 Supabase 关闭 Confirm email'],
+  [/signups not allowed|Signups not allowed/i, '服务器暂时关闭了注册'], [/Failed to fetch|NetworkError|network/i, '连不上服务器，请检查网络'], [/Database error/i, '服务器建表还没完成，或账号名不合规']];
+const errCN = e => { const m = String((e && (e.message || e.error_description)) || e || ''); const hit = ERR_CN.find(([r]) => r.test(m)); return hit ? hit[1] : (m || '出错了，请稍后再试'); };
+
+async function accInit() {
+  if (!SUPA.URL || !SUPA.KEY) { ACC.state = 'off'; recLoad(); accUI(); return; }
+  ACC.state = 'loading'; recLoad(); accUI();
+  try {
+    const lib = await loadSupabase();
+    ACC.sb = lib.createClient(SUPA.URL, SUPA.KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'duanlian.auth' }, realtime: { params: { eventsPerSecond: 50 } } });
+    const { data } = await ACC.sb.auth.getSession();
+    await accSetUser(data && data.session ? data.session.user : null);
+    ACC.sb.auth.onAuthStateChange((ev, session) => {
+      if (ev === 'SIGNED_OUT') accSetUser(null);
+      else if (session && session.user && (!ACC.user || ACC.user.id !== session.user.id)) accSetUser(session.user);
+    });
+  } catch (e) { ACC.state = 'err'; ACC.err = '连不上账户服务器，请检查网络后重试'; accUI(); }
+}
+async function accSetUser(user) {
+  ACC.user = user; ACC.profile = null; ACC.recent = null;
+  if (!user) { ACC.state = ACC.sb ? 'out' : ACC.state; recLoad(); accUI(); netLeaveAll(); return; }
+  recLoad();
+  try {
+    let { data, error } = await ACC.sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if (error) throw error;
+    if (!data) {   // 没有触发器时自己补一条资料
+      const m = user.user_metadata || {};
+      const row = { id: user.id, username: m.username || user.email.split('@')[0], nickname: m.nickname || m.username || '无名', avatar: m.avatar || 'CH_JIN' };
+      const r = await ACC.sb.from('profiles').insert(row).select().single(); if (r.error) throw r.error; data = r.data;
+    }
+    ACC.profile = data; recMerge(data.stats, data.achievements); achCheck(); recSave(); ACC.state = 'in';
+    if (JSON.stringify(data.stats || {}) !== JSON.stringify(REC.stats) || JSON.stringify(data.achievements || {}) !== JSON.stringify(REC.ach)) recPush();
+  } catch (e) { ACC.state = 'in'; ACC.profile = ACC.profile || { id: user.id, username: (user.user_metadata || {}).username || '?', nickname: (user.user_metadata || {}).nickname || '玩家', avatar: 'CH_JIN' }; toast('资料读取失败：' + errCN(e)); }
+  accUI();
+}
+async function accSignIn(u, p) {
+  const { data, error } = await ACC.sb.auth.signInWithPassword({ email: uEmail(u), password: p });
+  if (error) throw error; await accSetUser(data.user);
+}
+async function accSignUp(u, p, nick, avatar) {
+  const { data, error } = await ACC.sb.auth.signUp({ email: uEmail(u), password: p, options: { data: { username: u, nickname: nick, avatar } } });
+  if (error) throw error;
+  if (!data.session) throw new Error('Email not confirmed');
+  if (data.user && data.user.identities && data.user.identities.length === 0) throw new Error('already registered');
+  await accSetUser(data.user);
+}
+async function accSignOut() { try { await ACC.sb.auth.signOut(); } catch (e) {} await accSetUser(null); }
+async function accSaveProfile(patch) {
+  const { data, error } = await ACC.sb.from('profiles').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', ACC.user.id).select().single();
+  if (error) throw error; ACC.profile = data; accUI();
+}
+
+/* ---------- 战绩与成就：本地缓存 + 云端同步（取较大值合并） ---------- */
+const STAT0 = () => ({ games: 0, wins: 0, losses: 0, draws: 0, chars: {}, maxHits: 0, maxLv: 0, fins: 0, breaks: 0, parries: 0, burns: 0, chases: 0, bounces: 0, sides: 0, throws: 0, perfects: 0, onG: 0, onW: 0, cpu2: 0 });
+const REC = { stats: STAT0(), ach: {} };
+const recKey = () => 'duanlian.rec.' + (ACC.user ? ACC.user.id : 'guest');
+function recLoad() { try { const o = JSON.parse(localStorage.getItem(recKey()) || 'null'); REC.stats = Object.assign(STAT0(), o && o.stats); REC.ach = (o && o.ach) || {}; } catch (e) { REC.stats = STAT0(); REC.ach = {}; } }
+function recSave() { try { localStorage.setItem(recKey(), JSON.stringify({ stats: REC.stats, ach: REC.ach })); } catch (e) {} }
+function recMerge(cs, ca) {
+  const s = REC.stats;
+  for (const k in cs || {}) {
+    if (k === 'chars') for (const c in cs.chars || {}) { const a = s.chars[c] || { g: 0, w: 0 }, b = cs.chars[c] || {}; s.chars[c] = { g: Math.max(a.g, b.g || 0), w: Math.max(a.w, b.w || 0) }; }
+    else if (typeof cs[k] === 'number') s[k] = Math.max(s[k] || 0, cs[k]);
+  }
+  for (const k in ca || {}) if (!REC.ach[k]) REC.ach[k] = ca[k];
+}
+let pushT = 0;
+function recPush() {
+  if (ACC.state !== 'in' || !ACC.sb || !ACC.user) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(() => ACC.sb.from('profiles').update({ stats: REC.stats, achievements: REC.ach, updated_at: new Date().toISOString() }).eq('id', ACC.user.id)
+    .then(({ error }) => { if (error) console.warn('同步战绩失败', error); }), 300);
+}
+const ACH = [
+  { id: 'ACH_FIRST', name: '初出茅庐', desc: '完成第一场对战', ic: 'MV_DASH', ok: s => s.games >= 1 },
+  { id: 'ACH_WIN1', name: '首胜', desc: '赢下第一场', ic: 'MV_JIN_L', ok: s => s.wins >= 1 },
+  { id: 'ACH_WIN10', name: '十胜', desc: '累计赢 10 场', ic: 'GR_TALISMAN', ok: s => s.wins >= 10 },
+  { id: 'ACH_WIN50', name: '百炼', desc: '累计赢 50 场', ic: 'MECH_EMBER', ok: s => s.wins >= 50 },
+  { id: 'ACH_G100', name: '百战', desc: '累计打满 100 场', ic: 'GR_BUCKLE', ok: s => s.games >= 100 },
+  { id: 'ACH_HIT10', name: '十连', desc: '单次连段打到 10 连', ic: 'MECH_CANCEL', ok: s => s.maxHits >= 10 },
+  { id: 'ACH_HIT25', name: '连绵不绝', desc: '单次连段打到 25 连', ic: 'MV_LAN_S', ok: s => s.maxHits >= 25 },
+  { id: 'ACH_LV3', name: '坠落', desc: '连段打到「坠落」阶段', ic: 'MV_AIRH', ok: s => s.maxLv >= 3 },
+  { id: 'ACH_LV4', name: '终焉', desc: '连段打到「终焉」阶段', ic: 'MV_LING_FIN', ok: s => s.maxLv >= 4 },
+  { id: 'ACH_FIN10', name: '终结者', desc: '累计用终结技收尾 10 次', ic: 'MV_JIN_FIN', ok: s => s.fins >= 10 },
+  { id: 'ACH_BRK10', name: '断链者', desc: '累计破链 10 次', ic: 'SK_BRK', ok: s => s.breaks >= 10 },
+  { id: 'ACH_PARRY20', name: '见招拆招', desc: '累计弹反 20 次', ic: 'MECH_PARRY', ok: s => s.parries >= 20 },
+  { id: 'ACH_BURN', name: '燃链', desc: '用一次燃链', ic: 'MECH_BURN', ok: s => s.burns >= 1 },
+  { id: 'ACH_AIR', name: '凌空', desc: '坠击落地反弹 5 次', ic: 'MECH_AIR', ok: s => s.bounces >= 5 },
+  { id: 'ACH_SIDE', name: '游身', desc: '侧闪 30 次', ic: 'MV_SIDE', ok: s => s.sides >= 30 },
+  { id: 'ACH_THROW', name: '擒拿', desc: '投技命中 10 次', ic: 'MV_THROW', ok: s => s.throws >= 10 },
+  { id: 'ACH_PERFECT', name: '完美', desc: '满血拿下一回合', ic: 'GR_MIRROR', ok: s => s.perfects >= 1 },
+  { id: 'ACH_ALL', name: '七人众', desc: '用每个角色都赢过', ic: 'GR_FAN', ok: s => CHARS.every(c => (s.chars[c.id] || {}).w > 0) },
+  { id: 'ACH_CPU2', name: '破阵', desc: '战胜最高难度的电脑', ic: 'MECH_ARMOR', ok: s => s.cpu2 >= 1 },
+  { id: 'ACH_ON1', name: '初登擂台', desc: '赢下一场联机对战', ic: 'MECH_WALL', ok: s => s.onW >= 1 },
+  { id: 'ACH_ON10', name: '擂主', desc: '联机累计赢 10 场', ic: 'MECH_THUNDER', ok: s => s.onW >= 10 },
+];
+const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));
+function achCheck() { const fresh = []; for (const a of ACH) if (!REC.ach[a.id] && a.ok(REC.stats)) { REC.ach[a.id] = Date.now(); fresh.push(a); } return fresh; }
+on('EV_AIRCHASE', d => { const f = G.f[d.who]; if (f) f.stats.chases = (f.stats.chases || 0) + 1; });
+on('EV_BOUNCE', d => { const f = G.f[d.who]; if (f) f.stats.bounces = (f.stats.bounces || 0) + 1; });
+on('EV_THROW', d => { const f = G.f[d.who]; if (f) f.stats.throws = (f.stats.throws || 0) + 1; });
+/* 一场打完：记战绩（对战电脑、联机计入；双人同机和训练不计） */
+function recMatch() {
+  if (G.demo || (G.mode !== 'cpu' && G.mode !== 'online')) return null;
+  const me = G.f[G.mode === 'online' ? LS.me : 0], op = G.f[1 - me.idx], st = me.stats, s = REC.stats;
+  const res = me.wins > op.wins ? 'win' : me.wins < op.wins ? 'lose' : 'draw';
+  s.games++; s[{ win: 'wins', lose: 'losses', draw: 'draws' }[res]]++;
+  const c = s.chars[me.ch.id] = s.chars[me.ch.id] || { g: 0, w: 0 }; c.g++; if (res === 'win') c.w++;
+  s.maxHits = Math.max(s.maxHits, st.maxHits || 0); s.maxLv = Math.max(s.maxLv, st.maxLv || 0);
+  for (const k of ['fins', 'breaks', 'parries', 'burns', 'chases', 'bounces', 'sides', 'throws', 'perfects']) s[k] += st[k] || 0;
+  if (G.mode === 'online') { s.onG++; if (res === 'win') s.onW++; }
+  if (G.mode === 'cpu' && res === 'win' && CFG.AI_LEVEL >= 2) s.cpu2++;
+  const fresh = achCheck(); recSave();
+  if (ACC.state === 'in') {
+    recPush();
+    const peer = G.mode === 'online' ? (LS.peer || ROOM.peer) : null;
+    ACC.sb.from('matches').insert({ mode: G.mode, my_char: me.ch.id, opp_char: op.ch.id, opp_id: peer ? peer.uid : null, opp_name: peer ? peer.nick : ('电脑 · ' + (AI_LEVELS[CFG.AI_LEVEL] || {}).name),
+      result: res, rounds: `${me.wins}:${op.wins}`, max_hits: st.maxHits || 0, max_lv: st.maxLv || 0, stage: G.stage }).then(({ error }) => { if (error) console.warn('写入对战记录失败', error); });
+    ACC.recent = null;
+  }
+  return { res, fresh };
+}
+
+/* ---------- 界面：标题页账户入口 · 账户页 ---------- */
+const avHTML = (id, cls = '') => { const ch = CHAR[id] || CHARS[0]; return `<span class="av ${cls}" style="--c:${ch.color}">${esc(ch.name[0])}</span>`; };
+const titleOf = p => p && p.title && ACH_BY[p.title] ? ACH_BY[p.title].name : '';
+function accUI() {
+  const chip = $('#accChip'); if (chip) {
+    const p = ACC.profile;
+    chip.innerHTML = ACC.state === 'in' && p ? `${avHTML(p.avatar)}<span>${esc(p.nickname)}</span>` : ACC.state === 'loading' ? '<span>账户连接中…</span>' : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.4-4 4.2-6 7.5-6s6.1 2 7.5 6"/></svg><span>${ACC.state === 'off' ? '账户' : '登录 / 注册'}</span>`;
+  }
+  if (G.page === 'PG_ACCOUNT') buildAccount();
+  if (G.page === 'PG_ONLINE') buildOnline();
+}
+function buildAccount() {
+  const B = $('#accBody'), sub = $('#accSub'); if (!B) return;
+  if (ACC.state === 'off') { sub.textContent = ''; B.innerHTML = `<p>账户服务还没开通：作者还没把 Supabase 项目信息填进游戏。</p><p class="hint">没开通时战绩和成就也会记在这台设备上，开通并登录后会一起同步到云端。</p>${statsHTML()}`; return; }
+  if (ACC.state === 'loading') { sub.textContent = ''; B.innerHTML = '<p>正在连接账户服务器…</p>'; return; }
+  if (ACC.state === 'err') { sub.textContent = ''; B.innerHTML = `<p class="err">${esc(ACC.err)}</p><div class="actions" style="justify-content:flex-start"><button class="btn primary" id="accRetry">重试</button></div>`; return; }
+  if (ACC.state === 'out') {
+    sub.textContent = '登录后战绩、成就跨设备同步，还能联机对战';
+    const up = ACC.tab === 'up';
+    B.innerHTML = `<div class="tabs" role="tablist"><button data-acctab="in" aria-selected="${!up}">登录</button><button data-acctab="up" aria-selected="${up}">注册</button></div>
+    <form id="accForm" class="form" autocomplete="on">
+      <label><span>账号名</span><input name="u" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="3–16 位小写字母、数字或下划线" required></label>
+      <label><span>密码</span><input name="p" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" maxlength="64" placeholder="至少 6 位" required></label>
+      ${up ? `<label><span>昵称</span><input name="n" maxlength="12" placeholder="其他玩家看到的名字，可以用中文"></label>
+      <div class="chips"><span class="lab">头像</span>${CHARS.map((c, i) => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${i === 0}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>` : ''}
+      <p class="err" id="accErr" role="alert"></p>
+      <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">${up ? '注册并登录' : '登录'}</button></div>
+      <p class="hint">${up ? '账号名用来登录，注册后不能改；昵称、头像以后可以随时改。' : '还没有账号？点上面的「注册」。'}</p>
+    </form>`;
+    return;
+  }
+  const p = ACC.profile || {}, t = titleOf(p);
+  sub.textContent = '';
+  const unlocked = ACH.filter(a => REC.ach[a.id]);
+  B.innerHTML = `<div class="prof">${avHTML(p.avatar, 'lg')}<div class="pinfo"><b class="pnick">${esc(p.nickname)}</b>${t ? `<span class="ptitle">${esc(t)}</span>` : ''}<small>账号 ${esc(p.username)}${p.created_at ? ' · ' + new Date(p.created_at).toLocaleDateString('zh-CN') + ' 加入' : ''}</small></div>
+    <div class="pbtn"><button class="btn" id="accEditBtn">${ACC.edit ? '收起' : '编辑资料'}</button><button class="btn" id="accOut">退出登录</button></div></div>
+  ${ACC.edit ? `<form id="accEditForm" class="form">
+    <label><span>昵称</span><input name="n" maxlength="12" value="${esc(p.nickname)}" required></label>
+    <div class="chips"><span class="lab">头像</span>${CHARS.map(c => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${c.id === p.avatar}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>
+    <div class="chips"><span class="lab">称号</span><button type="button" class="chip" data-ti="" aria-pressed="${!p.title}">不显示</button>${unlocked.map(a => `<button type="button" class="chip" data-ti="${a.id}" aria-pressed="${p.title === a.id}">${a.name}</button>`).join('')}</div>
+    <p class="hint">${unlocked.length ? '称号来自已解锁的成就。' : '解锁成就后可以把成就名设成称号。'}</p>
+    <p class="err" id="accErr" role="alert"></p>
+    <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">保存</button></div></form>` : ''}
+  ${statsHTML()}
+  <h3>最近对战</h3><div id="accRecent">${recentHTML()}</div>`;
+  if (!ACC.recent && ACC.sb) {
+    ACC.recent = 'loading';
+    ACC.sb.from('matches').select('*').eq('user_id', ACC.user.id).order('created_at', { ascending: false }).limit(12)
+      .then(({ data, error }) => { ACC.recent = error ? [] : data || []; const el = $('#accRecent'); if (el) el.innerHTML = recentHTML(); });
+  }
+}
+function statsHTML() {
+  const s = REC.stats, rate = s.games ? Math.round(s.wins / s.games * 100) + '%' : '—';
+  const tiles = [['场次', s.games], ['胜', s.wins], ['负', s.losses], ['胜率', rate], ['最高连段', s.maxHits], ['最高掉落', DROP_LEVELS[s.maxLv].name], ['终结技', s.fins], ['破链', s.breaks], ['弹反', s.parries], ['联机胜 / 场', `${s.onW} / ${s.onG}`]];
+  const rows = CHARS.map(c => { const r = s.chars[c.id] || { g: 0, w: 0 }; return `<tr><td>${avHTML(c.id, 'sm')}${c.name}<small> · ${c.title}</small></td><td class="num">${r.g}</td><td class="num">${r.w}</td><td class="num">${r.g ? Math.round(r.w / r.g * 100) + '%' : '—'}</td></tr>`; }).join('');
+  const n = ACH.filter(a => REC.ach[a.id]).length;
+  return `<h3>战绩 <small class="mute">对战电脑和联机计入</small></h3><div class="statgrid">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
+  <div class="cols2"><div><h3>角色战绩</h3><div class="tablewrap"><table class="ctab"><tr><th>角色</th><th class="num">场次</th><th class="num">胜</th><th class="num">胜率</th></tr>${rows}</table></div></div>
+  <div><h3>成就 <small class="mute">${n} / ${ACH.length}</small></h3><div class="achgrid">${ACH.map(a => { const t = REC.ach[a.id]; return `<div class="ach${t ? ' on' : ''}" title="${esc(a.desc)}">${icSVG(a.ic, { grey: !t })}<b>${a.name}</b><small>${a.desc}</small></div>`; }).join('')}</div></div></div>`;
+}
+function recentHTML() {
+  if (ACC.recent === 'loading' || ACC.recent == null) return '<p class="hint">读取中…</p>';
+  if (!ACC.recent.length) return '<p class="hint">还没有对战记录。</p>';
+  const R = { win: ['胜', 'w'], lose: ['负', 'l'], draw: ['平', 'd'] };
+  return `<div class="tablewrap"><table class="rtab">${ACC.recent.map(m => `<tr><td><span class="res ${R[m.result][1]}">${R[m.result][0]}</span></td><td>${m.mode === 'online' ? '联机' : '电脑'}</td><td>${avHTML(m.my_char, 'sm')}${esc((CHAR[m.my_char] || {}).name || '')}</td><td>对 ${esc(m.opp_name || '')} · ${esc((CHAR[m.opp_char] || {}).name || '')}</td><td class="num">${esc(m.rounds || '')}</td><td class="num">${m.max_hits} 连</td><td class="mute">${new Date(m.created_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td></tr>`).join('')}</table></div>`;
+}
+function accFormSubmit(form) {
+  const err = $('#accErr'), btn = form.querySelector('[type=submit]'), fd = new FormData(form);
+  const u = String(fd.get('u') || '').trim().toLowerCase(), p = String(fd.get('p') || ''), up = ACC.tab === 'up';
+  const nick = String(fd.get('n') || '').trim() || u, av = (form.querySelector('[data-av][aria-pressed=true]') || {}).dataset?.av || 'CH_JIN';
+  if (!UNAME.test(u)) { err.textContent = '账号名要 3–16 位，只能用小写字母、数字和下划线'; return; }
+  if (p.length < 6) { err.textContent = '密码至少要 6 位'; return; }
+  if (up && nick.length > 12) { err.textContent = '昵称最多 12 个字'; return; }
+  err.textContent = ''; btn.disabled = true; btn.textContent = up ? '注册中…' : '登录中…';
+  (up ? accSignUp(u, p, nick, av) : accSignIn(u, p)).then(() => toast(up ? '注册成功，欢迎来到《断链》' : '登录成功'))
+    .catch(e => { err.textContent = errCN(e); btn.disabled = false; btn.textContent = up ? '注册并登录' : '登录'; });
+}
+function accEditSubmit(form) {
+  const err = $('#accErr'), fd = new FormData(form), nick = String(fd.get('n') || '').trim();
+  if (!nick || nick.length > 12) { err.textContent = '昵称要 1–12 个字'; return; }
+  const avatar = (form.querySelector('[data-av][aria-pressed=true]') || {}).dataset?.av || ACC.profile.avatar;
+  const tb = form.querySelector('[data-ti][aria-pressed=true]'), title = tb ? tb.dataset.ti || null : ACC.profile.title;
+  accSaveProfile({ nickname: nick, avatar, title }).then(() => { ACC.edit = false; accUI(); toast('资料已保存'); }).catch(e => { err.textContent = errCN(e); });
+}
+document.addEventListener('submit', e => {
+  if (e.target.id === 'accForm') { e.preventDefault(); accFormSubmit(e.target); }
+  else if (e.target.id === 'accEditForm') { e.preventDefault(); accEditSubmit(e.target); }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.acctab) { ACC.tab = b.dataset.acctab; buildAccount(); return; }
+  if (b.dataset.av || b.dataset.ti !== undefined && b.closest('form')) {
+    const k = b.dataset.av ? 'av' : 'ti'; b.closest('.chips').querySelectorAll(`[data-${k}]`).forEach(x => x.setAttribute('aria-pressed', x === b)); return;
+  }
+  if (b.id === 'accOut') { accSignOut().then(() => toast('已退出登录')); return; }
+  if (b.id === 'accEditBtn') { ACC.edit = !ACC.edit; buildAccount(); return; }
+  if (b.id === 'accRetry') { accInit(); return; }
+});
+
+/* ============================================================
+   联机：大厅（在线玩家、快速匹配、邀请）· 房间 · 帧同步对战
+   ============================================================ */
+const NET = { lobby: null, members: [], status: 'idle', q: 0, invite: null, pending: null };
+const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pingT: 0, joinedAt: 0 };
+const KEYS12 = ['left', 'right', 'up', 'down', 'jump', 'guard', 'l', 'h', 's', 'brk', 'fin', 'ast'];
+const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
+const decIn = b => { const r = { held: {}, pressed: {} }; KEYS12.forEach((k, i) => { r.held[k] = !!(b & (1 << i)); r.pressed[k] = !!(b & (1 << (i + 12))); }); return r; };
+let LS = { on: false, me: 0 };
+const myInfo = () => { const p = ACC.profile || {}; return { uid: ACC.user.id, nick: p.nickname || '玩家', avatar: p.avatar || 'CH_JIN', title: titleOf(p), wins: REC.stats.onW, games: REC.stats.onG }; };
+const median = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[s.length >> 1] : 0; };
+
+function lobbyJoin() {
+  if (NET.lobby || ACC.state !== 'in') return;
+  const uid = ACC.user.id;
+  NET.lobby = ACC.sb.channel('duanlian-lobby', { config: { presence: { key: uid }, broadcast: { self: false } } })
+    .on('presence', { event: 'sync' }, () => { NET.members = Object.values(NET.lobby.presenceState()).map(a => a[a.length - 1]).filter(m => m && m.uid); lobbyMatch(); if (G.page === 'PG_ONLINE') renderPlayers(); })
+    .on('broadcast', { event: 'invite' }, ({ payload: p }) => { if (p.to !== uid) return; if (NET.status !== 'idle' && NET.status !== 'queue') { lobbySend('reply', { to: p.from.uid, ok: false, why: 'busy' }); return; } NET.invite = p; showInvite(); })
+    .on('broadcast', { event: 'reply' }, ({ payload: p }) => { if (p.to !== uid) return; if (!p.ok && NET.pending && ROOM.host && !ROOM.peer) { toast(p.why === 'busy' ? '对方正忙，稍后再邀请吧' : '对方拒绝了邀请'); roomLeave(); go('PG_ONLINE'); } })
+    .on('broadcast', { event: 'match' }, ({ payload: p }) => { if (p.to !== uid || NET.status !== 'queue') return; roomJoin(p.room, false); })
+    .subscribe(st => { if (st === 'SUBSCRIBED') lobbyTrack(); else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { $('#onState') && ($('#onState').textContent = '连接大厅失败，请检查网络'); } });
+}
+function lobbyTrack() { if (NET.lobby) NET.lobby.track({ ...myInfo(), status: NET.status, q: NET.q }).catch(() => {}); }
+function lobbySend(event, payload) { if (NET.lobby) NET.lobby.send({ type: 'broadcast', event, payload }).catch(() => {}); }
+function lobbySetStatus(s) { NET.status = s; NET.q = s === 'queue' ? Date.now() : 0; lobbyTrack(); if (G.page === 'PG_ONLINE') buildOnline(); }
+function lobbyLeave() { if (NET.lobby) { try { ACC.sb.removeChannel(NET.lobby); } catch (e) {} } NET.lobby = null; NET.members = []; NET.status = 'idle'; }
+/* 快速匹配：排队的人按排队时间两两配对，前一位做房主开房间并通知后一位 */
+function lobbyMatch() {
+  if (NET.status !== 'queue' || ROOM.ch || NET.matching) return;
+  const q = NET.members.filter(m => m.status === 'queue' && m.q).sort((a, b) => a.q - b.q || (a.uid < b.uid ? -1 : 1));
+  const i = q.findIndex(m => m.uid === ACC.user.id);
+  if (i < 0 || i % 2 || !q[i + 1]) return;
+  const code = String(1000 + Math.floor(Math.random() * 9000)); NET.matching = true;
+  roomJoin(code, true).then(ok => { NET.matching = false; if (ok) lobbySend('match', { to: q[i + 1].uid, room: code }); });
+}
+function modal(html) { const el = $('#modal'); if (!el) return; el.innerHTML = `<div class="ibox">${html}</div>`; el.hidden = false; const b = el.querySelector('.primary'); b && b.focus({ preventScroll: true }); }
+function modalClose() { const el = $('#modal'); if (el) el.hidden = true; }
+function showInvite() {
+  const p = NET.invite; if (!p) return;
+  modal(`${avHTML(p.from.avatar, 'lg')}<div><b>${esc(p.from.nick)}</b>${p.from.title ? `<span class="ptitle">${esc(p.from.title)}</span>` : ''}<p>邀请你联机对战</p></div>
+    <div class="ibtn"><button class="btn" id="invNo">拒绝</button><button class="btn primary" id="invYes">接受</button></div>`);
+  SFX.play('ui');
+}
+function hideInvite() { if (NET.invite) modalClose(); NET.invite = null; }
+function lsAskQuit() {
+  modal(`<div><b>离开这场联机对战？</b><p>现在离开算你认输。</p></div><div class="ibtn"><button class="btn" id="quitNo">继续对战</button><button class="btn primary" id="quitYes">认输离开</button></div>`);
+}
+function lsQuit() {
+  if (!LS.on) return; roomSend('quit');
+  const me = G.f[LS.me], op = G.f[1 - LS.me]; op.wins = Math.max(op.wins, me.wins + 1); G.rs = 'RS_KO'; endMatch();
+}
+
+/* ---------- 房间 ---------- */
+function roomJoin(code, host) {
+  if (ACC.state !== 'in') { go('PG_ACCOUNT'); return Promise.resolve(false); }
+  roomLeave(true);
+  lobbyJoin();
+  Object.assign(ROOM, { code, host, peer: null, ready: [false, false], rtt: [], joinedAt: Date.now() });
+  const uid = ACC.user.id;
+  return new Promise(resolve => {
+    let done = false; const finish = ok => { if (!done) { done = true; resolve(ok); } };
+    const ch = ACC.sb.channel('duanlian-room-' + code, { config: { presence: { key: uid }, broadcast: { self: false, ack: false } } });
+    ROOM.ch = ch;
+    ch.on('presence', { event: 'sync' }, () => roomPresence())
+      .on('broadcast', { event: 'm' }, ({ payload }) => roomMsg(payload))
+      .on('broadcast', { event: 'in' }, ({ payload }) => lsRecv(payload))
+      .subscribe(async st => {
+        if (st === 'SUBSCRIBED') {
+          await ch.track({ ...myInfo(), host, t: ROOM.joinedAt });
+          lobbySetStatus('room'); G.mode = 'online';
+          if (host) { G.sel.p1 = G.sel.p1 || 'CH_JIN'; } else { G.sel.p2 = G.sel.p2 || 'CH_LAN'; }
+          go('PG_SELECT'); finish(true);
+          if (!host) setTimeout(() => { if (ROOM.ch === ch && !ROOM.peer) { toast(`没找到房间 ${code}，请确认房间号`); roomLeave(); go('PG_ONLINE'); } }, 6000);
+        } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { toast('连接房间失败，请检查网络'); roomLeave(); finish(false); }
+      });
+    clearInterval(ROOM.pingT);
+    ROOM.pingT = setInterval(() => { if (ROOM.peer && !LS.on) roomSend('ping', { t: performance.now() }); }, 2000);
+  });
+}
+function roomSend(k, d = {}) { if (ROOM.ch) ROOM.ch.send({ type: 'broadcast', event: 'm', payload: { k, ...d } }).catch(() => {}); }
+function roomPresence() {
+  if (!ROOM.ch) return;
+  const uid = ACC.user.id, list = Object.values(ROOM.ch.presenceState()).map(a => a[a.length - 1]).filter(m => m && m.uid);
+  const hostM = list.find(m => m.host && m.uid !== uid), guests = list.filter(m => !m.host).sort((a, b) => a.t - b.t || (a.uid < b.uid ? -1 : 1));
+  let peer = null;
+  if (ROOM.host) peer = guests[0] || null;
+  else {
+    if (guests.length > 1 && guests[0].uid !== uid && guests.some(g => g.uid === uid)) { toast('房间已满'); roomLeave(); go('PG_ONLINE'); return; }
+    peer = hostM || null;
+  }
+  if (peer && (!ROOM.peer || ROOM.peer.uid !== peer.uid)) {
+    ROOM.peer = peer; ROOM.ready = [false, false]; NET.pending = null;
+    if (ROOM.host) roomSend('sel', { sel: { p1: G.sel.p1, g1: G.sel.g1, a1: G.sel.a1, stage: G.sel.stage } });
+    else roomSend('sel', { sel: { p2: G.sel.p2, g2: G.sel.g2, a2: G.sel.a2 } });
+    SFX.play('ui'); if (G.page === 'PG_SELECT') buildSelect();
+  } else if (!peer && ROOM.peer) roomPeerLeft();
+}
+function roomPeerLeft() {
+  const name = ROOM.peer ? ROOM.peer.nick : '对手'; ROOM.peer = null; ROOM.ready = [false, false];
+  if (LS.on) { toast(`${name} 断线了，本场判你获胜`); lsForfeit(); return; }
+  if (G.mode !== 'online') return;
+  if (G.page === 'PG_SELECT') { toast(`${name} 离开了房间`); if (!ROOM.host) { roomLeave(); go('PG_ONLINE'); } else buildSelect(); }
+  else if (G.page === 'PG_RESULT') toast(`${name} 离开了房间`);
+}
+function roomLeave(silent) {
+  clearInterval(ROOM.pingT);
+  if (ROOM.ch) { if (!silent) roomSend('bye'); const ch = ROOM.ch; ROOM.ch = null; try { ACC.sb.removeChannel(ch); } catch (e) {} }
+  Object.assign(ROOM, { code: '', host: false, peer: null, ready: [false, false], rtt: [] });
+  if (LS.on) lsStop();
+  if (NET.lobby) lobbySetStatus('idle');
+}
+const mySlots = () => ROOM.host ? ['p1', 'g1', 'a1', 'stage'] : ['p2', 'g2', 'a2'];
+function roomMsg(m) {
+  if (!m || !m.k) return;
+  if (m.k === 'sel') { const ok = ROOM.host ? ['p2', 'g2', 'a2'] : ['p1', 'g1', 'a1', 'stage']; for (const k of ok) if (m.sel[k]) G.sel[k] = m.sel[k]; ROOM.ready[ROOM.host ? 1 : 0] = false; if (G.page === 'PG_SELECT' && G.mode === 'online') buildSelect(); }
+  else if (m.k === 'ready') { ROOM.ready[ROOM.host ? 1 : 0] = !!m.v; if (G.page === 'PG_SELECT') buildSelect(); roomMaybeStart(); }
+  else if (m.k === 'ping') roomSend('pong', { t: m.t });
+  else if (m.k === 'pong') { ROOM.rtt.push(performance.now() - m.t); if (ROOM.rtt.length > 7) ROOM.rtt.shift(); if (G.page === 'PG_SELECT' && G.mode === 'online') { const s = $('#selMode'); if (s) s.textContent = roomTitle(); } }
+  else if (m.k === 'start' && !ROOM.host) lsStart(m);
+  else if (m.k === 'bye') { roomPeerLeft(); }
+  else if (m.k === 'again') { if (G.page === 'PG_RESULT') toast(`${ROOM.peer ? ROOM.peer.nick : '对手'} 想再来一局`); }
+  else if (m.k === 'quit' && LS.on) { toast(`${ROOM.peer ? ROOM.peer.nick : '对手'} 认输离开了`); lsForfeit(); }
+  else if (m.k === 'timeout' && LS.on) { const me = G.f[LS.me], op = G.f[1 - LS.me]; op.wins = Math.max(op.wins, me.wins + 1); G.rs = 'RS_KO'; toast('你断开太久，本场判负'); endMatch(); }
+  else if (m.k === 'hash') lsHashCheck(m.f, m.h, true);
+}
+const roomTitle = () => `联机 · 房间 ${ROOM.code}${ROOM.rtt.length ? ` · 延迟 ${Math.round(median(ROOM.rtt))} ms` : ''}`;
+function roomToggleReady() {
+  if (!ROOM.peer) { toast('对手还没进房间'); return; }
+  const i = ROOM.host ? 0 : 1; ROOM.ready[i] = !ROOM.ready[i]; roomSend('ready', { v: ROOM.ready[i] }); buildSelect(); roomMaybeStart();
+}
+const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'TOUCH_LIFT', 'AI_LEVEL']);
+function roomMaybeStart() {
+  if (!ROOM.host || !ROOM.ready[0] || !ROOM.ready[1] || LS.on) return;
+  const rtt = ROOM.rtt.length ? median(ROOM.rtt) : 150;
+  const D = Math.max(3, Math.min(14, Math.ceil(rtt / 2 / 16.67) + 2));
+  const cfg = {}; for (const k in CFG) if (!NET_CFG_SKIP.has(k) && (typeof CFG[k] !== 'object' || CFG[k] === null)) cfg[k] = CFG[k];
+  const msg = { seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg };
+  roomSend('start', msg); lsStart(msg);
+}
+
+/* ---------- 帧同步（lockstep）：双方只交换按键，各自用同样的种子和输入推演，结果完全一致 ---------- */
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function lsStart(m) {
+  ROOM.ready = [false, false]; modalClose(); SERIAL = 0;
+  LS = { on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc: new Map(), rem: new Map(), remTop: m.D - 1, ack: -1, tick: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: false, cfgBak: { ...CFG } };
+  for (let f = 0; f < m.D; f++) { LS.loc.set(f, 0); LS.rem.set(f, 0); }
+  Object.assign(CFG, m.cfg); G.sel = { ...G.sel, ...m.sel }; G.rngSeed = m.seed;
+  const s = m.sel; G.frame = 0;
+  startMatch({ mode: 'online', p1: s.p1, p2: s.p2, g1: s.g1, g2: s.g2, a1: s.a1, a2: s.a2, stage: s.stage });
+  G.rng = mulberry32(m.seed); acc = 0;
+}
+function lsStop() { if (!LS.on) return; LS.on = false; if (LS.cfgBak) { const keep = {}; for (const k of NET_CFG_SKIP) keep[k] = CFG[k]; Object.assign(CFG, LS.cfgBak, keep); } }
+function lsForfeit() {
+  if (!LS.on) return; const me = G.f[LS.me], op = G.f[1 - LS.me];
+  me.wins = Math.max(me.wins, op.wins + 1); G.rs = 'RS_KO'; endMatch();
+}
+function lsRecv(p) {
+  if (!LS.on || !p) return;
+  for (let i = 0; i < p.b.length; i++) if (!LS.rem.has(p.f + i)) LS.rem.set(p.f + i, p.b[i]);
+  while (LS.rem.has(LS.remTop + 1)) LS.remTop++;
+  if (p.a > LS.ack) LS.ack = p.a;
+}
+function lsSend(force) {
+  if (!ROOM.ch) return;
+  if (!force && ++LS.tick < 2) return; LS.tick = 0;
+  let top = LS.frame + LS.D; while (!LS.loc.has(top) && top > 0) top--;
+  const from = Math.max(LS.ack + 1, 0), to = Math.min(top, from + 59); if (from > to) return;   // 没确认收到的帧一直重发
+  const b = []; for (let f = from; f <= to; f++) b.push(LS.loc.get(f) || 0);
+  ROOM.ch.send({ type: 'broadcast', event: 'in', payload: { f: from, b, a: LS.remTop } }).catch(() => {});
+}
+const lsHashOf = () => { let h = 2166136261; const mix = v => { h ^= Math.round(v * 16) | 0; h = Math.imul(h, 16777619); };
+  for (const f of G.f) { mix(f.x); mix(f.y); mix(f.z); mix(f.hp); mix(f.grd); mix(f.brk); mix(f.wins); mix(f.state.length); mix(f.chain ? f.chain.hits * 1000 + f.chain.mom : -1); }
+  mix(G.timer); mix(G.round); return h >>> 0; };
+function lsHashCheck(f, h, remote) {
+  if (remote) LS.remHash.set(f, h); else LS.hash.set(f, h);
+  const a = LS.hash.get(f), b = LS.remHash.get(f);
+  if (a != null && b != null) { LS.hash.delete(f); LS.remHash.delete(f); if (a !== b && !LS.desync) { LS.desync = true; console.warn('联机画面不同步 @', f); toast('联机同步出现偏差，本场结束后请重开一局'); } }
+}
+/* 每个渲染帧调用：凑齐双方输入才推进一帧 */
+function lsTick(dt) {
+  let n = 0;
+  while (acc >= 1 && n < 6) {
+    const tf = LS.frame + LS.D;
+    if (!LS.loc.has(tf)) { LS.loc.set(tf, encIn(Input.read('P1'))); Input.endFrame(); }
+    if (!LS.rem.has(LS.frame)) break;
+    const a = LS.loc.get(LS.frame), r = LS.rem.get(LS.frame);
+    const ins = LS.me === 0 ? [a, r] : [r, a];
+    G.frame++; simStep(decIn(ins[0]), decIn(ins[1]));
+    if (!LS.on) return;
+    if (LS.frame % 60 === 0) { const h = lsHashOf(); lsHashCheck(LS.frame, h, false); roomSend('hash', { f: LS.frame, h }); }
+    if (LS.frame - 90 < LS.ack) LS.loc.delete(LS.frame - 90); LS.rem.delete(LS.frame - 90);
+    LS.frame++; acc -= 1; n++; LS.wait = 0;
+  }
+  if (n === 0 && acc >= 1) { LS.wait += dt; if (LS.wait > 20000) { roomSend('timeout'); toast('对手长时间没有响应，本场判你获胜'); lsForfeit(); return; } }
+  if (acc > 6) acc = 6;
+  lsSend(false);
+}
+/* 对战画面：标出自己、显示等待和延迟 */
+function lsHUD(c) {
+  if (!LS.on || G.f.length < 2) return;
+  const f = G.f[LS.me], t = G.camT, x = (f.x - t.cx) * t.z + W / 2, y = (f.y - 250 * f.ch.scale - t.fy) * t.z + t.fy - t.ly;
+  c.save(); c.fillStyle = f.col; c.beginPath(); c.moveTo(x - 9, y - 12); c.lineTo(x + 9, y - 12); c.lineTo(x, y); c.closePath(); c.fill();
+  c.font = `700 18px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; otxt(c, '你', x, y - 20); c.restore();
+  if (LS.wait > 400) { c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80); c.font = `700 26px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; c.fillText(`等待对手… ${Math.ceil(LS.wait / 1000)} 秒`, W / 2, H / 2 + 9); c.restore(); }
+}
+
+/* ---------- 联机大厅界面 ---------- */
+function buildOnline() {
+  const B = $('#onBody'), sub = $('#onSub'); if (!B) return;
+  if (ACC.state !== 'in') {
+    sub.textContent = '';
+    B.innerHTML = ACC.state === 'off' ? '<p>联机需要账户服务，作者还没开通。</p>' : `<p>联机对战需要先登录账户，对手会看到你的昵称、头像和称号。</p><div class="actions" style="justify-content:flex-start"><button class="btn primary" data-go="PG_ACCOUNT">去登录 / 注册</button></div>`;
+    return;
+  }
+  lobbyJoin();
+  sub.textContent = '和在线玩家实时对战';
+  const q = NET.status === 'queue';
+  B.innerHTML = `<div class="onact">
+    <button class="btn primary" id="onQuick">${q ? '取消匹配' : '快速匹配'}</button>
+    <button class="btn" id="onCreate"${q ? ' disabled' : ''}>创建房间</button>
+    <span class="join"><input id="onCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 位房间号"><button class="btn" id="onJoin"${q ? ' disabled' : ''}>加入房间</button></span>
+  </div>
+  <p class="hint" id="onState">${q ? '正在找对手…有其他人点「快速匹配」就会自动配对' : '创建房间后把房间号发给好友，或者直接邀请下面的在线玩家。'}</p>
+  <h3>在线玩家 <small class="mute" id="onCount"></small></h3><div class="plist" id="onList"></div>`;
+  renderPlayers();
+}
+function renderPlayers() {
+  const L = $('#onList'); if (!L) return;
+  const me = ACC.user.id, ms = NET.members.slice().sort((a, b) => (a.uid === me ? -1 : b.uid === me ? 1 : (b.wins || 0) - (a.wins || 0)));
+  $('#onCount') && ($('#onCount').textContent = ms.length ? `${ms.length} 人` : '');
+  const ST = { idle: '空闲', queue: '匹配中', room: '对战中' };
+  L.innerHTML = ms.length ? ms.map(m => `<div class="prow">${avHTML(m.avatar)}<div><b>${esc(m.nick)}</b>${m.title ? `<span class="ptitle">${esc(m.title)}</span>` : ''}<small>联机 ${m.wins || 0} 胜 / ${m.games || 0} 场 · ${ST[m.status] || ''}</small></div>
+    ${m.uid === me ? '<span class="mute">你</span>' : `<button class="btn" data-inv="${esc(m.uid)}"${m.status === 'room' ? ' disabled' : ''}>邀请</button>`}</div>`).join('') : '<p class="hint">正在连接大厅…</p>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'onQuick') { lobbySetStatus(NET.status === 'queue' ? 'idle' : 'queue'); return; }
+  if (b.id === 'onCreate') { roomJoin(String(1000 + Math.floor(Math.random() * 9000)), true); return; }
+  if (b.id === 'onJoin') { const c = ($('#onCode').value || '').trim(); if (!/^\d{4}$/.test(c)) { toast('请输入 4 位数字房间号'); return; } roomJoin(c, false); return; }
+  if (b.dataset.inv) {
+    const to = NET.members.find(m => m.uid === b.dataset.inv); if (!to) return;
+    const code = String(1000 + Math.floor(Math.random() * 9000));
+    roomJoin(code, true).then(ok => { if (ok) { NET.pending = to.uid; lobbySend('invite', { to: to.uid, from: myInfo(), room: code }); toast(`已邀请 ${to.nick}，等待对方接受`); } });
+    return;
+  }
+  if (b.id === 'invYes') { const p = NET.invite; hideInvite(); if (p) { if (NET.status === 'queue') NET.status = 'idle'; lobbySend('reply', { to: p.from.uid, ok: true }); roomJoin(p.room, false); } return; }
+  if (b.id === 'invNo') { const p = NET.invite; hideInvite(); if (p) lobbySend('reply', { to: p.from.uid, ok: false }); return; }
+  if (b.id === 'onBack') { lobbyLeave(); go('PG_TITLE'); return; }
+  if (b.id === 'quitNo') { modalClose(); return; }
+  if (b.id === 'quitYes') { modalClose(); lsQuit(); return; }
+});
+function netLeaveAll() { roomLeave(true); lobbyLeave(); hideInvite(); }
+
+accInit();
+window.DUANLIAN = { G, CFG, DROP_LEVELS, CHARS, STAGES, KEYMAP, EVENTS, on, startMatch, step, simStep, go, callAssist, tryBurn, SUPA, ACC, REC, ROOM, NET, get LS() { return LS; }, accInit, recMatch, lsHashOf, Input, AI, accSignUp, roomJoin };
 startDemo();
 requestAnimationFrame(loop);
 }
