@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>断链 · 安卓版下载</title>
+<meta name="description" content="《断链》1V1 无限连段格斗：安卓安装包下载，iPhone 添加到主屏幕。">
+<meta name="theme-color" content="#0a0807">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#141110;--red:#e8432b;--bone:#efe9df;--mute:#a39a8f;--line:rgba(239,233,223,.16);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:#0a0807;color:var(--bone);font:16px/1.65 "Noto Sans SC",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+a{color:inherit}
+.wrap{max-width:62em;margin:0 auto;padding:0 1.25em 3em}
+header{background:var(--red);color:var(--ink);padding:2.2em 0 1.8em}
+header .wrap{padding-bottom:0;display:flex;align-items:flex-end;gap:1.4em;flex-wrap:wrap}
+header svg{width:7.5em;height:auto;flex:none}
+h1{font:400 4.2em/1 "Ma Shan Zheng",serif;margin:0;letter-spacing:.04em}
+.sub{font-weight:900;font-size:1.15em;margin-top:.35em}
+.rule{max-width:34em;margin:.6em 0 0;font-size:.95em}
+main{display:grid;grid-template-columns:1fr 17em;gap:2.4em;margin-top:2.2em;align-items:start}
+.meta{color:var(--mute);font-size:.92em;min-height:1.6em}
+.btns{display:flex;flex-wrap:wrap;gap:.8em;margin:1em 0 .4em}
+.btn{display:inline-flex;align-items:center;gap:.55em;text-decoration:none;font-weight:700;font-size:1.08em;padding:.8em 1.4em;border:1px solid var(--line);border-radius:.3em;background:rgba(239,233,223,.04)}
+.btn svg{width:1.25em;height:1.25em;flex:none}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn:hover{border-color:var(--bone)}
+.note{color:var(--mute);font-size:.88em;margin:.3em 0 0}
+.pending{display:none;margin:.9em 0 0;padding:.7em 1em;border-left:.25em solid #e8b04a;background:rgba(232,176,74,.1);font-size:.93em}
+h2{font-size:1.12em;margin:2em 0 .5em;display:flex;align-items:center;gap:.5em}
+h2::before{content:"";width:.5em;height:.5em;background:var(--red);transform:rotate(45deg)}
+ol{margin:0;padding-left:1.4em}
+ol li{margin:.3em 0}
+.hl{outline:1px solid var(--red);outline-offset:.8em;border-radius:.2em}
+.qr{background:#141110;border:1px solid var(--line);border-top:.3em solid var(--red);padding:1.3em;text-align:center;position:sticky;top:1.5em}
+.qr svg{width:100%;height:auto;display:block;border-radius:.2em}
+.qr b{display:block;font-size:1.05em;margin-bottom:.7em}
+.qr small{display:block;color:var(--mute);margin-top:.7em;word-break:break-all;font-size:.78em}
+footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:var(--mute);font-size:.88em;display:flex;flex-wrap:wrap;gap:.4em 1.6em}
+footer b{color:var(--bone)}
+#inapp{display:none;position:fixed;inset:0;z-index:9;background:rgba(10,8,7,.93);padding:1.4em 1.6em;text-align:right;font-size:1.15em}
+#inapp svg{width:5em;height:5em;display:block;margin:0 0 .4em auto}
+#inapp p{margin:.3em 0;text-align:right}
+#inapp button{margin-top:1.4em;font:inherit;font-size:.85em;color:var(--mute);background:none;border:1px solid var(--line);border-radius:.3em;padding:.4em 1em}
+@media (max-width:720px){main{grid-template-columns:1fr}.qr{position:static;max-width:17em}h1{font-size:3.4em}header svg{width:5.5em}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <svg viewBox="0 0 260 110" aria-hidden="true"><g fill="none" stroke="#141110" stroke-width="11" stroke-linecap="round"><rect x="10" y="30" width="96" height="50" rx="25"/><path d="M84 55h46"/><path d="M150 32h38a25 25 0 0 1 0 50h-38"/><path d="M136 38l-10-14M132 74l-12 12M222 30l16-16M228 86l18 10"/></g></svg>
+  <div><h1>断链</h1><div class="sub">1V1 无限连段格斗 · 手机版</div>
+  <p class="rule">攻方可以一直连下去，伤害按阶段阈值“掉落”结算；守方攒满破链能量，就能把连段斩断。</p></div>
+</div></header>
+
+<div class="wrap">
+<main>
+  <section>
+    <div class="meta" id="meta">安卓安装包（.apk）</div>
+    <div class="btns">
+      <a class="btn primary" id="dlBtn" href="https://github.com/lianyingxue37-coder/yingxuelian/releases/latest/download/duanlian.apk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6.5 10.5 12 16l5.5-5.5M4 20h16"/></svg>下载安卓安装包</a>
+      <a class="btn" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M8 5.5v13l10.5-6.5z"/></svg>在浏览器里直接玩</a>
+    </div>
+    <p class="note">下载很慢时，换个网络（比如手机流量）再试一次。</p>
+    <div class="pending" id="pending">新版本正在自动打包，几分钟后刷新本页就能下载。</div>
+
+    <div id="secAndroid">
+      <h2>安卓安装</h2>
+      <ol>
+        <li>点「下载安卓安装包」，下载 <b>duanlian.apk</b>。</li>
+        <li>打开下载好的安装包。第一次安装时手机会提示“允许安装未知来源应用”，同意即可。</li>
+        <li>装好后桌面出现「断链」图标。打开就是横屏全屏，断网也能玩。</li>
+      </ol>
+      <p class="note">更新：下载新版安装包直接安装。如果提示“签名不一致”或“安装失败”，先卸载旧版再装。</p>
+    </div>
+
+    <div id="secIOS">
+      <h2>iPhone / iPad</h2>
+      <ol>
+        <li>苹果不能直接装安装包。用 <b>Safari</b> 打开 <a href="./">游戏首页</a>。</li>
+        <li>点底部的分享按钮，选择「添加到主屏幕」。</li>
+        <li>桌面出现「断链」图标，点开就是全屏游戏，用起来和应用一样。</li>
+      </ol>
+    </div>
+
+    <div id="secPC">
+      <h2>电脑</h2>
+      <p style="margin:0">直接在浏览器里玩，键盘操作：1P 用 WASD 移动、空格跳、J K L 出招。也可以用手机扫右边的二维码下载手机版。</p>
+    </div>
+  </section>
+
+  <aside class="qr">
+    <b>手机扫码下载</b>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45" shape-rendering="crispEdges"><rect width="45" height="45" fill="#fff"/><path d="M4 4h7v1H4zM12 4h1v1H12zM16 4h4v1H16zM21 4h3v1H21zM25 4h1v1H25zM27 4h4v1H27zM32 4h1v1H32zM34 4h7v1H34zM4 5h1v1H4zM10 5h1v1H10zM12 5h4v1H12zM17 5h1v1H17zM20 5h3v1H20zM24 5h1v1H24zM26 5h1v1H26zM34 5h1v1H34zM40 5h1v1H40zM4 6h1v1H4zM6 6h3v1H6zM10 6h1v1H10zM12 6h1v1H12zM14 6h1v1H14zM22 6h1v1H22zM24 6h3v1H24zM28 6h4v1H28zM34 6h1v1H34zM36 6h3v1H36zM40 6h1v1H40zM4 7h1v1H4zM6 7h3v1H6zM10 7h1v1H10zM13 7h1v1H13zM17 7h1v1H17zM20 7h6v1H20zM28 7h2v1H28zM32 7h1v1H32zM34 7h1v1H34zM36 7h3v1H36zM40 7h1v1H40zM4 8h1v1H4zM6 8h3v1H6zM10 8h1v1H10zM12 8h5v1H12zM19 8h5v1H19zM29 8h1v1H29zM32 8h1v1H32zM34 8h1v1H34zM36 8h3v1H36zM40 8h1v1H40zM4 9h1v1H4zM10 9h1v1H10zM14 9h1v1H14zM17 9h1v1H17zM20 9h3v1H20zM24 9h2v1H24zM27 9h1v1H27zM29 9h2v1H29zM32 9h1v1H32zM34 9h1v1H34zM40 9h1v1H40zM4 10h7v1H4zM12 10h1v1H12zM14 10h1v1H14zM16 10h1v1H16zM18 10h1v1H18zM20 10h1v1H20zM22 10h1v1H22zM24 10h1v1H24zM26 10h1v1H26zM28 10h1v1H28zM30 10h1v1H30zM32 10h1v1H32zM34 10h7v1H34zM13 11h3v1H13zM17 11h3v1H17zM23 11h1v1H23zM25 11h1v1H25zM27 11h1v1H27zM29 11h4v1H29zM4 12h1v1H4zM7 12h11v1H7zM20 12h1v1H20zM22 12h4v1H22zM27 12h2v1H27zM30 12h1v1H30zM32 12h2v1H32zM36 12h1v1H36zM38 12h3v1H38zM5 13h1v1H5zM8 13h1v1H8zM11 13h1v1H11zM14 13h2v1H14zM21 13h1v1H21zM24 13h1v1H24zM26 13h1v1H26zM29 13h3v1H29zM35 13h5v1H35zM5 14h6v1H5zM12 14h7v1H12zM25 14h2v1H25zM28 14h1v1H28zM30 14h3v1H30zM36 14h1v1H36zM40 14h1v1H40zM6 15h1v1H6zM9 15h1v1H9zM11 15h2v1H11zM16 15h1v1H16zM19 15h1v1H19zM21 15h2v1H21zM32 15h4v1H32zM37 15h4v1H37zM6 16h1v1H6zM10 16h6v1H10zM18 16h1v1H18zM20 16h1v1H20zM23 16h1v1H23zM28 16h1v1H28zM31 16h2v1H31zM34 16h2v1H34zM37 16h1v1H37zM40 16h1v1H40zM4 17h1v1H4zM9 17h1v1H9zM12 17h1v1H12zM18 17h5v1H18zM26 17h2v1H26zM31 17h2v1H31zM36 17h2v1H36zM6 18h1v1H6zM8 18h1v1H8zM10 18h1v1H10zM13 18h1v1H13zM16 18h1v1H16zM19 18h3v1H19zM23 18h1v1H23zM25 18h2v1H25zM29 18h1v1H29zM31 18h1v1H31zM33 18h1v1H33zM36 18h5v1H36zM6 19h1v1H6zM9 19h1v1H9zM11 19h1v1H11zM14 19h1v1H14zM16 19h2v1H16zM19 19h1v1H19zM21 19h2v1H21zM24 19h1v1H24zM27 19h2v1H27zM30 19h1v1H30zM32 19h2v1H32zM35 19h1v1H35zM37 19h4v1H37zM8 20h1v1H8zM10 20h1v1H10zM12 20h1v1H12zM14 20h1v1H14zM16 20h1v1H16zM18 20h1v1H18zM20 20h2v1H20zM23 20h3v1H23zM27 20h1v1H27zM29 20h1v1H29zM34 20h1v1H34zM38 20h1v1H38zM40 20h1v1H40zM5 21h1v1H5zM8 21h1v1H8zM11 21h3v1H11zM20 21h1v1H20zM22 21h1v1H22zM24 21h1v1H24zM27 21h2v1H27zM30 21h2v1H30zM35 21h1v1H35zM37 21h1v1H37zM4 22h1v1H4zM6 22h5v1H6zM12 22h4v1H12zM18 22h2v1H18zM21 22h2v1H21zM24 22h1v1H24zM26 22h2v1H26zM29 22h1v1H29zM31 22h1v1H31zM33 22h1v1H33zM37 22h2v1H37zM40 22h1v1H40zM6 23h4v1H6zM11 23h1v1H11zM28 23h2v1H28zM31 23h4v1H31zM37 23h1v1H37zM40 23h1v1H40zM5 24h1v1H5zM9 24h2v1H9zM12 24h1v1H12zM15 24h2v1H15zM19 24h3v1H19zM26 24h1v1H26zM28 24h1v1H28zM30 24h1v1H30zM32 24h6v1H32zM4 25h1v1H4zM8 25h1v1H8zM11 25h1v1H11zM16 25h2v1H16zM19 25h1v1H19zM22 25h2v1H22zM25 25h3v1H25zM30 25h2v1H30zM36 25h1v1H36zM38 25h2v1H38zM4 26h3v1H4zM10 26h1v1H10zM12 26h2v1H12zM16 26h1v1H16zM18 26h5v1H18zM24 26h1v1H24zM26 26h2v1H26zM31 26h2v1H31zM34 26h2v1H34zM37 26h1v1H37zM40 26h1v1H40zM4 27h6v1H4zM12 27h1v1H12zM14 27h1v1H14zM16 27h2v1H16zM20 27h2v1H20zM24 27h4v1H24zM32 27h1v1H32zM35 27h6v1H35zM4 28h1v1H4zM6 28h9v1H6zM16 28h1v1H16zM20 28h4v1H20zM25 28h1v1H25zM28 28h1v1H28zM32 28h1v1H32zM34 28h2v1H34zM39 28h1v1H39zM4 29h1v1H4zM6 29h1v1H6zM8 29h1v1H8zM11 29h2v1H11zM15 29h2v1H15zM18 29h1v1H18zM20 29h2v1H20zM23 29h3v1H23zM29 29h4v1H29zM35 29h2v1H35zM38 29h1v1H38zM4 30h2v1H4zM7 30h1v1H7zM10 30h1v1H10zM13 30h2v1H13zM16 30h3v1H16zM20 30h2v1H20zM23 30h2v1H23zM27 30h6v1H27zM34 30h3v1H34zM38 30h3v1H38zM4 31h1v1H4zM7 31h2v1H7zM12 31h1v1H12zM15 31h1v1H15zM18 31h2v1H18zM24 31h1v1H24zM26 31h2v1H26zM33 31h3v1H33zM37 31h3v1H37zM4 32h1v1H4zM6 32h1v1H6zM9 32h3v1H9zM14 32h1v1H14zM17 32h2v1H17zM22 32h1v1H22zM26 32h1v1H26zM28 32h3v1H28zM32 32h7v1H32zM12 33h2v1H12zM16 33h1v1H16zM18 33h2v1H18zM22 33h3v1H22zM26 33h1v1H26zM28 33h5v1H28zM36 33h1v1H36zM38 33h1v1H38zM4 34h7v1H4zM12 34h3v1H12zM17 34h1v1H17zM19 34h1v1H19zM23 34h1v1H23zM25 34h3v1H25zM29 34h1v1H29zM32 34h1v1H32zM34 34h1v1H34zM36 34h1v1H36zM40 34h1v1H40zM4 35h1v1H4zM10 35h1v1H10zM12 35h2v1H12zM15 35h3v1H15zM21 35h4v1H21zM26 35h2v1H26zM29 35h1v1H29zM31 35h2v1H31zM36 35h1v1H36zM39 35h1v1H39zM4 36h1v1H4zM6 36h3v1H6zM10 36h1v1H10zM12 36h3v1H12zM16 36h2v1H16zM25 36h2v1H25zM28 36h1v1H28zM30 36h7v1H30zM39 36h2v1H39zM4 37h1v1H4zM6 37h3v1H6zM10 37h1v1H10zM12 37h3v1H12zM18 37h1v1H18zM20 37h3v1H20zM28 37h1v1H28zM30 37h1v1H30zM33 37h2v1H33zM38 37h2v1H38zM4 38h1v1H4zM6 38h3v1H6zM10 38h1v1H10zM14 38h2v1H14zM17 38h4v1H17zM23 38h2v1H23zM26 38h5v1H26zM32 38h2v1H32zM36 38h1v1H36zM39 38h2v1H39zM4 39h1v1H4zM10 39h1v1H10zM14 39h2v1H14zM20 39h2v1H20zM23 39h2v1H23zM27 39h1v1H27zM30 39h1v1H30zM36 39h5v1H36zM4 40h7v1H4zM12 40h3v1H12zM19 40h1v1H19zM24 40h1v1H24zM30 40h1v1H30zM32 40h2v1H32zM35 40h1v1H35zM37 40h1v1H37zM40 40h1v1H40z" fill="#0d0a09"/></svg>
+    <small>lianyingxue37-coder.github.io/yingxuelian/download.html</small>
+  </aside>
+</main>
+
+<footer>
+  <span><b>赞助作者</b>：VX18530993088</span>
+  <span><a href="https://github.com/lianyingxue37-coder/yingxuelian/releases">全部版本</a></span>
+</footer>
+</div>
+
+<div id="inapp" role="dialog" aria-label="请在浏览器中打开">
+  <svg viewBox="0 0 80 80" fill="none" stroke="#efe9df" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 70C40 66 58 46 62 14"/><path d="M50 22 62 12l8 14"/></svg>
+  <p>当前 App 里不能直接下载安装包</p>
+  <p>点右上角 <b>···</b>，选择 <b>「在浏览器打开」</b></p>
+  <button type="button" onclick="this.parentNode.style.display='none'">我知道了</button>
+</div>
+
+<script>
+const REPO = 'lianyingxue37-coder/yingxuelian';
+const ua = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(ua), inApp = /MicroMessenger|QQ\/|Weibo|DingTalk|AlipayClient/i.test(ua);
+const $ = id => document.getElementById(id);
+if (isAndroid && inApp) $('inapp').style.display = 'block';
+if (isIOS) {
+  const ios = $('secIOS'); ios.parentNode.insertBefore(ios, $('secAndroid')); ios.classList.add('hl');
+  $('dlBtn').classList.remove('primary'); $('meta').textContent = 'iPhone 请按下面的方法添加到主屏幕';
+}
+if (isIOS || isAndroid) $('secPC').remove();
+if (!isIOS) fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { cache: 'no-store' })
+  .then(r => r.ok ? r.json() : Promise.reject(r.status))
+  .then(rel => {
+    const a = (rel.assets || []).find(x => x.name === 'duanlian.apk'); if (!a) return Promise.reject(404);
+    const d = new Date(a.updated_at);
+    $('meta').textContent = `${rel.tag_name} · ${(a.size / 1048576).toFixed(1)} MB · ${d.getMonth() + 1} 月 ${d.getDate()} 日更新 · 已下载 ${a.download_count} 次`;
+  })
+  .catch(e => { if (e === 404) { $('pending').style.display = 'block'; $('meta').textContent = '安卓安装包（.apk）· 正在打包'; } });
+</script>
+</body>
+</html>

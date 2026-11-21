@@ -138,7 +138,10 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .hudbtn{position:absolute;top:2.4%;width:2.9cqw;height:2.9cqw;min-width:28px;min-height:28px;display:grid;place-items:center;padding:0;pointer-events:auto;background:rgba(13,10,9,.75);border:1px solid rgba(239,233,223,.3);border-radius:.25em;color:var(--bone)}
 .hudbtn:hover{border-color:var(--bone)}.hudbtn svg{width:62%;height:62%}
 #tPause{left:42.9%}#bFs{left:54.3%}
-#fsTitle{position:absolute;top:1.1em;right:1.2em;display:flex;align-items:center;gap:.45em;background:rgba(13,10,9,.6);border:1px solid var(--line);border-radius:.25em;padding:.35em .9em;min-height:2.4em}
+#titleTools{position:absolute;top:1.1em;right:1.2em;display:flex;gap:.6em}
+#dlTitle{display:flex;align-items:center;gap:.45em;background:rgba(232,67,43,.85);border:1px solid var(--red);border-radius:.25em;padding:.35em .9em;min-height:2.4em;color:#fff;text-decoration:none;font-weight:700}
+#dlTitle svg{width:1.1em;height:1.1em}#dlTitle:hover{border-color:var(--bone)}
+#fsTitle{display:flex;align-items:center;gap:.45em;background:rgba(13,10,9,.6);border:1px solid var(--line);border-radius:.25em;padding:.35em .9em;min-height:2.4em}
 #fsTitle svg{width:1.1em;height:1.1em}#fsTitle:hover{border-color:var(--bone)}
 [hidden]{display:none!important}
 #toast{position:absolute;left:50%;bottom:22%;transform:translateX(-50%);max-width:80%;background:rgba(13,10,9,.94);border:1px solid var(--red);padding:.6em 1.1em;border-radius:.25em;font-size:max(12px,1.2cqw);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
@@ -200,7 +203,8 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
   <div class="ver">v0.8.1 · 背景为电脑自动对战演示</div>
-  <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button>
+  <div id="titleTools"><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
+  <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
 
 <section class="page" id="PG_SELECT"><div class="panel wide">
@@ -2626,6 +2630,7 @@ function drawPaper(c) {
   if (!CFG.SKETCH) return; if (!PAPER_PAT) PAPER_PAT = c.createPattern(PAPER, 'repeat');
   c.save(); c.globalCompositeOperation = 'multiply'; c.globalAlpha = .24; c.fillStyle = PAPER_PAT; c.fillRect(0, 0, W, H); c.restore();
 }
+if (window.Capacitor || matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches) $('#dlTitle').remove();
 let last = performance.now(), acc = 0;
 function loop(now) {
   requestAnimationFrame(loop);
