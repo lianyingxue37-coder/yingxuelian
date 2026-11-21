@@ -1,0 +1,155 @@
+# 断链 · 自动打包安卓 APK
+# 每次更新游戏（index.html / 图标 / 本文件）推送到 main，都会自动打包一次，并发布到仓库的 Releases。
+# 固定下载地址：https://github.com/lianyingxue37-coder/yingxuelian/releases/latest/download/duanlian.apk
+# 正式签名（可选）：在 Settings → Secrets and variables → Actions 里添加
+#   ANDROID_KEYSTORE_BASE64（keystore 文件的 base64）、ANDROID_KEYSTORE_PASSWORD、ANDROID_KEY_ALIAS
+# 没有这三个密钥时用调试签名打包，也能正常安装。
+name: 打包安卓 APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'manifest.webmanifest', 'icon-*.png', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: 准备 Capacitor 工程
+        run: |
+          VER=$(grep -oP 'class="ver">v\K[0-9.]+' index.html | head -1)
+          echo "VER=${VER:-0.0.0}" >> "$GITHUB_ENV"
+          mkdir -p app/www
+          cp index.html manifest.webmanifest icon-*.png apple-touch-icon.png app/www/
+          cd app
+          echo '{"name":"duanlian-android","private":true,"version":"1.0.0"}' > package.json
+          echo '{"appId":"com.duanlian.game","appName":"断链","webDir":"www","backgroundColor":"#0a0807","android":{"backgroundColor":"#0a0807"}}' > capacitor.config.json
+          npm install --no-audit --no-fund @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          npx cap add android
+
+      - name: 横屏、沉浸式全屏、常亮、振动
+        working-directory: app
+        run: |
+          node - <<'EOF'
+          const fs = require('fs'), path = require('path');
+          const mf = 'android/app/src/main/AndroidManifest.xml';
+          let x = fs.readFileSync(mf, 'utf8');
+          if (!x.includes('android:screenOrientation')) x = x.replace(/<activity\b/, '<activity android:screenOrientation="sensorLandscape"');
+          if (!x.includes('android.permission.VIBRATE')) x = x.replace('</manifest>', '    <uses-permission android:name="android.permission.VIBRATE" />\n</manifest>');
+          fs.writeFileSync(mf, x);
+          const find = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? find(path.join(d, e.name)) : e.name === 'MainActivity.java' ? [path.join(d, e.name)] : []);
+          for (const f of find('android/app/src/main/java')) {
+            const pkg = (fs.readFileSync(f, 'utf8').match(/^package\s+[\w.]+;/m) || [''])[0];
+            fs.writeFileSync(f, `${pkg}
+
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.WindowManager;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+              }
+
+              @Override
+              public void onWindowFocusChanged(boolean hasFocus) {
+                  super.onWindowFocusChanged(hasFocus);
+                  if (hasFocus) {
+                      getWindow().getDecorView().setSystemUiVisibility(
+                          View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                          | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                  }
+              }
+          }
+          `);
+            console.log('patched', f);
+          }
+          EOF
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"${VER}\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      - name: 应用图标和启动画面
+        working-directory: app
+        run: |
+          command -v convert >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
+          R=android/app/src/main/res
+          for d in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432; do
+            IFS=: read -r n s f <<< "$d"
+            mkdir -p "$R/mipmap-$n"
+            convert www/icon-512.png -resize "${s}x${s}" "$R/mipmap-$n/ic_launcher.png"
+            cp "$R/mipmap-$n/ic_launcher.png" "$R/mipmap-$n/ic_launcher_round.png"
+            k=$((f * 3 / 4))
+            convert www/icon-maskable-512.png -resize "${k}x${k}" -background none -gravity center -extent "${f}x${f}" "$R/mipmap-$n/ic_launcher_foreground.png"
+          done
+          [ -f "$R/values/ic_launcher_background.xml" ] && sed -i -E 's/#[0-9A-Fa-f]{6}/#E8432B/' "$R/values/ic_launcher_background.xml"
+          find "$R" -name 'splash.png' | while read -r f; do
+            w=$(identify -format '%w' "$f"); h=$(identify -format '%h' "$f"); m=$(( (w < h ? w : h) / 3 ))
+            convert -size "${w}x${h}" xc:'#0a0807' \( www/icon-512.png -resize "${m}x${m}" \) -gravity center -composite "$f"
+          done
+
+      - name: 打包 APK
+        working-directory: app/android
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          chmod +x gradlew
+          if [ -n "$KS_B64" ]; then
+            ./gradlew assembleRelease --no-daemon
+            echo "$KS_B64" | base64 -d > release.jks
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+            "$BT/zipalign" -f -p 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+            "$BT/apksigner" sign --ks release.jks --ks-pass env:KS_PASS --ks-key-alias "${KS_ALIAS:-duanlian}" --out ../duanlian.apk aligned.apk
+            rm -f release.jks
+            echo "SIGN=正式签名" >> "$GITHUB_ENV"
+          else
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../duanlian.apk
+            echo "SIGN=调试签名" >> "$GITHUB_ENV"
+          fi
+          ls -la ../duanlian.apk
+
+      - name: 发布到 Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VER }}
+          name: 断链 v${{ env.VER }} · 安卓版
+          make_latest: true
+          overwrite_files: true
+          files: app/duanlian.apk
+          body: |
+            《断链》1V1 无限连段格斗 · 安卓安装包（构建 #${{ github.run_number }}，${{ env.SIGN }}）
+
+            **下载**：下面的 `duanlian.apk`，或扫码打开下载页 https://lianyingxue37-coder.github.io/yingxuelian/download.html
+
+            **安装**：下载后点开安装包；第一次安装时手机会提示「允许安装未知来源应用」，同意即可。微信里打不开下载的话，点右上角「···」选「在浏览器打开」。
+
+            **iPhone**：用 Safari 打开 https://lianyingxue37-coder.github.io/yingxuelian/ ，点分享按钮 →「添加到主屏幕」。
+
+            赞助作者：VX18530993088
