@@ -90,6 +90,21 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .set{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.55em 1.2em;align-items:center}
 .set small{display:block;color:var(--mute);font-size:.8em}
 .set select{background:var(--ink2);border:1px solid var(--line);padding:.3em .6em;min-height:2.3em;border-radius:.2em}
+.settings-panel{display:flex;flex-direction:column;width:min(94%,46em)}
+.settings-panel .actions{flex:none}
+.settings-body{overflow:auto;overscroll-behavior:contain;min-height:0;padding:.35em .4em .35em 0}
+#setTabs{flex:none;margin-bottom:.7em}
+#setTabs button{min-height:2.6em}
+#setTabs [aria-pressed=true]{color:var(--bone);border-color:var(--red);background:rgba(232,67,43,.17)}
+.set .slider{display:flex;gap:.65em;align-items:center}
+.set input[type=range]{width:min(22cqw,12em);accent-color:var(--red)}
+.set output{min-width:3.5em;text-align:right;font-variant-numeric:tabular-nums}
+.settings-body details{margin-top:1em;border-top:1px solid var(--line);padding-top:.65em}
+.settings-body summary{cursor:pointer}
+.settings-body details .set{margin-top:.7em}
+.set-account{display:flex;gap:.75em 1.5em;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.set-account[hidden]{display:none}
+.set-account p{overflow-wrap:anywhere}
 /* 对战页（触屏） */
 #PG_BATTLE{pointer-events:none}
 #touch{display:none;position:absolute;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);pointer-events:none;z-index:3;font-size:clamp(9px,2.9vmin,15px);color:var(--bone)}
@@ -232,7 +247,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v1.5 · 背景为电脑自动对战演示</div>
+  <div class="ver">v1.6 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -253,7 +268,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 
 <section class="page" id="PG_PAUSE"><div class="panel narrow">
   <h2>暂停</h2>
-  <nav class="menu col"><button id="btnResume">继续<small>Esc / P</small></button><button data-fs><span class="lbl">全屏</span><small>F 键</small></button><button data-go="PG_MOVES">招式与系统</button><button id="btnRestart">重新开始本场</button><button id="btnQuit">返回标题</button></nav>
+  <nav class="menu col"><button id="btnResume">继续<small>Esc / P</small></button><button data-fs><span class="lbl">全屏</span><small>F 键</small></button><button data-go="PG_SETTINGS">设置</button><button data-go="PG_MOVES">招式与系统</button><button id="btnRestart">重新开始本场</button><button id="btnQuit">返回标题</button></nav>
 </div></section>
 
 <section class="page" id="PG_RESULT"><div class="panel narrow">
@@ -268,7 +283,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 <section class="page" id="PG_ACCOUNT"><div class="panel">
   <h2>账户 <small id="accSub"></small></h2>
   <div id="accBody"></div>
-  <div class="actions"><button class="btn" data-go="PG_TITLE">返回</button></div>
+  <div class="actions"><button class="btn" id="accBack" data-go="PG_TITLE">返回</button></div>
 </div></section>
 
 <section class="page" id="PG_ONLINE"><div class="panel">
@@ -301,10 +316,14 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   <div class="actions"><button class="btn" data-back>返回</button></div>
 </div></section>
 
-<section class="page" id="PG_SETTINGS"><div class="panel narrow">
+<section class="page" id="PG_SETTINGS"><div class="panel settings-panel">
   <h2>设置</h2>
-  <div class="set" id="setList"></div>
-  <div class="actions"><button class="btn" id="setReset">恢复默认</button><button class="btn primary" data-back>完成</button></div>
+  <nav class="tabs" id="setTabs" aria-label="设置分类"></nav>
+  <div class="settings-body">
+    <div class="set-account" id="setAccount" hidden><p id="setAccountStatus"></p><button class="btn" data-go="PG_ACCOUNT">管理账户</button></div>
+    <div id="setList"></div>
+  </div>
+  <div class="actions"><button class="btn" id="setReset">恢复本页默认</button><button class="btn primary" data-back>完成</button></div>
 </div></section>
 <div id="toast" role="status"></div>
 <div id="modal" role="dialog" aria-modal="true" hidden></div>
@@ -340,7 +359,7 @@ const CFG = {
   GAIN: { guard: 6, landHit: 2, commit: 10, passive: 0.02 },
   CHAIN_WINDOW: 40, WINDOW_MUL: 1, CHAIN_DIST: 100,
   REPEAT_LIMIT: 3, REPEAT_MOM_MUL: 0.5, REPEAT_DMG_MUL: 0.7,
-  IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 3, COUNTER_MOM: 20,
+  IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 2, COUNTER_MOM: 20,
   END_PROTECT: 10, FIN_DOWN: 100,
   GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
   SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
@@ -349,7 +368,8 @@ const CFG = {
   EMBER_DMG: 12, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80, ELIXIR: 60,
   BURN_TIME: 360, BURN_MOM: 1.25, BURN_WIN: 1.25, BURN_DMG: 1.1, WALL_MOM: 25, THROW_RANGE: 112,
   FROST_MAX: 5, FROST_BRK: 0.12, FROST_SPD: 0.06, FREEZE_MOM: 40, ARMOR_DMG: 0.8, CHARGE_TIME: 75, CHARGE_MAX: 3, ZAP_DMG: 1.5, ZAP_MOM: 30, MONK_FREEZE: 50,
-  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, VIBRATE: true, STICK_MODE: 'float', CAMERA: true, TOUCH_LIFT: 96, SKETCH: true,
+  AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, SFX_VOLUME: 100, VIBRATE: true, STICK_MODE: 'float', CAMERA: true, TOUCH_LIFT: 96, SKETCH: true,
+  GRAPHICS: 'auto', FPS_LIMIT: 60,
   Z_MAX: 100, Z_Y0: 600, Z_Y1: 690, Z_SCALE0: 0.88, Z_SCALE1: 1.06, Z_SPEED: 2.3, Z_HIT: 30, Z_BODY: 18, Z_TRACK: 10, SIDE_DIST: 46, BOUNCE_MOM: 20,
 };
 const CFG_DESC = {
@@ -367,7 +387,8 @@ const CFG_DESC = {
   END_PROTECT: '连段结束后守方额外的无敌帧（防止立刻再起手）', FIN_DOWN: '吃到终结技后的倒地帧数',
   SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
   BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
-  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置', TOUCH_LIFT: '触屏时战斗画面最多上移多少像素，给按键让出底部', SKETCH: '手绘风渲染角色',
+  AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', SFX_VOLUME: '本机音效音量 0–100', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置', TOUCH_LIFT: '触屏时战斗画面最多上移多少像素，给按键让出底部', SKETCH: '手绘风渲染角色',
+  GRAPHICS: '本机画质', FPS_LIMIT: '本机绘制帧率上限',
   Z_MAX: 'Z 轴（纵深）范围', Z_Y0: 'Z=0（最里）时脚底的屏幕高度', Z_Y1: 'Z 最大（最外）时脚底的屏幕高度', Z_SCALE0: '最里侧角色缩放', Z_SCALE1: '最外侧角色缩放',
   Z_SPEED: '纵深移动速度', Z_HIT: '招式默认的纵深判定宽度（Z 差超过就打不中）', Z_BODY: '身体碰撞的纵深厚度（Z 差小于它两人才会互相挡住；比判定窄，不会“撞得到却打不到”）', Z_TRACK: '出手时朝对手纵深自动修正的最大距离（转向）', SIDE_DIST: '侧闪移动的纵深距离', BOUNCE_MOM: '坠击落地反弹额外连段势',
   PARRY_GAIN: '闪避成功获得的破链能量（侧闪 / 后撤步的无敌时间里躲开一次攻击）',
@@ -382,7 +403,7 @@ const DROP_LEVELS = [
   { id: 'DL0', lv: 0, name: '起势', min: 0,   dmgMul: 1.0, gain: 4,  end: 'ST_STAGGER',   stun: 16, color: '#efe9df', note: '连段刚开始，暂存伤害尚未结算' },
   { id: 'DL1', lv: 1, name: '压制', min: 60,  dmgMul: 1.1, gain: 5,  end: 'ST_STAGGER',   stun: 28, color: '#f2b09a', note: '首次掉落；连段结束时对手踉跄' },
   { id: 'DL2', lv: 2, name: '崩势', min: 160, dmgMul: 1.2, gain: 7,  end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '连段结束时对手倒地' },
-  { id: 'DL3', lv: 3, name: '坠落', min: 300, dmgMul: 1.3, gain: 10, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '解锁终结技；对手被重重砸地' },
+  { id: 'DL3', lv: 3, name: '坠落', min: 300, dmgMul: 1.3, gain: 10, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '对手被重重砸地' },
   { id: 'DL4', lv: 4, name: '终焉', min: 480, dmgMul: 0.5, gain: 16, end: 'ST_KNOCKDOWN', stun: 92, color: '#c21f0a', note: '此后伤害减半、对手充能加快，应尽快终结' },
 ];
 
@@ -986,7 +1007,7 @@ const PAGES = [
   { id: 'PG_RESULT', name: '结算', desc: '胜负与本场数据' },
   { id: 'PG_MOVES', name: '招式与系统', desc: '规则说明、掉落阶段图、招式表、按键表' },
   { id: 'PG_CODEX', name: '设定 ID 表', desc: '所有数据表 ID 汇总（本页）' },
-  { id: 'PG_SETTINGS', name: '设置', desc: '回合、时间、难度与核心参数，保存在本机浏览器' },
+  { id: 'PG_SETTINGS', name: '设置', desc: '账户、画面、声音、操作和对战选项' },
 ];
 const EVENTS = {
   EV_ROUND_START: '回合开始', EV_CHAIN_START: '起手命中，连段开始', EV_CHAIN_HIT: '连段中每次命中',
@@ -1009,7 +1030,7 @@ const HOOKS = {};
 const on = (ev, fn) => (HOOKS[ev] = HOOKS[ev] || []).push(fn);
 
 /* ---------- 六、按键 ---------- */
-const ACTIONS = { left: '左移', right: '右移', up: '往里走（双击侧闪）', down: '往外走（双击侧闪）', jump: '跳跃 / 浮空追击', l: '轻击', h: '重击（贴身+前 = 投）', s: '特技（+前 = 前冲技）', brk: '破链 / 燃链', fin: '终结技（坠落起）', ast: '呼叫外援' };
+const ACTIONS = { left: '左移', right: '右移', up: '往里走（双击侧闪）', down: '往外走（双击侧闪）', jump: '跳跃 / 浮空追击', l: '轻击', h: '重击（贴身+前 = 投）', s: '特技（+前 = 前冲技）', brk: '破链 / 燃链', fin: '终结技（连段达标）', ast: '呼叫外援' };
 const KEYMAP = {
   P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], down: ['KeyS'], jump: ['Space'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'], ast: ['KeyU'] },
   P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], down: ['ArrowDown'], jump: ['ShiftRight', 'Numpad0'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'], ast: ['KeyM', 'Numpad4'] },
@@ -1019,25 +1040,34 @@ const keyName = c => KN[c] || (c.startsWith('Key') ? c.slice(3) : c.startsWith('
 
 /* ---------- 七、设置项 SET ---------- */
 const SETTINGS = [
-  { id: 'SET_ROUNDS', label: '获胜所需回合', key: 'ROUNDS_TO_WIN', opts: [[1, '1 回合'], [2, '2 回合'], [3, '3 回合']] },
-  { id: 'SET_TIME', label: '每回合时间', key: 'ROUND_TIME', opts: [[60, '60 秒'], [99, '99 秒'], [0, '不限时']] },
-  { id: 'SET_AI', label: '电脑难度', key: 'AI_LEVEL', opts: [[0, '简单'], [1, '普通'], [2, '困难']] },
-  { id: 'SET_WINDOW', label: '连段窗口', key: 'WINDOW_MUL', note: '下一击必须命中的时限', opts: [[.8, '紧 0.8×'], [1, '标准'], [1.25, '宽松 1.25×']] },
-  { id: 'SET_BRK_START', label: '开局破链能量', key: 'BRK_START', opts: [[0, '0'], [20, '20'], [50, '50'], [100, '满']] },
-  { id: 'SET_IMM', label: '每击立即生效比例', key: 'IMMEDIATE_RATIO', note: '其余进入暂存，越过阈值才掉落', opts: [[.2, '20%'], [.3, '30%'], [.5, '50%']] },
-  { id: 'SET_SHARDS', label: '链晶出现', key: 'SHARDS', opts: [[true, '开'], [false, '关']] },
-  { id: 'SET_SHAKE', label: '屏幕震动', key: 'SHAKE', opts: [[true, '开'], [false, '关']] },
-  { id: 'SET_SOUND', label: '音效', key: 'SOUND', opts: [[true, '开'], [false, '关']] },
-  { id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '安卓有效', opts: [[true, '开'], [false, '关']] },
-  { id: 'SET_STICK', label: '触屏摇杆', key: 'STICK_MODE', note: '左半屏按下即出现摇杆', opts: [['float', '跟随手指'], ['fixed', '固定位置']] },
-  { id: 'SET_STAGE', label: '场地大小', key: 'STAGE_W', note: '大场地镜头会跟着角色横移，远景带视差', opts: [[1280, '小'], [2400, '大'], [3200, '超大']] },
-  { id: 'SET_SPEED', label: '移动速度', key: 'MOVE_MUL', note: '走路、纵深、跳跃和冲刺的速度', opts: [[1, '经典'], [1.3, '快'], [1.6, '很快']] },
-  { id: 'SET_CAMERA', label: '动态镜头', key: 'CAMERA', note: '连段时镜头推近', opts: [[true, '开'], [false, '关']] },
-  { id: 'SET_SKETCH', label: '画风', key: 'SKETCH', note: '手绘：毛笔线条 + 纸张纹理；简洁更省电', opts: [[true, '手绘'], [false, '简洁']] },
+  { group: 'video', id: 'SET_GRAPHICS', label: '画质', key: 'GRAPHICS', note: '自动按屏幕大小调整，低画质减少场景特效', opts: [['auto', '自动'], ['low', '低'], ['high', '高']] },
+  { group: 'video', id: 'SET_FPS', label: '帧率上限', key: 'FPS_LIMIT', note: '只影响画面刷新', opts: [[60, '60 FPS'], [30, '30 FPS']] },
+  { group: 'video', id: 'SET_SKETCH', label: '画风', key: 'SKETCH', opts: [[true, '手绘'], [false, '简洁']] },
+  { group: 'video', id: 'SET_SHAKE', label: '屏幕震动', key: 'SHAKE', opts: [[true, '开'], [false, '关']] },
+  { group: 'video', id: 'SET_CAMERA', label: '动态镜头', key: 'CAMERA', note: '连段时镜头推近', opts: [[true, '开'], [false, '关']] },
+  { group: 'audio', id: 'SET_SOUND', label: '音效', key: 'SOUND', opts: [[true, '开'], [false, '关']] },
+  { group: 'audio', id: 'SET_VOLUME', label: '音效音量', key: 'SFX_VOLUME', range: true },
+  { group: 'controls', id: 'SET_STICK', label: '触屏摇杆', key: 'STICK_MODE', opts: [['float', '跟随手指'], ['fixed', '固定位置']] },
+  { group: 'controls', id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '适用于支持振动的设备', opts: [[true, '开'], [false, '关']] },
+  { group: 'battle', id: 'SET_ROUNDS', label: '获胜所需回合', key: 'ROUNDS_TO_WIN', opts: [[1, '1 回合'], [2, '2 回合'], [3, '3 回合']] },
+  { group: 'battle', id: 'SET_TIME', label: '每回合时间', key: 'ROUND_TIME', opts: [[60, '60 秒'], [99, '99 秒'], [0, '不限时']] },
+  { group: 'battle', id: 'SET_AI', label: '电脑难度', key: 'AI_LEVEL', opts: [[0, '简单'], [1, '普通'], [2, '困难']] },
+  { group: 'battle', advanced: true, id: 'SET_WINDOW', label: '连段窗口', key: 'WINDOW_MUL', note: '下一击必须命中的时限', opts: [[.8, '紧 0.8×'], [1, '标准'], [1.25, '宽松 1.25×']] },
+  { group: 'battle', advanced: true, id: 'SET_BRK_START', label: '开局破链能量', key: 'BRK_START', opts: [[0, '0'], [20, '20'], [50, '50'], [100, '满']] },
+  { group: 'battle', advanced: true, id: 'SET_IMM', label: '每击立即生效比例', key: 'IMMEDIATE_RATIO', note: '其余进入暂存，越过阈值才掉落', opts: [[.2, '20%'], [.3, '30%'], [.5, '50%']] },
+  { group: 'battle', advanced: true, id: 'SET_SHARDS', label: '链晶出现', key: 'SHARDS', opts: [[true, '开'], [false, '关']] },
+  { group: 'battle', advanced: true, id: 'SET_STAGE', label: '场地大小', key: 'STAGE_W', opts: [[1280, '小'], [2400, '大'], [3200, '超大']] },
+  { group: 'battle', advanced: true, id: 'SET_SPEED', label: '移动速度', key: 'MOVE_MUL', opts: [[1, '经典'], [1.3, '快'], [1.6, '很快']] },
 ];
 const DEFAULTS = Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]]));
 const SAVE_KEY = 'duanlian.settings.v1';
-try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); for (const k in s) if (k in DEFAULTS) CFG[k] = s[k]; } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+  for (const { key, range, opts } of SETTINGS) {
+    const value = saved?.[key];
+    if (range ? Number.isInteger(value) && value >= 0 && value <= 100 : opts.some(([v]) => v === value)) CFG[key] = value;
+  }
+} catch (e) {}
 const saveSettings = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]])))); } catch (e) {} };
 
 /* ============================================================
@@ -1079,10 +1109,13 @@ const SFX = {
     if (this.c) { if (this.c.state === 'suspended') this.c.resume(); return; }
     try {
       const C = window.AudioContext || window.webkitAudioContext; this.c = new C();
-      this.m = this.c.createGain(); this.m.gain.value = .45; this.m.connect(this.c.destination);
+      this.m = this.c.createGain(); this.m.gain.value = CFG.SFX_VOLUME * .0045; this.m.connect(this.c.destination);
       const n = this.c.sampleRate; this.nb = this.c.createBuffer(1, n, n); const d = this.nb.getChannelData(0);
       for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
     } catch (e) { this.c = null; }
+  },
+  volume() {
+    if (this.c) this.m.gain.setTargetAtTime(CFG.SOUND ? CFG.SFX_VOLUME * .0045 : 0, this.c.currentTime, .025);
   },
   noise(t, dur, type, freq, vol, q = 1) {
     const s = this.c.createBufferSource(), f = this.c.createBiquadFilter(), g = this.c.createGain();
@@ -1097,7 +1130,7 @@ const SFX = {
     o.connect(g); g.connect(this.m); o.start(t); o.stop(t + dur + .05);
   },
   play(k, p = 0) {
-    if (!CFG.SOUND || !this.c || G.demo) return;
+    if (!CFG.SOUND || !CFG.SFX_VOLUME || !this.c || G.demo) return;
     const t = this.c.currentTime;
     switch (k) {
       case 'swing': this.noise(t, .08, 'bandpass', 900 + p * 8, .1, 1.3); break;
@@ -1941,8 +1974,20 @@ function clampAll() {
 /* ============================================================
    绘制
    ============================================================ */
-const cv = $('#cv'), ctx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
-cv.width = W * DPR; cv.height = H * DPR;
+const cv = $('#cv'), ctx = cv.getContext('2d', { alpha: false });
+const DPR = Math.min(2, window.devicePixelRatio || 1); // 缩略图用设备像素比，主画布另设上限
+let renderScale = 1;
+function resizeBattleCanvas() {
+  const limits = { low: [768, 1], auto: [1280, 1.5], high: [1920, 2] };
+  const [maxWidth, maxRatio] = limits[CFG.GRAPHICS];
+  const width = Math.min(maxWidth, (cv.clientWidth || W) * Math.min(maxRatio, window.devicePixelRatio || 1));
+  const units = Math.max(1, Math.round(width / 16));
+  if (cv.width === units * 16 && cv.height === units * 9) return;
+  cv.width = units * 16;
+  cv.height = units * 9;
+  renderScale = cv.width / W;
+  nextPaint = 0;
+}
 const BG = {}, THUMB = {};
 function seeded(s) { return () => (s = (s * 16807) % 2147483647) / 2147483647; }
 /* 远景按 1280 宽的构图来画；PX0..PX1 是这次要铺满的横向范围（宽场地时向两侧延伸） */
@@ -2108,11 +2153,11 @@ function floorLines(c, id, vx, x0, x1, y1, o) {
   c.stroke();
 }
 function stageBG(id) {
-  const BW = Math.ceil(W + Math.max(0, CFG.STAGE_W - W) * CFG.PARALLAX) + 80, key = `${id}|${BW}|${CFG.STAGE_W}`;
+  const BW = Math.ceil(W + Math.max(0, CFG.STAGE_W - W) * CFG.PARALLAX) + 80, key = `${id}|${BW}|${CFG.STAGE_W}|${renderScale}`;
   if (BG.key === key) return BG;
-  const ox = (BW - W) / 2, b = document.createElement('canvas'); b.width = Math.ceil(BW * DPR); b.height = H * DPR;
-  let c = b.getContext('2d'); c.scale(DPR, DPR); c.translate(ox, 0); PX0 = -ox; PX1 = W + ox; (PAINT[id] || paintBridge)(c); PX0 = 0; PX1 = W;
-  const FD = Math.min(DPR, 1.5), flW = CFG.STAGE_W + 160, f = document.createElement('canvas'); f.width = Math.ceil(flW * FD); f.height = Math.ceil(FL_H * FD);
+  const ox = (BW - W) / 2, b = document.createElement('canvas'); b.width = Math.ceil(BW * renderScale); b.height = H * renderScale;
+  let c = b.getContext('2d'); c.scale(renderScale, renderScale); c.translate(ox, 0); PX0 = -ox; PX1 = W + ox; (PAINT[id] || paintBridge)(c); PX0 = 0; PX1 = W;
+  const FD = Math.min(renderScale, 1.5), flW = CFG.STAGE_W + 160, f = document.createElement('canvas'); f.width = Math.ceil(flW * FD); f.height = Math.ceil(FL_H * FD);
   c = f.getContext('2d'); c.scale(FD, FD); c.translate(80, -FL_Y); paintFloor(c, id, -80, CFG.STAGE_W + 80);
   return Object.assign(BG, { key, bg: b, fl: f, BW, ox, flW });
 }
@@ -2123,16 +2168,17 @@ function stageThumb(id) {   // 选关缩略图：只画 1280 宽的主构图
   return (THUMB[id] = b);
 }
 const FW = [];
+let fireworkClock = 140;
 const SAND = Array.from({ length: 90 }, () => ({ x: rand(0, W), y: rand(260, 700), v: rand(4, 10), l: rand(10, 40) }));
 const AMB = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.3, 1.2), ph: rand(0, 6), sz: rand(1, 3) }));
 const RAIN = Array.from({ length: 150 }, () => ({ x: rand(0, W + 200), y: rand(0, H), l: rand(14, 30), v: rand(14, 22) }));
 const LEAF = Array.from({ length: 34 }, () => ({ x: rand(0, W), y: rand(-H, H), v: rand(.6, 1.6), ph: rand(0, 6), r: rand(0, 6), sz: rand(5, 10) }));
 const SNOW = Array.from({ length: 130 }, () => ({ x: rand(0, W), y: rand(0, H), v: rand(.6, 2), ph: rand(0, 6), sz: rand(1.2, 3.4) }));
-function drawStage(c) {
+function drawStage(c, motion) {
   const S = stageBG(G.stage), t = G.camT, mid = CFG.STAGE_W / 2;
   const bx = t.cx - S.BW / 2 - (t.cx - mid) * CFG.PARALLAX;   // 远景视差：镜头横移时远景只跟着挪一部分
   c.drawImage(S.bg, bx, 0, S.BW, H);
-  if (G.stage === 'STG_01') {
+  if (G.stage === 'STG_01' && CFG.GRAPHICS !== 'low') {
     c.save(); c.translate(bx + S.ox, 0); c.strokeStyle = '#1a0d0b'; c.lineWidth = 3;
     for (const [ax, ph] of [[506, 0], [770, 2]]) {
       const sw = Math.sin(G.frame * .02 + ph) * .1;
@@ -2142,33 +2188,39 @@ function drawStage(c) {
   }
   c.drawImage(S.fl, -80, FL_Y, S.flW, FL_H);
   const hw = W / (2 * t.z) + 40; floorLines(c, G.stage, t.cx, t.cx - hw, t.cx + hw, FL_Y + FL_H, mid);
+  if (CFG.GRAPHICS === 'low') return;
   c.save(); c.translate(t.cx - W / 2, 0);   // 天气粒子贴着镜头画，任何位置都铺满画面
   if (G.stage === 'STG_02') {
     c.strokeStyle = 'rgba(220,235,230,.32)'; c.lineWidth = 1.5; c.beginPath();
-    for (const r of RAIN) { r.y += r.v * .5; r.x -= r.v * .12; if (r.y > 640) { r.y = rand(-60, 0); r.x = rand(0, W + 200); } c.moveTo(r.x, r.y); c.lineTo(r.x + r.l * .25, r.y - r.l); }
+    for (const r of RAIN) { r.y += r.v * .5 * motion; r.x -= r.v * .12 * motion; if (r.y > 640) { r.y = rand(-60, 0); r.x = rand(0, W + 200); } c.moveTo(r.x, r.y); c.lineTo(r.x + r.l * .25, r.y - r.l); }
     c.stroke();
   } else if (G.stage === 'STG_03') {
     for (const l of LEAF) {
-      l.y += l.v; l.x += Math.sin(G.frame * .03 + l.ph) * 1.2 - .3; l.r += .04; if (l.y > 640) { l.y = rand(-80, -10); l.x = rand(0, W + 100); }
+      l.y += l.v * motion; l.x += (Math.sin(G.frame * .03 + l.ph) * 1.2 - .3) * motion; l.r += .04 * motion; if (l.y > 640) { l.y = rand(-80, -10); l.x = rand(0, W + 100); }
       c.save(); c.translate(l.x, l.y); c.rotate(l.r); c.fillStyle = 'rgba(176,196,110,.75)'; c.beginPath(); c.ellipse(0, 0, l.sz, l.sz * .28, 0, 0, 7); c.fill(); c.restore();
     }
   } else if (G.stage === 'STG_05') {
-    if (G.frame % 140 === 0 || (G.frame % 140 === 40 && Math.random() < .5)) { const x = rand(180, 1100), y = rand(70, 230), col = pick(['#ffd36e', '#ff7a5c', '#8fe6dc', '#e6a8ff', '#fff3c4']); for (let i = 0; i < 46; i++) { const an = i / 46 * Math.PI * 2, v = rand(2.2, 3.4); FW.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: 60, col }); } }
-    for (const q of FW) { q.x += q.vx; q.y += q.vy; q.vy += .04; q.vx *= .98; q.life--; c.globalAlpha = Math.max(0, q.life / 60); c.fillStyle = q.col; c.fillRect(q.x, q.y, 2.5, 2.5); }
+    fireworkClock += motion;
+    if (fireworkClock >= 140) {
+      fireworkClock %= 140;
+      const x = rand(180, 1100), y = rand(70, 230), col = pick(['#ffd36e', '#ff7a5c', '#8fe6dc', '#e6a8ff', '#fff3c4']);
+      for (let i = 0; i < 46; i++) { const an = i / 46 * Math.PI * 2, v = rand(2.2, 3.4); FW.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: 60, col }); }
+    }
+    for (const q of FW) { q.x += q.vx * motion; q.y += q.vy * motion; q.vy += .04 * motion; q.vx *= .98 ** motion; q.life -= motion; c.globalAlpha = Math.max(0, q.life / 60); c.fillStyle = q.col; c.fillRect(q.x, q.y, 2.5, 2.5); }
     c.globalAlpha = 1; for (let i = FW.length - 1; i >= 0; i--) if (FW[i].life <= 0) FW.splice(i, 1);
-    for (const e of AMB) { e.y -= e.v * .6; e.x += Math.sin(G.frame * .02 + e.ph) * .5; if (e.y < 0) { e.y = H; e.x = rand(0, W); } c.fillStyle = `rgba(255,190,110,${.3 + .3 * Math.sin(G.frame * .1 + e.ph)})`; c.fillRect(e.x, e.y, e.sz, e.sz); }
+    for (const e of AMB) { e.y -= e.v * .6 * motion; e.x += Math.sin(G.frame * .02 + e.ph) * .5 * motion; if (e.y < 0) { e.y = H; e.x = rand(0, W); } c.fillStyle = `rgba(255,190,110,${.3 + .3 * Math.sin(G.frame * .1 + e.ph)})`; c.fillRect(e.x, e.y, e.sz, e.sz); }
   } else if (G.stage === 'STG_06') {
     c.strokeStyle = 'rgba(255,236,200,.35)'; c.lineWidth = 2; c.beginPath();
     for (let y = 430; y < 600; y += 22) { c.moveTo(0, y); for (let x = 0; x <= W; x += 40) c.lineTo(x, y + Math.sin(x * .02 + G.frame * .06 + y) * 2.5); }
     c.stroke();
     c.strokeStyle = 'rgba(214,168,108,.55)'; c.lineWidth = 2; c.beginPath();
-    for (const s of SAND) { s.x += s.v; if (s.x > W + 40) { s.x = -40; s.y = rand(260, 700); } c.moveTo(s.x, s.y); c.lineTo(s.x - s.l, s.y + 1); }
+    for (const s of SAND) { s.x += s.v * motion; if (s.x > W + 40) { s.x = -40; s.y = rand(260, 700); } c.moveTo(s.x, s.y); c.lineTo(s.x - s.l, s.y + 1); }
     c.stroke();
   } else if (G.stage === 'STG_04') {
     c.fillStyle = 'rgba(244,247,255,.85)';
-    for (const s of SNOW) { s.y += s.v; s.x += Math.sin(G.frame * .02 + s.ph) * .6; if (s.y > 660) { s.y = rand(-40, 0); s.x = rand(0, W); } c.beginPath(); c.arc(s.x, s.y, s.sz, 0, 7); c.fill(); }
+    for (const s of SNOW) { s.y += s.v * motion; s.x += Math.sin(G.frame * .02 + s.ph) * .6 * motion; if (s.y > 660) { s.y = rand(-40, 0); s.x = rand(0, W); } c.beginPath(); c.arc(s.x, s.y, s.sz, 0, 7); c.fill(); }
   } else {
-    for (const e of AMB) { e.y -= e.v; e.x += Math.sin(G.frame * .02 + e.ph) * .4; if (e.y < 0) { e.y = H; e.x = rand(0, W); } c.fillStyle = `rgba(255,${150 + e.sz * 30},90,${.35 + .3 * Math.sin(G.frame * .1 + e.ph)})`; c.fillRect(e.x, e.y, e.sz, e.sz); }
+    for (const e of AMB) { e.y -= e.v * motion; e.x += Math.sin(G.frame * .02 + e.ph) * .4 * motion; if (e.y < 0) { e.y = H; e.x = rand(0, W); } c.fillStyle = `rgba(255,${150 + e.sz * 30},90,${.35 + .3 * Math.sin(G.frame * .1 + e.ph)})`; c.fillRect(e.x, e.y, e.sz, e.sz); }
   }
   c.restore();
 }
@@ -2562,7 +2614,7 @@ function skTick(f) { const m = f.move, S = SK[f.ch.id]; if (m && m.sk) { skCastF
 function skHit(a, x, y, pw) { const S = SK[a.ch.id]; if (S && S.hit) S.hit(a, x, y, pw, a.move && a.move.slot); }
 function drawDim(c) {
   const d = G.dim; if (!d) return; const k = Math.min(1, (d.max - d.t) / 8, d.t / 14);
-  c.save(); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.fillStyle = d.col + (d.a * k) + ')'; c.fillRect(0, 0, W, H); c.restore();
+  c.save(); c.setTransform(renderScale, 0, 0, renderScale, 0, 0); c.fillStyle = d.col + (d.a * k) + ')'; c.fillRect(0, 0, W, H); c.restore();
 }
 /* 终结技插画：角色色带 + 专属底纹 + 名字（只在出终结技时闪一下） */
 function drawCutin(c) {
@@ -3247,7 +3299,7 @@ function njCineTick(q) {
 function njCineBack(c) {
   const q = G.cine; if (!q) return;
   const ch = q.a.ch, t = q.t, k = Math.min(1, t / 8, (q.dur - t) / 8), el = NJ_EL[q.cid] || {};
-  c.save(); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  c.save(); c.setTransform(renderScale, 0, 0, renderScale, 0, 0);
   c.fillStyle = `rgba(10,8,7,${.74 * k})`; c.fillRect(0, 0, W, H);
   const g = c.createRadialGradient(W / 2, H * .55, 30, W / 2, H * .55, W * .75); g.addColorStop(0, rgbp(ch.color) + (.5 * k) + ')'); g.addColorStop(1, rgbp(ch.dark) + '0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
   c.restore();
@@ -3725,7 +3777,7 @@ const WP_SFX = {
   hpierce(t) { this.noise(t, .06, 'bandpass', 2400, .14, 2); this.tone(t, 1200, 300, .08, 'sawtooth', .03); },
   hmagic(t) { this.tone(t, 990, 985, .22, 'sine', .07); this.noise(t, .08, 'highpass', 5000, .1); },
 };
-{ const P0 = SFX.play; SFX.play = function (k, p = 0) { const fn = WP_SFX[k]; if (!fn) return P0.call(this, k, p); if (!CFG.SOUND || !this.c || G.demo) return; fn.call(this, this.c.currentTime, p); }; }
+{ const P0 = SFX.play; SFX.play = function (k, p = 0) { const fn = WP_SFX[k]; if (!fn) return P0.call(this, k, p); if (!CFG.SOUND || !CFG.SFX_VOLUME || !this.c || G.demo) return; fn.call(this, this.c.currentTime, p); }; }
 
 /* ---- 图标：轻击 / 重击换成兵器 ---- */
 Object.assign(ICONS, {
@@ -4259,7 +4311,8 @@ function chainHUD(c, a) {
   for (const d of DROP_LEVELS.slice(1)) {
     const u = d.min / max, tx = L ? bx + bw * u : bx + bw * (1 - u), passed = ch.mom >= d.min;
     c.fillStyle = passed ? d.color : BONE; c.fillRect(tx - 1, by - 4, 2, bh + 8);
-    c.fillStyle = passed ? d.color : MUTE; c.fillText(d.name, tx, by + bh + 16);
+    c.fillStyle = passed ? d.color : MUTE;
+    c.fillText(d.lv === CFG.FIN_MIN_LV ? `${d.name} · 奥义` : d.name, tx, by + bh + 16);
   }
   const wr = clamp(ch.win / ch.maxWin, 0, 1); c.fillStyle = wr < .3 ? RED : BONE; c.fillRect(bx + bw / 2 - bw / 2 * wr, by + bh + 22, bw * wr, 3);
   c.restore();
@@ -4323,20 +4376,21 @@ function drawBanner(c) {
   if (b.sub) txt(c, b.sub, 0, 92 / sc, 26, FU, BONE, 'center', 5, 500);
   c.restore();
 }
-function render() {
-  const c = ctx; c.setTransform(DPR, 0, 0, DPR, 0, 0);
+function render(motion = 1) {
+  const c = ctx; c.setTransform(renderScale, 0, 0, renderScale, 0, 0);
   c.save();
   if (G.shake) c.translate(rand(-1, 1) * G.shake, rand(-1, 1) * G.shake);
   let tz = 1, tx = CFG.STAGE_W / 2;
   if (G.f.length === 2 && !G.demo) { const A = G.f[0], B = G.f[1], ch = A.chain || B.chain; tx = (A.x + B.x) / 2;
     if (CFG.CAMERA) { tz = 1 + (ch ? .05 + ch.lv * .025 : 0) + Math.min(.04, G.hitstop * .004); if (G.rs === 'RS_KO' && G.koFx && G.rsT < 110) { tz = 1.3; tx = G.koFx.x; } } }
   if (G.cine && CFG.CAMERA) { tz = 1.22; tx = G.cine.x; }
-  G.cam.z += (tz - G.cam.z) * .08; G.cam.x += (tx - G.cam.x) * .14;
-  G.cam.ly += ((G.demo || G.f.length < 2 ? 0 : G.liftT) - G.cam.ly) * .15;
+  G.cam.z += (tz - G.cam.z) * (1 - .92 ** motion);
+  G.cam.x += (tx - G.cam.x) * (1 - .86 ** motion);
+  G.cam.ly += ((G.demo || G.f.length < 2 ? 0 : G.liftT) - G.cam.ly) * (1 - .85 ** motion);
   const z = G.cam.z, half = W / (2 * z), cx = clamp(G.cam.x, half, Math.max(half, CFG.STAGE_W - half)), fy = H * .62, ly = G.cam.ly;
   G.camT = { cx, z, fy, ly };
   c.translate(W / 2, fy - ly); c.scale(z, z); c.translate(-cx, -fy);
-  drawStage(c); drawDim(c); njCineBack(c);
+  drawStage(c, motion); drawDim(c); njCineBack(c);
   if (G.f.length) {
     for (const f of G.f) drawShadow(c, f);
     for (const a of G.f) if (a.chain) drawChainLinks(c, a);
@@ -4362,7 +4416,8 @@ const PAPER = (() => {
 })();
 let PAPER_PAT = null;
 function drawPaper(c) {
-  if (!CFG.SKETCH) return; if (!PAPER_PAT) PAPER_PAT = c.createPattern(PAPER, 'repeat');
+  if (!CFG.SKETCH || CFG.GRAPHICS === 'low' || (CFG.GRAPHICS === 'auto' && TOUCH)) return;
+  if (!PAPER_PAT) PAPER_PAT = c.createPattern(PAPER, 'repeat');
   c.save(); c.globalCompositeOperation = 'multiply'; c.globalAlpha = .24; c.fillStyle = PAPER_PAT; c.fillRect(0, 0, W, H); c.restore();
 }
 if (window.Capacitor || matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches) $('#dlTitle').remove();
@@ -4381,15 +4436,30 @@ function appUpdateCheck() {
   }).catch(() => {});
 }
 setTimeout(appUpdateCheck, 2500);
-let last = performance.now(), acc = 0;
-function loop(now) {
-  requestAnimationFrame(loop);
+let last = performance.now(), acc = 0, nextPaint = 0, lastPaint = 0;
+function advanceClock(now) {
   const dt = Math.min(100, now - last); last = now;
   if (G.slow > 0) G.slow -= dt / 16.67;
-  acc += dt / 16.667 * (G.slow > 0 ? .33 : 1);
+  acc += dt / 16.667 * (!LS.on && G.slow > 0 ? .33 : 1);
   if (LS.on) lsTick(now);
-  else { lsTail(now); let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0; }
-  render();
+  else {
+    lsTail(now);
+    if (G.paused || (G.demo && G.page !== 'PG_TITLE' && G.page !== 'PG_SELECT')) acc = 0;
+    else { let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0; }
+  }
+}
+
+function loop(now) {
+  requestAnimationFrame(loop);
+  advanceClock(performance.now());
+  // 绘制限帧独立于每秒 60 次的模拟与联机输入。
+  const fighting = G.page === 'PG_BATTLE', result = G.page === 'PG_RESULT';
+  const animated = fighting || result || G.page === 'PG_TITLE' || G.page === 'PG_SELECT';
+  if (nextPaint && (!animated || now + 1 < nextPaint)) return;
+  const period = 1000 / (fighting ? CFG.FPS_LIMIT : 30);
+  nextPaint = !nextPaint || now - nextPaint >= period ? now + period : nextPaint + period;
+  render(lastPaint ? clamp((now - lastPaint) / (1000 / 60), 1, 3) : 1);
+  lastPaint = now;
 }
 
 /* ============================================================
@@ -4398,14 +4468,19 @@ function loop(now) {
 const SUB = ['PG_MOVES', 'PG_CODEX', 'PG_SETTINGS', 'PG_RANK'];
 function go(id) {
   if (G.page === 'PG_ONLINE' && id !== 'PG_ONLINE') queueStop();
-  if (SUB.includes(id) && !SUB.includes(G.page)) G.prev = G.page;
+  if (id === 'PG_ACCOUNT') $('#accBack').dataset.go = G.page === 'PG_SETTINGS' ? 'PG_SETTINGS' : 'PG_TITLE';
+  if (SUB.includes(id) && !SUB.includes(G.page) && !(id === 'PG_SETTINGS' && G.page === 'PG_ACCOUNT')) G.prev = G.page;
   G.page = id;
+  nextPaint = 0;
   $$('.page').forEach(p => p.classList.toggle('on', p.id === id));
   ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings, PG_ACCOUNT: buildAccount, PG_ONLINE: buildOnline, PG_RANK: buildRank })[id]?.();
   Input.clear();
   $('#wrap').classList.toggle('battle', id === 'PG_BATTLE' && TOUCH);
   if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); calcLift(); } catch (e) {} });
-  if (id !== 'PG_BATTLE') { const f = $(`#${id} .menu button, #${id} [aria-pressed=true], #${id} button`); f && f.focus({ preventScroll: true }); }
+  if (id !== 'PG_BATTLE') {
+    const f = id === 'PG_SETTINGS' ? $('#setTabs [aria-pressed=true]') : $(`#${id} .menu button, #${id} [aria-pressed=true], #${id} button`);
+    f?.focus({ preventScroll: true });
+  }
   else document.activeElement && document.activeElement.blur && document.activeElement.blur();
 }
 function portrait(cv, ch, alt) {
@@ -4503,11 +4578,39 @@ function buildCodex() {
   }
   $('#cxTable').innerHTML = `<tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr>` + t.rows().map(r => `<tr>${r.map((v, i) => i === 0 ? `<td><code>${icFor(v) ? icSVG(icFor(v)) : ''}${v}</code></td>` : `<td class="${typeof v === 'number' ? 'num' : String(v).length > 14 ? 'w' : ''}">${v}</td>`).join('')}</tr>`).join('');
 }
+const SET_TABS = [['account', '账户'], ['video', '画面'], ['audio', '声音'], ['controls', '操作'], ['battle', '对战']];
+let settingsTab = 'video';
+function refreshSettingsAccount() {
+  $('#setAccountStatus').textContent = ACC.state === 'in' ? ACC.profile?.nickname || '已登录'
+    : ACC.state === 'loading' ? '账户连接中…'
+    : ACC.state === 'off' || ACC.state === 'err' ? '账户服务暂不可用' : '尚未登录';
+}
 function buildSettings() {
-  $('#setList').innerHTML = SETTINGS.map(s => {
+  const tabs = SET_TABS.filter(([tab]) => !G.paused || (tab !== 'account' && tab !== 'battle'));
+  if (!tabs.some(([tab]) => tab === settingsTab)) settingsTab = 'video';
+  $('#setTabs').innerHTML = tabs.map(([tab, label]) =>
+    `<button type="button" data-settab="${tab}" aria-pressed="${tab === settingsTab}">${label}</button>`).join('');
+  const account = settingsTab === 'account';
+  $('#setAccount').hidden = !account;
+  $('#setReset').hidden = account;
+  $('#setReset').disabled = account;
+  if (account) refreshSettingsAccount();
+  const fields = SETTINGS.filter(s => s.group === settingsTab);
+  const row = s => {
+    const label = `<label for="${s.id}">${s.label}${s.note ? `<small>${s.note}</small>` : ''}</label>`;
+    if (s.range) return `${label}<div class="slider"><input id="${s.id}" type="range" min="0" max="100" data-key="${s.key}" value="${CFG[s.key]}"><output for="${s.id}">${CFG[s.key]}%</output></div>`;
     const idx = s.opts.findIndex(o => o[0] === CFG[s.key]);
-    return `<label for="${s.id}">${s.label}${s.note ? `<small>${s.note}</small>` : ''}</label><select id="${s.id}" data-key="${s.key}">${s.opts.map((o, i) => `<option value="${i}" ${i === idx ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
-  }).join('');
+    return `${label}<select id="${s.id}" data-key="${s.key}">${s.opts.map((o, i) => `<option value="${i}" ${i === idx ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
+  };
+  const advanced = fields.filter(s => s.advanced);
+  $('#setList').innerHTML = `<div class="set">${fields.filter(s => !s.advanced).map(row).join('')}</div>` +
+    (advanced.length ? `<details><summary>高级规则</summary><div class="set">${advanced.map(row).join('')}</div></details>` : '');
+  $('#PG_SETTINGS .settings-body').scrollTop = 0;
+}
+function applySettings() {
+  if (settingsTab === 'video') { resizeBattleCanvas(); nextPaint = 0; }
+  if (settingsTab === 'audio') { SFX.init(); SFX.volume(); }
+  saveSettings();
 }
 
 /* ---------- 事件绑定 ---------- */
@@ -4568,13 +4671,36 @@ $('#btnToTitle').onclick = () => { if (G.mode === 'online') { roomLeave(); start
 $('#btnReselect').onclick = () => { startDemo(); go('PG_SELECT'); };
 $('#btnRematch').onclick = () => { if (G.mode === 'online') { if (ROOM.ch) roomPresence(); if (!ROOM.peer) { toast('对手已经离开房间'); return; } ROOM.launch = null; roomSend('again'); startDemo(); G.mode = 'online'; go('PG_SELECT'); return; } startMatch(G.lastOpts); };
 $('#tPause').onclick = () => pause(true);
-$('#setReset').onclick = () => { Object.assign(CFG, DEFAULTS); saveSettings(); buildSettings(); };
-$('#setList').addEventListener('change', e => { const s = SETTINGS.find(x => x.key === e.target.dataset.key); if (s) { CFG[s.key] = s.opts[+e.target.value][0]; saveSettings(); } });
+$('#setTabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-settab]');
+  if (!b) return;
+  settingsTab = b.dataset.settab;
+  buildSettings();
+  $('#setTabs [aria-pressed=true]').focus({ preventScroll: true });
+});
+$('#setReset').onclick = () => {
+  for (const s of SETTINGS) if (s.group === settingsTab) CFG[s.key] = DEFAULTS[s.key];
+  applySettings();
+  buildSettings();
+};
+$('#setList').addEventListener('input', e => {
+  if (e.target.id !== 'SET_VOLUME') return;
+  CFG.SFX_VOLUME = e.target.valueAsNumber;
+  e.target.nextElementSibling.value = `${CFG.SFX_VOLUME}%`;
+  SFX.init();
+  SFX.volume();
+});
+$('#setList').addEventListener('change', e => {
+  const s = SETTINGS.find(x => x.key === e.target.dataset.key);
+  if (!s) return;
+  if (!s.range) CFG[s.key] = s.opts[+e.target.value][0];
+  applySettings();
+});
 function pause(manual) { if (!G.running || G.paused) return; if (G.mode === 'online') { if (manual && LS.on) lsAskQuit(); return; } G.paused = true; go('PG_PAUSE'); }
 function resume() { G.paused = false; go('PG_BATTLE'); }
 const GAME_CODES = new Set(Object.values(KEYMAP).flatMap(m => Object.values(m).flat()));
 addEventListener('keydown', e => {
-  if (e.target.closest && e.target.closest('input,textarea')) return;
+  if (e.target.closest?.('input,textarea') && !(G.page === 'PG_SETTINGS' && e.code === 'Escape')) return;
   SFX.init();
   if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey) { e.preventDefault(); FS.toggle(); return; }
   if (G.page === 'PG_BATTLE') {
@@ -4590,7 +4716,7 @@ addEventListener('keydown', e => {
   if (/^(ArrowDown|ArrowRight)$/.test(e.code)) { e.preventDefault(); (items[i + 1] || items[0])?.focus(); }
   else if (/^(ArrowUp|ArrowLeft)$/.test(e.code)) { e.preventDefault(); (items[i - 1] || items[items.length - 1])?.focus(); }
   else if (e.code === 'KeyJ') document.activeElement?.click?.();
-  else if (e.code === 'Escape') (page.querySelector('[data-back]') || page.querySelector('[data-go="PG_TITLE"]') || page.querySelector('#btnSelBack, #onBack'))?.click();
+  else if (e.code === 'Escape') (page.querySelector('[data-back]') || page.querySelector('[data-go="PG_TITLE"]') || page.querySelector('#btnSelBack, #onBack, #accBack'))?.click();
 });
 addEventListener('keyup', e => Input.held.delete(e.code));
 addEventListener('contextmenu', e => { if (!(e.target.closest && e.target.closest('input,textarea'))) e.preventDefault(); });
@@ -4986,6 +5112,7 @@ function accUI() {
     chip.innerHTML = ACC.state === 'in' && p ? `${avHTML(p.avatar)}<span>${esc(p.nickname)}</span>` : ACC.state === 'loading' ? '<span>账户连接中…</span>' : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.4-4 4.2-6 7.5-6s6.1 2 7.5 6"/></svg><span>${ACC.state === 'off' ? '账户' : '登录 / 注册'}</span>`;
   }
   if (G.page === 'PG_ACCOUNT') buildAccount();
+  if (G.page === 'PG_SETTINGS' && settingsTab === 'account') refreshSettingsAccount();
   if (G.page === 'PG_ONLINE') buildOnline();
 }
 function buildAccount() {
@@ -5197,8 +5324,9 @@ const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false
 const KEYS12 = ['left', 'right', 'up', 'down', 'jump', 'guard', 'l', 'h', 's', 'brk', 'fin', 'ast'];
 const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
 const decIn = b => { const r = { held: {}, pressed: {} }; KEYS12.forEach((k, i) => { r.held[k] = !!(b & (1 << i)); r.pressed[k] = !!(b & (1 << (i + 12))); }); return r; };
-const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'TOUCH_LIFT', 'AI_LEVEL']);
+const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'SFX_VOLUME', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'GRAPHICS', 'FPS_LIMIT', 'TOUCH_LIFT', 'AI_LEVEL']);
 const LS_REJOIN_MS = 20000, LS_SEND_MS = 1000 / 15, LS_BATCH = 32, LS_CHUNK = 256, LS_MAX_FRAME = 432000;
+const LS_STEP_MS = 1000 / 60, LS_INPUT_RESERVE = 4;
 const GAME_UUID = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 let LS = { on: false, me: 0 };
 const myInfo = () => { const p = ACC.profile || {}, s = cloudStats(); return { uid: ACC.user.id, nick: p.nickname || '玩家', avatar: p.avatar || 'CH_JIN', title: titleOf(p), wins: s.onW, games: s.onG, rating: p.rating ?? 1000 }; };
@@ -5517,8 +5645,9 @@ function roomToggleReady() {
 async function roomMaybeStart() {
   if (!ROOM.host || !ROOM.peer || !ROOM.ready.every(Boolean) || ROOM.launch || LS.on) return;
   const { ch, peer } = ROOM, id = crypto.randomUUID();
-  const rtt = ROOM.rtt.length ? median(ROOM.rtt) : 150;
-  const D = Math.max(7, Math.min(20, Math.ceil(rtt / 33.334) + 5));
+  // 双向延迟折算为单程，再留两个广播周期给发送间隔和一次补包。
+  const rtt = ROOM.rtt.length ? Math.max(...ROOM.rtt) : 220;
+  const D = clamp(Math.ceil((rtt / 2 + 2 * LS_SEND_MS) / LS_STEP_MS), 7, 20);
   const cfg = Object.fromEntries(Object.entries(CFG).filter(([k, v]) => !NET_CFG_SKIP.has(k) && typeof v !== 'object'));
   if (ROOM.spar) cfg.ROUNDS_TO_WIN = ROOM.rounds;
   const setup = { seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg, spar: !!ROOM.spar };
@@ -5591,6 +5720,9 @@ function lsJournalSave() {
   const journal = LS.journal;
   if (!journal || LS.replaying) return;
   const inputs = [LS.loc, LS.rem], counts = [LS.loc.length, LS.remTop + 1];
+  const active = storeRead(sessionStorage, 'duanlian.active', null);
+  if (active === journal.id && LS.frame === journal.frame && LS.desync === journal.desync
+      && counts.every((count, side) => count === journal.counts[side])) return;
   // Acknowledged remote inputs and transmitted local inputs must survive a reload.
   for (const side of [0, 1]) {
     if (counts[side] === journal.counts[side]) continue;
@@ -5602,7 +5734,7 @@ function lsJournalSave() {
   const saved = { ...journal, counts, frame: LS.frame, at: Date.now(), desync: LS.desync };
   if (storeWrite(localStorage, lsJournalKey(journal.uid), saved)) {
     LS.journal = saved;
-    storeWrite(sessionStorage, 'duanlian.active', saved.id);
+    if (active !== saved.id) storeWrite(sessionStorage, 'duanlian.active', saved.id);
   }
 }
 function lsLoadInputs(saved, side) {
@@ -5639,7 +5771,7 @@ function lsStart(id, m, saved = null, inputs = null) {
   const loc = inputs ? inputs[0] : Array(m.D).fill(0), rem = inputs ? inputs[1] : Array(m.D).fill(0);
   LS = {
     id, on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc, rem, remTop: rem.length - 1, ack: -1,
-    startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
+    startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, sampledAt: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
     cfgBak: { ...CFG }, journal: saved || { uid: ACC.user.id, id, code: ROOM.code, match: ROOM.match, peer: ROOM.peer, counts: [0, 0] },
     replaying: !!saved, sent: 0
   };
@@ -5658,6 +5790,12 @@ function lsStart(id, m, saved = null, inputs = null) {
     CFG.SOUND = LS.cfgBak.SOUND; CFG.VIBRATE = LS.cfgBak.VIBRATE;
   }
   acc = 0;
+  last = performance.now();
+  // 绘制回调受浏览器限流时，仍按同一个时钟推进联机同步。
+  LS.clockTimer = setInterval(() => {
+    const now = performance.now();
+    if (now - last >= 32) advanceClock(now);
+  }, 16);
   lsJournalSave(); lsConnect(LS);
 }
 async function lsConnect(state) {
@@ -5684,6 +5822,7 @@ function lsStop() {
   else lsJournalSave();
 }
 function lsDispose(keepJournal = false) {
+  clearInterval(LS.clockTimer);
   if (LS.on) lsStop();
   const ch = LS.ch; LS.ch = null;
   if (ch) ACC.sb.removeChannel(ch);
@@ -5748,12 +5887,20 @@ function lsAdvance() {
     LS.hash.delete(LS.frame - 300); LS.remHash.delete(LS.frame - 300);
   }
 }
+function lsCapture(now) {
+  LS.loc.push(encIn(Input.read('P1')));
+  Input.endFrame();
+  LS.sampledAt = now;
+}
 function lsTick(now) {
   let n = 0;
-  while (acc >= 1 && n < 6) {
-    const tf = LS.frame + LS.D;
-    if (LS.loc[tf] === undefined) { LS.loc[tf] = encIn(Input.read('P1')); Input.endFrame(); }
-    if (LS.rem[LS.frame] === undefined) break;
+  while (LS.peerHeard && acc >= 1 && n < 6) {
+    if (LS.loc.length <= LS.frame + LS.D) lsCapture(now);
+    if (LS.rem[LS.frame] === undefined) {
+      // 等对方补帧时继续收少量本地输入，避免双方等一帧才发下一帧。
+      if (LS.loc.length <= LS.frame + LS.D + LS_INPUT_RESERVE && now - LS.sampledAt >= LS_STEP_MS) lsCapture(now);
+      break;
+    }
     lsAdvance();
     if (!LS.on) return;
     acc -= 1; n++;
@@ -5778,7 +5925,13 @@ function lsHUD(c) {
   const f = G.f[LS.me], t = G.camT, x = (f.x - t.cx) * t.z + W / 2, y = (f.y - 250 * f.ch.scale - t.fy) * t.z + t.fy - t.ly;
   c.save(); c.fillStyle = f.col; c.beginPath(); c.moveTo(x - 9, y - 12); c.lineTo(x + 9, y - 12); c.lineTo(x, y); c.closePath(); c.fill();
   c.font = `700 18px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; otxt(c, '你', x, y - 20); c.restore();
-  if (LS.wait > 450) { c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80); c.font = `700 26px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; c.fillText(`等待同步… ${Math.max(0, Math.ceil((LS_REJOIN_MS - LS.wait) / 1000))} 秒`, W / 2, H / 2 + 9); c.restore(); }
+  if (LS.wait > 1500) {
+    c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80);
+    txt(c, `等待同步… ${Math.max(0, Math.ceil((LS_REJOIN_MS - LS.wait) / 1000))} 秒`, W / 2, H / 2 + 9, 26, FU, BONE, 'center', 4, 700);
+    c.restore();
+  } else if (LS.wait > 350) {
+    txt(c, '网络波动', W / 2, H - 32, 17, FU, BONE, 'center', 4, 700);
+  }
 }
 
 /* ---------- 联机大厅界面 ---------- */
@@ -5980,6 +6133,9 @@ function netLeaveAll() { roomLeave(true); lobbyLeave(); hideInvite(); NET.fr = {
 accInit();
 window.DUANLIAN = { G, CFG, DROP_LEVELS, CHARS, STAGES, KEYMAP, EVENTS, on, startMatch, step, simStep, render, skel, hurtRect, go, callAssist, tryBurn, SUPA, ACC, REC, ROOM, NET, get LS() { return LS; }, accInit, recMatch, lsHashOf, Input, AI, accSignUp, roomJoin };
 startDemo();
+resizeBattleCanvas();
+if ('ResizeObserver' in window) new ResizeObserver(resizeBattleCanvas).observe(cv);
+addEventListener('resize', resizeBattleCanvas);
 requestAnimationFrame(loop);
 }
 </script>
