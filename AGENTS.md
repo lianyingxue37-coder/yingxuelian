@@ -47,9 +47,9 @@
 4. **不要提交任何密钥**：客户端只用 anon / publishable key。`service_role`、数据库密码、签名证书一律不进仓库（用 Supabase 后台或 GitHub Secrets）。
 5. 保留 `window.DUANLIAN` 现有字段（测试依赖它）。
    奥义演出 `G.cine` 期间 `simStep` 只推进演出帧（双方同一帧开始、同样长度）；改演出长度或替身落点时，两边必须仍然一致。
-   防御键、主动跳跃和空中追击已移除。闪避依赖侧闪、后撤步和替身术（`evade()` 的统计仍记在 `stats.parries`）。受击飞起和倒地保留，角色落地后恢复操作。联机输入中原跳跃和防御的位置保持为零。
+   防御键、主动跳跃和空中追击已移除。闪避依赖侧闪和后撤步（`evade()` 的统计仍记在 `stats.parries`）。受击飞起和倒地保留，角色落地后恢复操作。联机输入中原跳跃和防御的位置保持为零。
 6. 界面文字用中文，语气和现有文案一致；手机横屏（844×390）也要能用。
-7. 版本号在 `<div class="ver">v…` 里，改动发布时顺手加一位；安卓打包会自动按它打 tag。
+7. 版本号在 `<div class="ver">v…` 里，改动发布时顺手加一位；安卓打包会自动按它打 tag。**`<head>` 开头的 `<meta name="dl-ver">` 必须同步改**（安装包热更新靠它比较版本，不一致时控制台报错、测试会失败）。
 8. **在分支上验证并通过 PR 发布，不要直接推 main**。以最新主线为基线，避免覆盖作者同时进行的玩法和画面改动。通过验收后直接发布正式版，作者指定保留草稿时再停在草稿。
 9. 联机战绩只能由数据库认定：客户端不写 `profiles.stats / achievements / rating`，也不直接插 `matches`（权限已收紧）。
 
@@ -63,9 +63,23 @@
 - 发出的每个输入都要先写进日志（`lsJournalSave()`），直连和中转都一样，否则刷新重连会对不上。
 - 测试：`RTC=off python3 dev/test_online.py …` 模拟打不通直连；默认时直连延迟取中转的一半（`__RTC_LAT / __RTC_JIT / __RTC_DROP`）。结果里的 `direct dc_sent delay_range stall_ms hitch_ms` 用来对比效果。
 
+## 破绽断链与掉落阶段（v2.0）
+
+- 被连时不能随时破链：只有 `chainLoose(c)` 为真才行——攻方迟疑（`c.win` ≤ `maxWin × CFG.LOOSE_AT`，默认一半）、重复同一招（`c.rep ≥ 2`）、或已到终焉。没有破绽时按破链键会记下 `d.brkWant`，`CFG.BRK_HOLD` 帧内一出现破绽就自动断。
+- 破链不再留木桩、不再瞬移到身后：原地挣断，把攻方震开（`doBreak`）。影的「替影」也不留木桩了。
+- `DROP_LEVELS` 门槛 0 / 40 / 100 / 170 / 250，守方每击充能 4 / 4 / 5 / 6 / 8，`GAIN.commit` 6。终焉由“伤害减半”改为奖励：奥义伤害 ×`DROP_LEVELS[lv].fin`（坠落 1.3、终焉 1.8）。HUD 势条在终焉正好打满。
+- 平衡检查：AI 对 AI 约 200 段连段里约 10% 打到终焉、破链约 30%（v1.9 是 0% 和 45%）。
+
+## 安卓安装包热更新（v2.0）
+
+- 安装包里的 `index.html` 只是保底版本。启动 3 秒后 `hotUpdate()` 从 Pages（国内连不上时换 jsDelivr）下载最新 `index.html` 存进 localStorage（`dl-hot-*`），提示「重启更新」；下次启动 `<head>` 开头的加载器用 `document.write` 换成新版。连续两次没活过 4 秒就退回安装包版本。
+- `dl-shell` 是安装包外壳版本：新版需要安装包里新增文件 / 插件 / 原生改动时加一，旧安装包不会套用它，改为提示下载新 APK（`appUpdateCheck`）。
+- 只在 `https://localhost`（Capacitor）里生效；测试用 `window.__HOT_FORCE`，见 `dev/test_hot_update.py`。
+- 安装包目前是调试签名，每次构建签名都不同，装新 APK 前要先卸载旧版。配好 GitHub Secrets 里的正式签名后就能直接覆盖安装。
+
 ## 待办（给 Codex）
 
-- **联机协议**：v1.7 地面战斗使用协议 15。修改确定性对战规则时，同步更新大厅、房间、开局参数和匹配协议。先部署兼容旧客户端的数据库迁移，再发布客户端。
+- **联机协议**：v2.0 使用协议 16。数据库从 `20261124000000_protocol_range.sql` 起接受 14–30，修改确定性对战规则时只需把客户端 `ONLINE_PROTOCOL` 加一（大厅频道名、房间、匹配都会跟着隔开）；超过 30 再加迁移。
 
 ## 正式发布与 Claude 交接
 
@@ -86,6 +100,7 @@ python3 dev/test_online.py 50 40 quick 0.15   # 快速匹配 + 844×390 排行�
 RTC=off python3 dev/test_online.py 100 40 no 0.1  # 直连打不通，只走服务器中转
 python3 dev/test_friends.py
 python3 dev/test_accounts_rooms.py
+python3 dev/test_hot_update.py           # 安装包热更新：新版接管、坏版本退回、旧缓存清理
 ```
 
 `dev/test_online.py` 会用 `dev/mock-supabase.js` 替换真实的 supabase-js，不需要联网，也不需要 Supabase 项目。
