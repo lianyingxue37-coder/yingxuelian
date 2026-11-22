@@ -30,6 +30,7 @@
 - `判定`（`hitRect` / `hurtRect` / `resolveHits`）、`核心：连段 / 暂存 / 掉落 / 破链`
 - `外援 AS`、`AI`、`特效`、`回合流程`、`主循环`（`step` → `simStep`，`clampAll`）
 - 绘制：场景、`角色专属技能表现 SK`、`技能化：每人三个技能`（`KIT` 技能表、冷却、技能实体 `G.ents` 里 `id: 'SK'`）、角色、粒子、HUD
+- `忍术化（v1.3）`：结印（`wpose: 'sealW'`）、术名（`jn`）、各技能的画法 `NJ_DRAW` / `NJ_FRONT`、奥义演出 `G.cine`（`njUltStart` / `njCineTick` / `NJ_ULT`）、替身术 `njSubstitute`
 - 界面与事件、全屏、虚拟摇杆
 - **`账户 · 战绩 · 成就 · 联机（Supabase）`**：`SUPA` / `ACC` / `REC` / `ACH` / `NET` / `ROOM` / `LS`
   - 战绩：本机记录 + 服务器结算（`onlineResult` → `submit_online_result`，待提交的报告存本机重试）
@@ -43,6 +44,7 @@
 3. **离线必须能玩**：`SUPA.URL` 为空时 `ACC.state === 'off'`，账户和联机显示「未开通」，其它模式完全不受影响。
 4. **不要提交任何密钥**：客户端只用 anon / publishable key。`service_role`、数据库密码、签名证书一律不进仓库（用 Supabase 后台或 GitHub Secrets）。
 5. 保留 `window.DUANLIAN` 现有字段（测试依赖它）。
+   奥义演出 `G.cine` 期间 `simStep` 只推进演出帧（双方同一帧开始、同样长度）；改演出长度或替身落点时，两边必须仍然一致。
 6. 界面文字用中文，语气和现有文案一致；手机横屏（844×390）也要能用。
 7. 版本号在 `<div class="ver">v…` 里，改动发布时顺手加一位；安卓打包会自动按它打 tag。
 8. **在分支上工作并开 PR，不要直接推 main**——作者那边同时在改玩法和画面（主要在 `index.html` 前半部分），你的改动尽量集中在「账户 · 战绩 · 成就 · 联机」那一段，避免冲突。
