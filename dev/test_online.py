@@ -11,7 +11,7 @@ import time
 
 from playwright.async_api import async_playwright
 
-URL = "http://127.0.0.1:8765/index.html"
+URL = os.environ.get("URL", "http://127.0.0.1:8765/index.html")
 LAT = int(sys.argv[1]) if len(sys.argv) > 1 else 60
 JIT = int(sys.argv[2]) if len(sys.argv) > 2 else 30
 ACTION = sys.argv[3] if len(sys.argv) > 3 else "no"
@@ -38,13 +38,14 @@ FINISH = """() => {
     page: G.page, final: LS.final, desync: LS.desync, sent: window.__sent ?? 0,
     input: LS.sentAtEnd, input_per_s: +(LS.sentAtEnd / LS.elapsed).toFixed(2), verdict: LS.verdict, onG: ACC.profile?.stats.onG ?? 0,
     onW: ACC.profile?.stats.onW ?? 0, rating: ACC.profile?.rating,
-    input_delay: LS.D, peak_sync_wait_ms: Math.round(window.__peakSyncWait ?? 0)
+    input_delay: LS.D, peak_sync_wait_ms: Math.round(window.__peakSyncWait ?? 0),
+    hitch_ms: window.__hitch || 0, direct: !!LS.rtcEver, dc_sent: LS.dcSent ?? 0, stall_ms: Math.round(LS.stallMs ?? 0), stalls: LS.stalls ?? 0, delay_range: [LS.dMin, LS.dMax], rtt: Math.round(LS.rtt ?? 0)
   };
 }"""
 
 
 async def local_only(route):
-    if route.request.url.startswith("http://127.0.0.1:8765/"):
+    if route.request.url.startswith(URL.rsplit("/", 1)[0] + "/"):
         await route.continue_()
     else:
         await route.fulfill(status=200, body="")
@@ -73,6 +74,11 @@ async def main():
         await ctx.route("**/*", local_only)
         await ctx.add_init_script(path=Path(__file__).with_name("mock-supabase.js"))
         await ctx.add_init_script(f"window.__LAT={LAT}; window.__JIT={JIT}; window.__DROP={DROP};")
+        # 直连（WebRTC）：RTC=off 模拟打不通，只走服务器；否则直连的延迟按服务器中转的一半模拟
+        if os.environ.get('RTC') == 'off':
+            await ctx.add_init_script('delete window.RTCPeerConnection;')
+        else:
+            await ctx.add_init_script(f"window.__RTC_LAT={max(5, LAT // 2)}; window.__RTC_JIT={JIT // 2}; window.__RTC_DROP={DROP};")
         a, b = await ctx.new_page(), await ctx.new_page()
         errors = {"A": [], "B": []}
         for name, page in (("A", a), ("B", b)):
@@ -119,6 +125,7 @@ async def main():
               setInterval(() => {
                 const {LS} = DUANLIAN;
                 if (LS.on) window.__peakSyncWait = Math.max(window.__peakSyncWait, LS.wait);
+                if (LS.on && LS.frame > 120 && LS.wait > 60) window.__hitch = (window.__hitch || 0) + 70;   // 对局中画面停住超过 60ms 的累计时长（粗略）
               }, 70);
             }""")
         print("room", await a.evaluate("DUANLIAN.ROOM.code"), flush=True)
