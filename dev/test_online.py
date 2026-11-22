@@ -1,7 +1,7 @@
 """用模拟 Supabase 的两个浏览器页面打完联机对战。
 
 先在仓库根目录启动 python -m http.server 8765，然后运行：
-  python dev/test_online.py [延迟ms=60] [抖动ms=30] [no|kill|reload|quick] [丢包率=0]
+  python dev/test_online.py [延迟ms=60] [抖动ms=30] [no|kill|reload|quick|mixed] [丢包率=0]
 """
 import asyncio
 import os
@@ -49,6 +49,20 @@ async def local_only(route):
         await route.fulfill(status=200, body="")
 
 
+async def configure_graphics(page, graphics, fps):
+    await page.click('#PG_TITLE [data-go="PG_SETTINGS"]')
+    await page.locator("#SET_GRAPHICS").select_option(label=graphics)
+    await page.locator("#SET_FPS").select_option(label=f"{fps} FPS")
+    await page.click("#PG_SETTINGS [data-back]")
+
+
+async def assert_mixed_graphics(a, b):
+    prefs = "() => { const {GRAPHICS, FPS_LIMIT} = DUANLIAN.CFG; return [GRAPHICS, FPS_LIMIT, document.querySelector('#cv').width]; }"
+    low, high = await asyncio.gather(a.evaluate(prefs), b.evaluate(prefs))
+    assert low[:2] == ["low", 30] and high[:2] == ["high", 60], (low, high)
+    assert low[2] < high[2], (low, high)
+
+
 async def main():
     async with async_playwright() as p:
         chrome = os.environ.get("CHROME")
@@ -64,6 +78,10 @@ async def main():
             page.on("pageerror", lambda e, n=name: errors[n].append(str(e)))
             page.on("console", lambda m, n=name: m.type == "error" and errors[n].append(m.text))
         await asyncio.gather(a.goto(URL), b.goto(URL))
+
+        if ACTION == "mixed":
+            await configure_graphics(a, "低", 30)
+            await configure_graphics(b, "高", 60)
 
         await a.click("#accChip")
         await a.click('[data-acctab="up"]')
@@ -105,6 +123,9 @@ async def main():
         await asyncio.gather(*(page.wait_for_function("DUANLIAN.LS.on") for page in (a, b)))
         start = time.monotonic()
 
+        if ACTION == "mixed":
+            await assert_mixed_graphics(a, b)
+
         if ACTION in ("reload", "kill"):
             await b.wait_for_function("DUANLIAN.LS.frame >= 300")
             if ACTION == "reload":
@@ -136,6 +157,9 @@ async def main():
         else:
             assert states[0]["verdict"] == "unverified" and states[0]["onG"] == 0, states
         print(f"match duration {elapsed:.2f}s, broadcasts sent per player " + ", ".join(str(s["input"]) for s in states), flush=True)
+        if ACTION == "mixed":
+            await assert_mixed_graphics(a, b)
+            print("local graphics and FPS stayed independent", flush=True)
         if ACTION == "quick":
             await a.click("#btnToTitle")
             await a.click("#onRank")
