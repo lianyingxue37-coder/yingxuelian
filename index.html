@@ -4287,7 +4287,12 @@ function touchDim() {
    账户 · 战绩 · 成就 · 联机（Supabase）
    SUPA 填好项目网址和公开 key（anon / publishable）即可启用；留空时这些功能显示为「未开通」。
    ============================================================ */
-const SUPA = { URL: '', KEY: '', EMAIL_AUTH: false, ...(window.DUANLIAN_SUPA || {}) };
+const SUPA = {
+  URL: 'https://wrybcmfmxugsjfmphmmd.supabase.co',
+  KEY: 'sb_publishable_vC-9uueAMNEUr9_6O35j5w_NW1wBaCo',
+  EMAIL_AUTH: false,
+  ...(window.DUANLIAN_SUPA || {})
+};
 const ACC = { sb: null, user: null, profile: null, state: 'off', err: '', tab: 'in', edit: false, recent: null, challenge: null, busy: false };
 const UNAME = /^[a-z0-9_]{3,16}$/;
 const uEmail = u => `${u}@players.duanlian.game`;
