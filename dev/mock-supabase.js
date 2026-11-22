@@ -8,14 +8,15 @@
   let session = JSON.parse(SS.getItem('mock.session') || 'null'); const authCbs = [];
   const setSess = s => { session = s; SS.setItem('mock.session', JSON.stringify(s)); authCbs.forEach(cb => cb(s ? 'SIGNED_IN' : 'SIGNED_OUT', s)); };
   class Q {
-    constructor(t) { this.t = t; this.op = 'select'; this.f = []; this.p = null; this.one = 0; this.ord = null; this.lim = 0; }
+    constructor(t) { this.t = t; this.op = 'select'; this.f = []; this.fin = null; this.p = null; this.one = 0; this.ord = null; this.lim = 0; }
     select() { return this; } insert(o) { this.op = 'insert'; this.p = o; return this; } update(o) { this.op = 'update'; this.p = o; return this; }
-    eq(k, v) { this.f.push([k, v]); return this; } order(k, o) { this.ord = [k, o && o.ascending === false ? -1 : 1]; return this; } limit(n) { this.lim = n; return this; }
+    eq(k, v) { this.f.push([k, v]); return this; } in(k, a) { this.fin = [k, a]; return this; } delete() { this.op = 'delete'; return this; } order(k, o) { this.ord = [k, o && o.ascending === false ? -1 : 1]; return this; } limit(n) { this.lim = n; return this; }
     single() { this.one = 1; return this; } maybeSingle() { this.one = 2; return this; }
     then(a, b) { return new Promise(r => setTimeout(() => r(this.exec()), 20)).then(a, b); }
     exec() {
-      const rows = LS_.get('t.' + this.t, []), ok = r => this.f.every(([k, v]) => r[k] === v); let out;
-      if (this.op === 'insert') { const o = { ...this.p, created_at: new Date().toISOString() }; if (this.t === 'matches') { o.id = rows.length + 1; o.user_id = o.user_id || (session && session.user.id); } rows.push(o); LS_.set('t.' + this.t, rows); out = [o]; }
+      const rows = LS_.get('t.' + this.t, []), ok = r => this.f.every(([k, v]) => r[k] === v) && (!this.fin || this.fin[1].includes(r[this.fin[0]])); let out;
+      if (this.op === 'insert') { const o = { ...this.p, created_at: new Date().toISOString() }; if (this.t !== 'profiles' && o.id == null) o.id = rows.reduce((m, r) => Math.max(m, r.id || 0), 0) + 1; if (this.t === 'matches') o.user_id = o.user_id || (session && session.user.id); if (this.t === 'friendships') { o.status = o.status || 'pending'; if (rows.some(r => (r.requester === o.requester && r.addressee === o.addressee) || (r.requester === o.addressee && r.addressee === o.requester))) return { data: null, error: { message: 'duplicate key value violates unique constraint' } }; } rows.push(o); LS_.set('t.' + this.t, rows); out = [o]; }
+      else if (this.op === 'delete') { out = rows.filter(ok); LS_.set('t.' + this.t, rows.filter(r => !ok(r))); }
       else if (this.op === 'update') { out = []; rows.forEach(r => { if (ok(r)) { Object.assign(r, this.p); out.push(r); } }); LS_.set('t.' + this.t, rows); }
       else { out = rows.filter(ok); if (this.ord) { const [k, d] = this.ord; out.sort((x, y) => (x[k] < y[k] ? -1 : 1) * d); } if (this.lim) out = out.slice(0, this.lim); }
       let data = out; if (this.one) { if (!out.length) return this.one === 2 ? { data: null, error: null } : { data: null, error: { message: 'no rows' } }; data = out[0]; }
