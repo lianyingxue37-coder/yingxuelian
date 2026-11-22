@@ -3,6 +3,9 @@
 请先读 `AGENTS.md`（结构、硬性规则、怎么测试）。这份是本轮任务：**在不影响离线玩法的前提下，把账户 / 战绩 / 联机的后端做成“服务器说了算”、更省流量、更稳**。
 在分支 `codex/backend-v2` 上完成，开一个 PR，PR 描述里写清楚：改了什么、怎么部署（要在 Supabase 里跑哪些 SQL）、怎么验证。
 
+> **v1.1 更新（Claude 已推到 main）**：新增好友系统（`friendships` 表 + RLS，见 `supabase_setup.sql` 第 4 节；`index.html` 里的「好友」一段；`dev/test_friends.py`），以及好友切磋房间（`ROOM.spar`，不计战绩）。另外角色招式改成了技能（飞行物 / 区域 / 陷阱等，作为 `G.ents` 里 `id: 'SK'` 的实体参与确定性模拟）。
+> 开 PR 前请先 `git fetch && git rebase origin/main`，并把 `friendships` 纳入你的迁移文件和测试；好友切磋的结果也不要计入排行。
+
 ## 现状（v1.0）
 
 **认证**：Supabase Auth。账号名 `u` 映射成假邮箱 `${u}@players.duanlian.game` + 密码注册 / 登录；后台必须关闭 Confirm email。

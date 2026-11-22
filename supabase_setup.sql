@@ -65,5 +65,27 @@ drop policy if exists "matches_insert_own" on public.matches;
 create policy "matches_insert_own" on public.matches for insert with check (auth.uid() = user_id);
 create index if not exists matches_user_time on public.matches (user_id, created_at desc);
 
--- 4. 检查：能看到两张表就说明建好了
-select table_name from information_schema.tables where table_schema = 'public' and table_name in ('profiles', 'matches');
+
+-- 4. 好友（v1.1 新增；重复运行也没关系）
+create table if not exists public.friendships (
+  id bigint generated always as identity primary key,
+  requester uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  addressee uuid not null references auth.users (id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'accepted')),
+  created_at timestamptz not null default now(),
+  constraint friendships_not_self check (requester <> addressee)
+);
+create unique index if not exists friendships_pair on public.friendships (least(requester, addressee), greatest(requester, addressee));
+create index if not exists friendships_addressee on public.friendships (addressee);
+alter table public.friendships enable row level security;
+drop policy if exists "friendships_select_own" on public.friendships;
+create policy "friendships_select_own" on public.friendships for select using (auth.uid() in (requester, addressee));
+drop policy if exists "friendships_insert_request" on public.friendships;
+create policy "friendships_insert_request" on public.friendships for insert with check (auth.uid() = requester and status = 'pending');
+drop policy if exists "friendships_accept" on public.friendships;
+create policy "friendships_accept" on public.friendships for update using (auth.uid() = addressee) with check (auth.uid() = addressee and status = 'accepted');
+drop policy if exists "friendships_delete_own" on public.friendships;
+create policy "friendships_delete_own" on public.friendships for delete using (auth.uid() in (requester, addressee));
+
+-- 5. 检查：能看到三张表就说明都建好了
+select table_name from information_schema.tables where table_schema = 'public' and table_name in ('profiles', 'matches', 'friendships');

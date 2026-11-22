@@ -11,13 +11,14 @@
 
 | 文件 | 作用 |
 |---|---|
-| `index.html` | **整个游戏**（约 3900 行，HTML + CSS + JS 都在里面，没有构建步骤） |
+| `index.html` | **整个游戏**（约 4300 行，HTML + CSS + JS 都在里面，没有构建步骤） |
 | `sw.js` / `manifest.webmanifest` / `icon-*.png` | PWA |
 | `download.html` | 安装包下载页（二维码） |
 | `supabase_setup.sql` | 当前的 Supabase 建表脚本（profiles、matches、注册触发器、RLS） |
 | `.github/workflows/android.yml` | push 到 main 后自动打 APK 并发布到 Releases（版本号取自 `<div class="ver">vX.Y`） |
 | `dev/mock-supabase.js` | 本地测试用的假 supabase-js（BroadcastChannel 模拟 Realtime，可调延迟、抖动、丢包） |
 | `dev/test_online.py` | Playwright：两个页面注册、进大厅、开房间、打完一整局，检查两边是否同步 |
+| `dev/test_friends.py` | Playwright：加好友 → 同意 → 邀请切磋 → 打一局（不计战绩）→ 加入好友房间 → 删除好友 |
 
 ## index.html 分区（按出现顺序，搜索注释标题即可定位）
 
@@ -26,11 +27,11 @@
 - `角色实体`（`class Fighter`：`update` / `neutral` / `startMove` / `updMove`）
 - `判定`（`hitRect` / `hurtRect` / `resolveHits`）、`核心：连段 / 暂存 / 掉落 / 破链`
 - `外援 AS`、`AI`、`特效`、`回合流程`、`主循环`（`step` → `simStep`，`clampAll`）
-- 绘制：场景、`角色专属技能表现 SK`、角色、粒子、HUD
+- 绘制：场景、`角色专属技能表现 SK`、`技能化：每人三个技能`（`KIT` 技能表、冷却、技能实体 `G.ents` 里 `id: 'SK'`）、角色、粒子、HUD
 - 界面与事件、全屏、虚拟摇杆
 - **`账户 · 战绩 · 成就 · 联机（Supabase）`**：`SUPA` / `ACC` / `REC` / `ACH` / `NET` / `ROOM` / `LS`
   - `战绩与成就：本地缓存 + 云端同步`
-  - `房间`、`帧同步（lockstep）`、`联机大厅界面`
+  - `房间`、`帧同步（lockstep）`、`联机大厅界面`、`好友`（`friendships` 表、`fr*` 函数、好友切磋 `ROOM.spar`）
 - 最后是 `window.DUANLIAN = {...}`（调试 / 测试接口，**不要删**）
 
 ## 硬性规则
