@@ -1,6 +1,6 @@
 // 测试用：模拟 supabase-js 的一小部分（auth / from / rpc / channel，含好友表权限），频道消息用 BroadcastChannel，带可调延迟
 (() => {
-  window.DUANLIAN_SUPA = { URL: 'mock', KEY: 'mock' };
+  window.DUANLIAN_SUPA = { URL: 'mock', KEY: 'mock', ...window.DUANLIAN_SUPA };
   const LS_ = { get(k, d) { try { const v = localStorage.getItem('mock.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { localStorage.setItem('mock.' + k, JSON.stringify(v)); } };
   const lat = () => (window.__LAT ?? 50) + Math.random() * (window.__JIT ?? 30);
   const uuid = () => crypto.randomUUID();
@@ -58,13 +58,81 @@
       return this.done(all.filter(ok));
     }
   }
-function rpcExec(name, a) {
+
+  const mockRooms = () => LS_.get('t.rooms', []);
+  const saveRooms = rows => LS_.set('t.rooms', rows);
+  const roomLive = r => r && r.hostUntil > Date.now();
+  const seatLive = r => r?.guest && r.guestUntil > Date.now();
+  const roomMember = (r, uid) => roomLive(r) && (r.host === uid || (seatLive(r) && r.guest === uid));
+  const friendsWith = (a, b) => LS_.get('t.friendships', []).some(f => f.status === 'accepted'
+    && ((f.requester === a && f.addressee === b) || (f.requester === b && f.addressee === a)));
+  function makeRoom(id, host, guest, spar) {
+    const rooms = mockRooms().filter(r => roomLive(r) && r.host !== host);
+    let code;
+    do { code = String(1000 + Math.floor(Math.random() * 9000)); } while (rooms.some(r => r.code === code));
+    const r = { id, host, guest, spar, code, matched: !!guest, hostUntil: Date.now() + 90000, guestUntil: guest ? Date.now() + 90000 : 0 };
+    rooms.push(r); saveRooms(rooms); return r;
+  }
+  function roomRPC(name, args, uid, profiles) {
+    const rooms = mockRooms(), r = rooms.find(x => x.id === args.p_room);
+    const ok = data => ({ data, error: null });
+    const view = r => ({ id: r.id, host: r.host, guest: seatLive(r) ? r.guest : null, spar: r.spar, matched: r.matched, code: r.code });
+    if (name === 'room_create') return ok(view(makeRoom(uuid(), uid, null, !!args.p_spar)));
+    if (name === 'room_enter') {
+      const target = rooms.find(row => row.code === args.p_code && (!args.p_room || row.id === args.p_room));
+      if (!roomLive(target)) return ok({ status: 'missing' });
+      if (target.host === uid) return ok(view(target));
+      if (target.spar && !friendsWith(uid, target.host)) return ok({ status: 'friends_only' });
+      if ((target.matched || seatLive(target)) && target.guest !== uid) return ok({ status: 'full' });
+      if (target.inviteUntil > Date.now() && target.invited !== uid && target.guest !== uid) return ok({ status: 'reserved' });
+      Object.assign(target, { guest: uid, guestUntil: Date.now() + 90000, invited: null, inviteUntil: 0 });
+      saveRooms(rooms); return ok(view(target));
+    }
+    if (name === 'room_touch') {
+      if (!roomMember(r, uid)) return ok(null);
+      r[r.host === uid ? 'hostUntil' : 'guestUntil'] = Date.now() + 90000;
+      saveRooms(rooms); return ok(view(r));
+    }
+    if (name === 'room_exit') {
+      if (r?.host === uid || (r?.matched && r.guest === uid)) saveRooms(rooms.filter(x => x !== r));
+      else if (r?.guest === uid) { r.guest = null; r.guestUntil = 0; saveRooms(rooms); }
+      return ok(null);
+    }
+    if (name === 'room_invite') {
+      const allowed = roomLive(r) && r.host === uid && !r.matched && !seatLive(r) && args.p_guest !== uid
+        && profiles.some(p => p.id === args.p_guest) && (!r.spar || friendsWith(uid, args.p_guest));
+      if (allowed) { r.invited = args.p_guest; r.inviteUntil = Date.now() + 45000; saveRooms(rooms); }
+      return ok(!!allowed);
+    }
+    if (name === 'room_invites') return ok(rooms.filter(r => roomLive(r) && r.invited === uid
+      && r.inviteUntil > Date.now() && (!r.spar || friendsWith(uid, r.host)))
+      .sort((a, b) => b.inviteUntil - a.inviteUntil)
+      .map(r => {
+        const p = profiles.find(x => x.id === r.host);
+        return { id: r.id, code: r.code, spar: r.spar, uid: r.host, nick: p.nickname,
+          avatar: p.avatar, title: p.title, expires: new Date(r.inviteUntil).toISOString() };
+      }));
+    if (name === 'room_decline') {
+      if (r?.invited === uid) { r.invited = null; r.inviteUntil = 0; saveRooms(rooms); }
+      return ok(null);
+    }
+    return { data: null, error: { message: 'Unknown RPC ' + name } };
+  }
+
+  function rpcExec(name, a) {
     const uid = session?.user.id;
     const deny = () => ({ data: null, error: { code: '42501', message: 'permission denied' } });
     if (!uid) return deny();
     const read = k => LS_.get('t.' + k, []);
     const save = (k, rows) => LS_.set('t.' + k, rows);
     const profiles = read('profiles'), mine = profiles.find(p => p.id === uid);
+    if (name === 'room_start') {
+      const room = mockRooms().find(r => r.id === a.p_room);
+      if (!roomLive(room) || room.host !== uid || !seatLive(room) || room.spar !== a.p_setup.spar
+          || (room.spar && !friendsWith(room.host, room.guest))) return deny();
+      a = { ...a, p_code: room.code, p_guest: room.guest }; name = 'online_open';
+    }
+    if (name.startsWith('room_')) return roomRPC(name, a, uid, profiles);
     const games = read('games'), game = games.find(g => g.id === a.p_game);
     const matches = read('matches');
     let data = null;
@@ -121,23 +189,26 @@ function rpcExec(name, a) {
         stage: a.p_stage, verified: false, created_at: new Date().toISOString() });
       save('matches', matches);
     } else if (['mm_join', 'mm_leave', 'mm_poll'].includes(name)) {
-      const now = Date.now();
+      const now = Date.now(), protocol = a.p_protocol ?? 13;
       const queue = read('queue').filter(x => x.assignment ? now - x.assignedAt < 15000 : now - x.seen < 8000);
       const row = queue.find(x => x.uid === uid);
       if (name === 'mm_join') {
-        if (!row) queue.push({ uid, at: now, seen: now, rating: mine.rating });
-        else Object.assign(row, { seen: now, at: row.assignment ? now : row.at, assignment: null });
+        if (!row) queue.push({ uid, protocol, at: now, seen: now, rating: mine.rating });
+        else Object.assign(row, { seen: now, protocol, at: row.assignment || row.protocol !== protocol ? now : row.at, assignment: null });
       } else if (name === 'mm_leave') {
         if (row) queue.splice(queue.indexOf(row), 1);
-      } else if (!row) data = { status: 'idle' };
+      } else if (!row || row.protocol !== protocol) data = { status: 'idle' };
       else {
         row.seen = now;
-        const peer = queue.filter(x => x !== row && !x.assignment
+        const peer = queue.filter(x => x !== row && x.protocol === protocol && !x.assignment
           && Math.abs(x.rating - row.rating) <= 100 + 100 * Math.floor((now - Math.min(x.at, row.at)) / 10000))
           .sort((a, b) => Math.abs(a.rating - row.rating) - Math.abs(b.rating - row.rating) || a.at - b.at || a.uid.localeCompare(b.uid))[0];
         if (!row.assignment && peer) {
           const host = row.at < peer.at || (row.at === peer.at && row.uid < peer.uid);
-          const assignment = { status: 'matched', pair: crypto.randomUUID(), code: String(1000 + Math.floor(Math.random() * 9000)) };
+          const pair = crypto.randomUUID();
+          const code = protocol === 14 ? makeRoom(pair, host ? uid : peer.uid, host ? peer.uid : uid, false).code
+            : String(1000 + Math.floor(Math.random() * 9000));
+          const assignment = { status: 'matched', pair, code };
           row.assignment = { ...assignment, host, peer: peer.uid };
           peer.assignment = { ...assignment, host: !host, peer: row.uid };
           row.assignedAt = peer.assignedAt = now;
@@ -163,7 +234,16 @@ function rpcExec(name, a) {
     }
     const ch = {
       on(type, filter, cb) { hs.push({ type, ev: filter.event, cb }); return ch; },
-      subscribe(cb) { setTimeout(() => { cb && cb('SUBSCRIBED'); post({ k: 'hello' }); }, lat()); return ch; },
+      subscribe(cb) {
+        setTimeout(() => {
+          if (closed) return;
+          if (name.startsWith('duanlian-room:') && !roomMember(mockRooms().find(r => r.id === name.slice(14)), session?.user.id)) {
+            cb?.('CHANNEL_ERROR'); return;
+          }
+          cb?.('SUBSCRIBED'); post({ k: 'hello' });
+        }, lat());
+        return ch;
+      },
       async track(meta) { my = meta; pres[key] = [meta]; post({ k: 'pres', key, meta }); syncs(); return 'ok'; },
       presenceState() { return JSON.parse(JSON.stringify(pres)); },
       async send(m) { post({ k: 'bc', event: m.event, payload: m.payload }); return 'ok'; },
@@ -172,22 +252,61 @@ function rpcExec(name, a) {
     chans.add(ch); return ch;
   }
   addEventListener('pagehide', () => chans.forEach(c => c.unsubscribe()));
-  const client = {
-    auth: {
-      async getSession() { return { data: { session } }; },
+
+  function mockAuth(persist) {
+    let temporary = null;
+    const current = () => persist ? session : temporary;
+    const set = value => { if (persist) setSess(value); else temporary = value; };
+    const signIn = u => {
+      const s = { user: { id: u.id, email: u.email, user_metadata: u.user_metadata, identities: [{}] } };
+      set(s); return { data: { user: s.user, session: s }, error: null };
+    };
+    const authError = message => ({ data: {}, error: { message } });
+    const readUsers = () => LS_.get('users', []);
+    return {
+      async getSession() { return { data: { session: current() } }; },
       onAuthStateChange(cb) { authCbs.push(cb); return { data: { subscription: { unsubscribe() {} } } }; },
       async signUp({ email, password, options }) {
-        const us = LS_.get('users', []); if (us.find(u => u.email === email)) return { data: {}, error: { message: 'User already registered' } };
-        const u = { id: uuid(), email, password, user_metadata: (options && options.data) || {} }; us.push(u); LS_.set('users', us);
-        const rows = LS_.get('t.profiles', []); const m = u.user_metadata; rows.push({ id: u.id, username: m.username, nickname: m.nickname || m.username, avatar: m.avatar || 'CH_JIN', title: null, rating: 1000, stats: {}, achievements: {}, created_at: new Date().toISOString() }); LS_.set('t.profiles', rows);
-        const s = { user: { id: u.id, email, user_metadata: u.user_metadata, identities: [{}] } }; setSess(s); return { data: { user: s.user, session: s }, error: null };
+        const us = readUsers(), m = options?.data || {};
+        if (us.some(u => u.email === email || u.user_metadata.username === m.username)) return authError('User already registered');
+        const verified = email.endsWith('@players.duanlian.game');
+        const u = { id: uuid(), email, password, user_metadata: m, verified }; us.push(u); LS_.set('users', us);
+        const rows = LS_.get('t.profiles', []);
+        rows.push({ id: u.id, username: m.username, nickname: m.nickname || m.username, avatar: m.avatar || 'CH_JIN',
+          title: null, rating: 1000, stats: {}, achievements: {}, created_at: new Date().toISOString() });
+        LS_.set('t.profiles', rows);
+        if (verified) return signIn(u);
+        return { data: { user: { id: u.id }, session: null }, error: null };
       },
-      async signInWithPassword({ email, password }) { const u = LS_.get('users', []).find(x => x.email === email && x.password === password); if (!u) return { data: {}, error: { message: 'Invalid login credentials' } }; const s = { user: { id: u.id, email, user_metadata: u.user_metadata } }; setSess(s); return { data: { user: s.user, session: s }, error: null }; },
-      async signOut() { setSess(null); return { error: null }; },
-    },
+      async signInWithPassword({ email, password }) {
+        const u = readUsers().find(x => x.email === email && x.password === password);
+        if (!u) return authError('Invalid login credentials');
+        if (u.verified === false) return authError('Email not confirmed');
+        return signIn(u);
+      },
+      async resend() { return { error: null }; },
+      async resetPasswordForEmail(email) { LS_.set('recover.email', email); return { error: null }; },
+      async verifyOtp({ email, token, type }) {
+        const us = readUsers(), u = us.find(x => x.email === email);
+        const allowed = type === 'signup' ? u?.verified === false : type === 'recovery' && u?.verified && LS_.get('recover.email', '') === email;
+        if (!allowed || token !== '384759') return authError('OTP expired');
+        if (type === 'recovery') LS_.set('recover.email', '');
+        else { u.verified = true; LS_.set('users', us); }
+        return signIn(u);
+      },
+      async updateUser({ password, current_password }) {
+        const us = readUsers(), u = us.find(x => x.id === current()?.user.id);
+        if (!u || (persist && current_password !== u.password)) return authError('current password mismatch');
+        u.password = password; LS_.set('users', us); return { data: { user: current().user }, error: null };
+      },
+      async signOut() { set(null); return { error: null }; },
+    };
+  }
+  const client = {
+    auth: mockAuth(true),
     from: t => new Q(t), channel, removeChannel(ch) { ch.unsubscribe(); },
     realtime: { async setAuth() {} },
     rpc: (name, args = {}) => new Promise(resolve => setTimeout(() => resolve(rpcExec(name, args)), 20)),
   };
-  window.supabase = { createClient: () => client };
+  window.supabase = { createClient: (_url, _key, options) => options?.auth?.persistSession === false ? { auth: mockAuth(false) } : client };
 })();

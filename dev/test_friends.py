@@ -60,7 +60,9 @@ async def main():
             if pa == 'PG_RESULT' and pb == 'PG_RESULT': break
         fa = await ev(A, "{page:G.page, verify:document.querySelector('#resVerify').textContent, verdict:LS.verdict, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp)), onG:ACC.profile?.stats.onG ?? 0, reports:JSON.parse(localStorage.getItem('duanlian.report.' + ACC.user.id) || '[]').length}")
         fb = await ev(B, "{page:G.page, verdict:LS.verdict, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp))}")
-        print('result A', fa, '| B', fb, '| 不计战绩', fa['onG'] == onG0 and fa['verdict'] == 'spar' and fb['verdict'] == 'spar' and fa['reports'] == 0)
+        unrated = fa['onG'] == onG0 and fa['verdict'] == 'spar' and fb['verdict'] == 'spar' and fa['reports'] == 0
+        print('result A', fa, '| B', fb, '| 不计战绩', unrated)
+        assert unrated and not fa['desync'] and not fb['desync'], (fa, fb)
         await A.screenshot(path=f'{OUT}/fr_A_result.png')
         # B 开切磋房间，A 在好友列表里直接「加入」
         await run(A, "document.querySelector('#btnToTitle').click()"); await run(B, "document.querySelector('#btnToTitle').click()"); await A.wait_for_timeout(800)
@@ -73,6 +75,8 @@ async def main():
         await run(A, "roomLeave(); NET.tab='friends'; go('PG_ONLINE')"); await A.wait_for_timeout(600)
         await A.click('[data-frdel]'); await A.wait_for_timeout(900)
         print('after delete', await ev(A, "NET.fr.rows.length"), await ev(B, "NET.fr.rows.length"))
+        assert await ev(A, "NET.fr.rows.length") == await ev(B, "NET.fr.rows.length") == 0
         print('errors', {k: v[:5] for k, v in errs.items()})
+        assert not any(errs.values()), errs
         await b.close()
 asyncio.run(main())

@@ -14,12 +14,13 @@
 | `index.html` | **整个游戏**（约 4900 行，HTML + CSS + JS 都在里面，没有构建步骤） |
 | `sw.js` / `manifest.webmanifest` / `icon-*.png` | PWA |
 | `download.html` | 安装包下载页（二维码） |
-| `supabase_setup.sql` | 完整建库 / 升级脚本（可重复运行）：资料、战绩、服务器结算与 Elo、匹配、限流、私有对局频道、好友。和 `supabase/migrations/20261121000000_backend_v2.sql` 内容一致，改一个就同步另一个 |
+| `supabase_setup.sql` | 完整建库 / 升级脚本（可重复运行）：资料、战绩、服务器结算与 Elo、匹配、限流、私有对局频道、好友、服务器房间与邀请。按时间戳拼接 `supabase/migrations/` 下的迁移，增量 SQL 和完整脚本保持一致 |
 | `docs/BACKEND.md` | 后端说明：表与权限、结算规则、重连、流量估算、已知限制 |
 | `.github/workflows/android.yml` | push 到 main 后自动打 APK 并发布到 Releases（版本号取自 `<div class="ver">vX.Y`） |
 | `dev/mock-supabase.js` | 本地测试用的假 supabase-js（BroadcastChannel 模拟 Realtime，可调延迟、抖动、丢包） |
 | `dev/test_online.py` | Playwright：两个页面注册、进大厅、开房间、打完一整局，检查两边是否同步 |
 | `dev/test_friends.py` | Playwright：加好友 → 同意 → 邀请切磋 → 打一局（不计战绩）→ 加入好友房间 → 删除好友 |
+| `dev/test_accounts_rooms.py` | Playwright：登录、邮箱验证、改密与找回、私有房间和邀请 |
 | `dev/test_backend.sql` | 数据库断言（在测试项目或本地 Postgres 跑，结束时回滚）：权限、双边结算、争议、过期、Elo、匹配、限流、好友、切磋不计分 |
 
 ## index.html 分区（按出现顺序，搜索注释标题即可定位）
@@ -35,7 +36,7 @@
 - 界面与事件、全屏、虚拟摇杆
 - **`账户 · 战绩 · 成就 · 联机（Supabase）`**：`SUPA` / `ACC` / `REC` / `ACH` / `NET` / `ROOM` / `LS`
   - 战绩：本机记录 + 服务器结算（`onlineResult` → `submit_online_result`，待提交的报告存本机重试）
-  - `房间`（Presence 会合，`online_open` 开局）、`帧同步（lockstep）`（私有频道、批量发包、输入日志与 20 秒重连）、匹配（`mm_*`）、排行榜、`好友`（`friendships`、`fr*`、好友切磋 `ROOM.spar` → 开局参数 `setup.spar`，服务器返回 `unrated`）
+  - `房间`（数据库房号、席位和邀请，私有 Presence，`room_start` 开局）、`帧同步（lockstep）`（私有频道、批量发包、输入日志与 20 秒重连）、匹配（`mm_*`）、排行榜、`好友`（`friendships`、`fr*`、好友切磋 `ROOM.spar` → 开局参数 `setup.spar`，服务器返回 `unrated`）
 - 最后是 `window.DUANLIAN = {...}`（调试 / 测试接口，**不要删**）
 
 ## 硬性规则
@@ -54,7 +55,7 @@
 
 ## 待办（给 Codex）
 
-- **联机版本校验**：房间和匹配目前不比对客户端版本。v1.3 和 v1.4 的对战逻辑不同，两边版本不一致时 lockstep 会不同步。建议在 `online_open` / `mm_join`（以及房间 Presence 里）带上 `APP_VER`，版本不同就提示对方更新、不开局。
+- **联机协议**：v1.5 的服务器房间与私有选人频道使用新流程，大厅和匹配队列同旧协议分开。后续调整确定性对战逻辑时同步更新协议标记，避免不同玩法版本进入同一局。
 
 ## 优化分支与 Claude 交接
 
@@ -73,6 +74,7 @@ python3 dev/test_online.py 50 40 no 0.15  # 再加 15% 丢包
 python3 dev/test_online.py 50 40 reload 0.15  # 对局中断线、刷新后恢复
 python3 dev/test_online.py 50 40 quick 0.15   # 快速匹配 + 844×390 排行榜
 python3 dev/test_friends.py
+python3 dev/test_accounts_rooms.py
 ```
 
 `dev/test_online.py` 会用 `dev/mock-supabase.js` 替换真实的 supabase-js，不需要联网，也不需要 Supabase 项目。

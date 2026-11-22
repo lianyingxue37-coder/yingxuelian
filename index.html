@@ -232,7 +232,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v1.4 · 背景为电脑自动对战演示</div>
+  <div class="ver">v1.5 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -4443,7 +4443,7 @@ function buildSelect() {
     const theirs = ROOM.host ? 2 : 1;
     $$(`#sideP${theirs} button`).forEach(b => b.disabled = true);
     if (!ROOM.host) $$('#pickStage button').forEach(b => b.disabled = true);
-    if (!ROOM.peer) $(`#sideP${theirs}`).innerHTML = `<h3><b>等待对手加入…</b></h3><p>把房间号 <b class="code">${ROOM.code}</b> 发给好友，让对方在「联机对战 → 加入房间」里输入。</p><p class="hint">也可以回大厅直接邀请在线玩家。</p><div id="frInvList">${frRoomInviteHTML()}</div>`;
+    if (!ROOM.peer) $(`#sideP${theirs}`).innerHTML = `<h3><b>等待对手加入…</b></h3><p>把房间号 <b class="code">${ROOM.code}</b> <button class="btn" id="copyRoom">复制房号</button> 发给好友，让对方在「联机对战 → 加入房间」里输入。</p><p class="hint">也可以回大厅直接邀请在线玩家。</p><div id="frInvList">${frRoomInviteHTML()}</div>`;
   }
   requestAnimationFrame(() => {
     for (const n of [1, 2]) $$(`#sideP${n} .pc canvas`).forEach((cv, i) => portrait(cv, CHARS[i], n === 2 && G.sel.p1 === CHARS[i].id));
@@ -4673,8 +4673,13 @@ function touchDim() {
    账户 · 战绩 · 成就 · 联机（Supabase）
    SUPA 填好项目网址和公开 key（anon / publishable）即可启用；留空时这些功能显示为「未开通」。
    ============================================================ */
-const SUPA = { URL: '', KEY: '', ...(window.DUANLIAN_SUPA || {}) };
-const ACC = { sb: null, user: null, profile: null, state: 'off', err: '', tab: 'in', edit: false, recent: null };
+const SUPA = {
+  URL: 'https://wrybcmfmxugsjfmphmmd.supabase.co',
+  KEY: 'sb_publishable_vC-9uueAMNEUr9_6O35j5w_NW1wBaCo',
+  EMAIL_AUTH: false,
+  ...(window.DUANLIAN_SUPA || {})
+};
+const ACC = { sb: null, user: null, profile: null, state: 'off', err: '', tab: 'in', edit: false, recent: null, challenge: null, busy: false };
 const UNAME = /^[a-z0-9_]{3,16}$/;
 const uEmail = u => `${u}@players.duanlian.game`;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -4689,60 +4694,133 @@ function loadSupabase() {
     document.head.appendChild(s);
   })), Promise.reject(new Error('start')));
 }
-const ERR_CN = [[/Invalid login credentials/i, '账号名或密码不对'], [/already registered|already been registered|already exists/i, '这个账号名已经被注册了'],
+const ERR_CN = [[/Invalid login credentials|current.password.mismatch/i, '登录名或密码不对'], [/otp.expired|token is invalid/i, '验证码错误或已过期，请重新获取'], [/already registered|already been registered|already exists/i, '这个账号名已经被注册了'],
   [/Password should be at least/i, '密码至少要 6 位'], [/rate limit|too many/i, '操作太频繁，请稍后再试'], [/Email not confirmed/i, '服务器还开着邮箱验证，请让作者在 Supabase 关闭 Confirm email'],
-  [/signups not allowed|Signups not allowed/i, '服务器暂时关闭了注册'], [/Failed to fetch|NetworkError|network/i, '连不上服务器，请检查网络'], [/Database error/i, '服务器建表还没完成，或账号名不合规']];
+  [/room codes busy/i, '房号暂时用完了，请稍后重试'], [/room unavailable/i, '房间已关闭或成员已变化'],
+  [/could not find the function/i, '服务器尚未升级，请联系作者'], [/signups not allowed/i, '服务器暂时关闭了注册'], [/Failed to fetch|NetworkError|network/i, '连不上服务器，请检查网络'], [/Database error/i, '服务器建表还没完成，或账号名不合规']];
 const errCN = e => { const m = String((e && (e.message || e.error_description)) || e || ''); const hit = ERR_CN.find(([r]) => r.test(m)); return hit ? hit[1] : (m || '出错了，请稍后再试'); };
 
+const ACC_STORAGE = 'duanlian.auth';
+function accClient(options = {}) {
+  return ACC.lib.createClient(SUPA.URL, SUPA.KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: ACC_STORAGE, ...options },
+    realtime: { params: { eventsPerSecond: 50 } }
+  });
+}
 async function accInit() {
   if (!SUPA.URL || !SUPA.KEY) { ACC.state = 'off'; recLoad(); accUI(); return; }
+  if (ACC.state === 'loading') return;
   ACC.state = 'loading'; recLoad(); accUI();
   try {
-    const lib = await loadSupabase();
-    ACC.sb = lib.createClient(SUPA.URL, SUPA.KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'duanlian.auth' }, realtime: { params: { eventsPerSecond: 50 } } });
-    const { data } = await ACC.sb.auth.getSession();
-    await accSetUser(data && data.session ? data.session.user : null);
-    // Supabase Auth can hold its lock during this callback. Defer calls to its Data API.
-    ACC.sb.auth.onAuthStateChange((ev, session) => setTimeout(() => {
-      if (ev === 'SIGNED_OUT' && ACC.user) accSetUser(null);
-      else if (session?.user && ACC.user?.id !== session.user.id) accSetUser(session.user);
-    }, 0));
-    if (ACC.user && G.page === 'PG_TITLE') lsRecover();
-  } catch (e) { ACC.state = 'err'; ACC.err = '连不上账户服务器，请检查网络后重试'; accUI(); }
+    if (!ACC.sb) {
+      ACC.lib = await loadSupabase();
+      ACC.sb = accClient();
+      // Defer Data API calls until the Auth SDK releases its session lock.
+      ACC.sb.auth.onAuthStateChange((ev, session) => setTimeout(() => {
+        if (ev === 'INITIAL_SESSION') return;
+        if (ev === 'SIGNED_OUT' && ACC.user) accSetUser(null);
+        else if (session?.user && ACC.user?.id !== session.user.id) accSetUser(session.user);
+      }, 0));
+    }
+    const { data, error } = await ACC.sb.auth.getSession();
+    if (error) throw error;
+    await accSetUser(data?.session?.user || null);
+    if (ACC.state === 'in' && G.page === 'PG_TITLE') lsRecover();
+  } catch (e) { ACC.state = 'err'; ACC.err = '账户连接失败，请检查网络后重试'; accUI(); }
 }
 async function accSetUser(user) {
-  ACC.user = user; ACC.profile = null; ACC.recent = null; ACC.edit = false;
-  if (!user) { ACC.state = ACC.sb ? 'out' : ACC.state; recLoad(); accUI(); netLeaveAll(); return; }
+  const previous = ACC.user?.id;
+  if (previous && previous !== user?.id) netLeaveAll();
+  const token = Symbol();
+  ACC.load = token;
+  ACC.user = user; ACC.profile = null; ACC.recent = null; ACC.edit = false; ACC.challenge = null;
+  ACC.state = user ? 'loading' : 'out';
   recLoad();
+  if (!user) { ACC.tab = 'in'; accUI(); return; }
   try {
     const { data, error } = await ACC.sb.from('profiles').select('*').eq('id', user.id).single();
-    if (ACC.user?.id !== user.id) return;
+    if (ACC.load !== token) return;
     if (error) throw error;
     ACC.profile = data; ACC.state = 'in';
     reportSchedule(0);
   } catch (e) {
-    if (ACC.user?.id !== user.id) return;
+    if (ACC.load !== token) return;
     ACC.state = 'err'; ACC.err = '资料读取失败：' + errCN(e);
   }
-  accUI(); if (ACC.state === 'in') { lobbyJoin(); frLoad(); }
+  accUI();
+  if (ACC.state === 'in') lobbyJoin();
 }
-async function accSignIn(u, p) {
-  const { data, error } = await ACC.sb.auth.signInWithPassword({ email: uEmail(u), password: p });
-  if (error) throw error; await accSetUser(data.user);
-}
-async function accSignUp(u, p, nick, avatar) {
-  const { data, error } = await ACC.sb.auth.signUp({ email: uEmail(u), password: p, options: { data: { username: u, nickname: nick, avatar } } });
+async function accSignIn(login, password) {
+  const email = login.includes('@') ? login : uEmail(login);
+  const { data, error } = await ACC.sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
-  if (!data.session) throw new Error('Email not confirmed');
-  if (data.user && data.user.identities && data.user.identities.length === 0) throw new Error('already registered');
   await accSetUser(data.user);
 }
-async function accSignOut() { try { await ACC.sb.auth.signOut(); } catch (e) {} await accSetUser(null); }
+async function accSignUp(u, p, nick, avatar, email = '') {
+  if (email) {
+    const { data, error } = await ACC.sb.from('profiles').select('id').eq('username', u).maybeSingle();
+    if (error) throw error;
+    if (data) throw new Error('User already registered');
+  }
+  const { data, error } = await ACC.sb.auth.signUp({
+    email: email || uEmail(u), password: p, options: { data: { username: u, nickname: nick, avatar } }
+  });
+  if (error) throw error;
+  if (email && !data.session) {
+    ACC.challenge = { kind: 'signup', email };
+    buildAccount();
+    return;
+  }
+  if (!data.session) throw new Error('Email not confirmed');
+  await accSetUser(data.user);
+}
+async function accSignOut() {
+  const { error } = await ACC.sb.auth.signOut({ scope: 'local' });
+  if (error) throw error;
+  if (ACC.user) await accSetUser(null);
+}
 async function accSaveProfile(patch) {
   const uid = ACC.user.id;
-  const { error } = await ACC.sb.from('profiles').update(patch).eq('id', uid);
+  const { data, error } = await ACC.sb.from('profiles').update(patch).eq('id', uid).select().single();
   if (error) throw error;
-  if (ACC.user?.id === uid) { Object.assign(ACC.profile, patch); accUI(); }
+  if (ACC.user?.id === uid) { ACC.profile = data; ACC.edit = false; accUI(); lobbyTrack(); }
+}
+async function accChangePassword(current, password) {
+  const user = ACC.user;
+  const { data, error } = await ACC.sb.auth.signInWithPassword({ email: user.email, password: current });
+  if (error) throw error;
+  if (data.user?.id !== user.id || ACC.user?.id !== user.id) throw new Error('账户已切换，请重新登录');
+  const { error: updateError } = await ACC.sb.auth.updateUser({ password, current_password: current });
+  if (updateError) throw updateError;
+  ACC.edit = false; accUI();
+}
+async function accSendRecovery(email) {
+  const { error } = await ACC.sb.auth.resetPasswordForEmail(email);
+  if (error) throw error;
+  ACC.challenge = { kind: 'recovery', email };
+  buildAccount();
+}
+async function accVerify(code, password) {
+  const { kind, email } = ACC.challenge;
+  if (kind === 'signup') {
+    const { data, error } = await ACC.sb.auth.verifyOtp({ email, token: code, type: kind });
+    if (error) throw error;
+    await accSetUser(data.user);
+    return;
+  }
+  // Keep the recovery session in memory and separate from the game's stored login.
+  const { auth } = accClient({ persistSession: false, autoRefreshToken: false, storageKey: ACC_STORAGE + '.recovery' });
+  const { error } = await auth.verifyOtp({ email, token: code, type: kind });
+  if (error) throw error;
+  try {
+    const { error: updateError } = await auth.updateUser({ password });
+    if (updateError) throw updateError;
+    ACC.challenge = null; ACC.tab = 'in'; buildAccount();
+  } catch (e) {
+    ACC.challenge = null; buildAccount();
+    toast('重置失败：' + errCN(e) + '，请重新获取验证码');
+    throw e;
+  } finally { await auth.signOut({ scope: 'local' }).catch(() => {}); }
 }
 
 /* ---------- 战绩与成就：联机由服务器结算，离线记录保存在设备上 ---------- */
@@ -4917,31 +4995,21 @@ function buildAccount() {
   if (ACC.state === 'err') { sub.textContent = ''; B.innerHTML = `<p class="err">${esc(ACC.err)}</p><div class="actions" style="justify-content:flex-start"><button class="btn primary" id="accRetry">重试</button></div>`; return; }
   if (ACC.state === 'out') {
     sub.textContent = '登录后可参加联机对战并同步已确认战绩';
-    const up = ACC.tab === 'up';
-    B.innerHTML = `<div class="tabs" role="tablist"><button data-acctab="in" aria-selected="${!up}">登录</button><button data-acctab="up" aria-selected="${up}">注册</button></div>
-    <form id="accForm" class="form" autocomplete="on">
-      <label><span>账号名</span><input name="u" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16" placeholder="3–16 位小写字母、数字或下划线" required></label>
-      <label><span>密码</span><input name="p" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" maxlength="64" placeholder="至少 6 位" required></label>
-      ${up ? `<label><span>昵称</span><input name="n" maxlength="12" placeholder="其他玩家看到的名字，可以用中文"></label>
-      <div class="chips"><span class="lab">头像</span>${CHARS.map((c, i) => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${i === 0}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>` : ''}
-      <p class="err" id="accErr" role="alert"></p>
-      <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">${up ? '注册并登录' : '登录'}</button></div>
-      <p class="hint">${up ? '账号名用来登录，注册后不能改；昵称、头像以后可以随时改。' : '还没有账号？点上面的「注册」。'}</p>
-    </form>${statsHTML()}`;
-    return;
+    B.innerHTML = accOutHTML(); return;
   }
   const p = ACC.profile || {}, t = titleOf(p);
   sub.textContent = '';
   const unlocked = ACH.filter(a => REC.ach[a.id] || cloudAch()[a.id]);
   B.innerHTML = `<div class="prof">${avHTML(p.avatar, 'lg')}<div class="pinfo"><b class="pnick">${esc(p.nickname)}</b>${t ? `<span class="ptitle">${esc(t)}</span>` : ''}<small>账号 ${esc(p.username)}${p.created_at ? ' · ' + new Date(p.created_at).toLocaleDateString('zh-CN') + ' 加入' : ''}</small></div>
-    <div class="pbtn"><button class="btn" data-go="PG_RANK">排行榜</button><button class="btn" id="accEditBtn">${ACC.edit ? '收起' : '编辑资料'}</button><button class="btn" id="accOut">退出登录</button></div></div>
-  ${ACC.edit ? `<form id="accEditForm" class="form">
+    <div class="pbtn"><button class="btn" data-go="PG_RANK">排行榜</button><button class="btn" id="accEditBtn">${ACC.edit === 'profile' ? '收起资料' : '编辑资料'}</button><button class="btn" id="accPasswordBtn">${ACC.edit === 'password' ? '收起改密' : '修改密码'}</button><button class="btn" id="accOut">退出登录</button></div></div>
+  ${ACC.edit === 'profile' ? `<form id="accEditForm" class="form">
     <label><span>昵称</span><input name="n" maxlength="12" value="${esc(p.nickname)}" required></label>
     <div class="chips"><span class="lab">头像</span>${CHARS.map(c => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${c.id === p.avatar}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>
     <div class="chips"><span class="lab">称号</span><button type="button" class="chip" data-ti="" aria-pressed="${!p.title}">不显示</button>${unlocked.map(a => `<button type="button" class="chip" data-ti="${a.id}" aria-pressed="${p.title === a.id}">${a.name}</button>`).join('')}</div>
     <p class="hint">${unlocked.length ? '称号来自已解锁的成就。' : '解锁成就后可以把成就名设成称号。'}</p>
-    <p class="err" id="accErr" role="alert"></p>
+    ${authFeedback}
     <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">保存</button></div></form>` : ''}
+  ${ACC.edit === 'password' ? accPasswordHTML() : ''}
   ${statsHTML(true)}
   <h3>最近对战</h3><div id="accRecent">${recentHTML()}</div>`;
   if (!ACC.recent && ACC.sb) {
@@ -4986,36 +5054,137 @@ async function buildRank() {
     <tbody>${data.map(r => `<tr><td>${r.rank}</td><td>${avHTML(r.avatar, 'sm')}${esc(r.nickname)}</td>
     <td class="num">${r.rating}</td><td class="num">${r.wins} / ${r.games}</td><td class="num">${r.win_rate}%</td></tr>`).join('')}</tbody></table></div>`;
 }
+const realEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && !v.endsWith('@players.duanlian.game');
+const passwordField = (name, title) => `<label><span>${title}</span><input name="${name}" type="password" autocomplete="new-password" minlength="8" maxlength="64" required></label>`;
+const authFeedback = '<p class="err" role="alert"></p>';
+function accOutHTML() {
+  const tabs = `<div class="tabs" role="tablist">${[['in', '登录'], ['up', '注册'], ...(SUPA.EMAIL_AUTH ? [['recover', '找回密码']] : [])].map(([tab, label]) =>
+    `<button data-acctab="${tab}" aria-selected="${ACC.tab === tab}">${label}</button>`).join('')}</div>`;
+  const c = ACC.challenge;
+  if (c) return tabs + `<form id="accChallenge" class="form">
+    <p class="hint">${c.kind === 'signup' ? '验证码已发送到' : '如果该邮箱关联了账号，将收到验证码'} ${esc(c.email)}。</p>
+    <label><span>邮箱验证码</span><input name="token" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6,10}" maxlength="10" required></label>
+    ${c.kind === 'recovery' ? passwordField('p', '新密码') + passwordField('again', '确认新密码') : ''}
+    ${authFeedback}<div class="actions"><button class="btn" type="button" id="accResend">重新发送</button>
+    <button class="btn primary" type="submit">${c.kind === 'signup' ? '验证并登录' : '重置密码'}</button></div></form>`;
+  if (ACC.tab === 'recover') return tabs + `<form id="accRecover" class="form">
+    <label><span>注册邮箱</span><input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+    ${authFeedback}<div class="actions"><button class="btn primary" type="submit">发送验证码</button></div>
+    <p class="hint">使用旧账号名注册的玩家，可在登录后修改密码。</p></form>`;
+  const up = ACC.tab === 'up';
+  const label = up ? '账号名' : '账号名或邮箱';
+  return tabs + `<form id="accForm" class="form">
+    <label><span>${label}</span><input name="u" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="${up ? 16 : 254}" required></label>
+    ${up && SUPA.EMAIL_AUTH ? '<label><span>邮箱</span><input name="email" type="email" autocomplete="email" maxlength="254" required></label>' : ''}
+    <label><span>密码</span><input name="p" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" maxlength="64" required></label>
+    ${up ? `<label><span>昵称</span><input name="n" maxlength="12" placeholder="其他玩家看到的名字"></label>
+    <div class="chips"><span class="lab">头像</span>${CHARS.map((c, i) => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${i === 0}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>
+    <p class="hint">账号名使用 3–16 位小写字母、数字或下划线，密码至少 8 位。${SUPA.EMAIL_AUTH ? '验证后使用邮箱登录，好友仍通过账号名添加。' : ''}</p>` : ''}
+    ${authFeedback}<div class="actions"><button class="btn primary" type="submit">${up ? (SUPA.EMAIL_AUTH ? '注册并发送验证码' : '注册并登录') : '登录'}</button></div>
+    </form>${statsHTML()}`;
+}
+function accPasswordHTML() {
+  return `<form id="accPassword" class="form">
+    <label><span>当前密码</span><input name="current" type="password" autocomplete="current-password" maxlength="64" required></label>
+    ${passwordField('p', '新密码')}${passwordField('again', '确认新密码')}
+    ${authFeedback}<div class="actions"><button class="btn primary" type="submit">保存新密码</button></div></form>`;
+}
+async function accAction(form, action) {
+  if (ACC.busy) return;
+  const feedback = form.querySelector('[role="alert"]');
+  const buttons = [...form.querySelectorAll('button')];
+  ACC.busy = true;
+  buttons.forEach(b => { b.disabled = true; });
+  feedback.textContent = '';
+  try { await action(new FormData(form)); }
+  catch (e) { feedback.textContent = errCN(e); }
+  finally { ACC.busy = false; buttons.forEach(b => { b.disabled = false; }); }
+}
 function accFormSubmit(form) {
-  const err = $('#accErr'), btn = form.querySelector('[type=submit]'), fd = new FormData(form);
-  const u = String(fd.get('u') || '').trim().toLowerCase(), p = String(fd.get('p') || ''), up = ACC.tab === 'up';
-  const nick = String(fd.get('n') || '').trim() || u, av = (form.querySelector('[data-av][aria-pressed=true]') || {}).dataset?.av || 'CH_JIN';
-  if (!UNAME.test(u)) { err.textContent = '账号名要 3–16 位，只能用小写字母、数字和下划线'; return; }
-  if (p.length < 6) { err.textContent = '密码至少要 6 位'; return; }
-  if (up && nick.length > 12) { err.textContent = '昵称最多 12 个字'; return; }
-  err.textContent = ''; btn.disabled = true; btn.textContent = up ? '注册中…' : '登录中…';
-  (up ? accSignUp(u, p, nick, av) : accSignIn(u, p)).then(() => toast(up ? '注册成功，欢迎来到《断链》' : '登录成功'))
-    .catch(e => { err.textContent = errCN(e); btn.disabled = false; btn.textContent = up ? '注册并登录' : '登录'; });
+  accAction(form, async fd => {
+    const u = String(fd.get('u')).trim().toLowerCase(), p = String(fd.get('p')), up = ACC.tab === 'up';
+    if (up) {
+      const nick = String(fd.get('n') || '').trim() || u;
+      const av = form.querySelector('[data-av][aria-pressed=true]')?.dataset.av || 'CH_JIN';
+      const email = String(fd.get('email') || '').trim().toLowerCase();
+      if (!UNAME.test(u)) throw new Error('账号名要 3–16 位，只能用小写字母、数字和下划线');
+      if (p.length < 8) throw new Error('新密码至少要 8 位');
+      if ([...nick].length > 12) throw new Error('昵称最多 12 个字');
+      if (SUPA.EMAIL_AUTH && !realEmail(email)) throw new Error('请输入可接收验证码的邮箱');
+      await accSignUp(u, p, nick, av, email);
+      if (ACC.state === 'in') toast('注册成功，欢迎来到《断链》');
+    } else {
+      if (!UNAME.test(u) && !realEmail(u)) throw new Error('请输入有效的登录名');
+      await accSignIn(u, p);
+      if (ACC.state === 'in') toast('登录成功');
+    }
+  });
+}
+function newPassword(fd) {
+  const password = String(fd.get('p') || '');
+  if (password.length < 8 || password.length > 64) throw new Error('新密码要 8–64 位');
+  if (password !== fd.get('again')) throw new Error('两次输入的新密码不一致');
+  return password;
 }
 function accEditSubmit(form) {
-  const err = $('#accErr'), fd = new FormData(form), nick = String(fd.get('n') || '').trim();
-  if (!nick || nick.length > 12) { err.textContent = '昵称要 1–12 个字'; return; }
-  const avatar = (form.querySelector('[data-av][aria-pressed=true]') || {}).dataset?.av || ACC.profile.avatar;
-  const tb = form.querySelector('[data-ti][aria-pressed=true]'), title = tb ? tb.dataset.ti || null : ACC.profile.title;
-  accSaveProfile({ nickname: nick, avatar, title }).then(() => { ACC.edit = false; accUI(); toast('资料已保存'); }).catch(e => { err.textContent = errCN(e); });
+  accAction(form, async fd => {
+    const nick = String(fd.get('n') || '').trim();
+    if (!nick || [...nick].length > 12) throw new Error('昵称要 1–12 个字');
+    const avatar = form.querySelector('[data-av][aria-pressed=true]')?.dataset.av || ACC.profile.avatar;
+    const title = form.querySelector('[data-ti][aria-pressed=true]')?.dataset.ti || null;
+    await accSaveProfile({ nickname: nick, avatar, title }); toast('资料已保存');
+  });
 }
 document.addEventListener('submit', e => {
-  if (e.target.id === 'accForm') { e.preventDefault(); accFormSubmit(e.target); }
-  else if (e.target.id === 'accEditForm') { e.preventDefault(); accEditSubmit(e.target); }
+  const form = e.target;
+  if (form.id === 'accForm') { e.preventDefault(); accFormSubmit(form); }
+  else if (form.id === 'accEditForm') { e.preventDefault(); accEditSubmit(form); }
+  else if (form.id === 'accPassword') {
+    e.preventDefault(); accAction(form, async fd => {
+      const password = newPassword(fd);
+      if (fd.get('current') === password) throw new Error('请输入不同的新密码');
+      await accChangePassword(fd.get('current'), password); toast('密码已更新');
+    });
+  } else if (form.id === 'accRecover') {
+    e.preventDefault(); accAction(form, async fd => {
+      const email = String(fd.get('email')).trim().toLowerCase();
+      if (!realEmail(email)) throw new Error('请输入注册时使用的真实邮箱');
+      await accSendRecovery(email);
+    });
+  } else if (form.id === 'accChallenge') {
+    e.preventDefault(); accAction(form, async fd => {
+      const kind = ACC.challenge.kind;
+      await accVerify(String(fd.get('token')).trim(), kind === 'recovery' ? newPassword(fd) : null);
+      toast(kind === 'recovery' ? '密码已重置，请用新密码登录' : '邮箱已验证');
+    });
+  }
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.acctab) { ACC.tab = b.dataset.acctab; buildAccount(); return; }
+  if (b.dataset.acctab && !ACC.busy) { ACC.tab = b.dataset.acctab; ACC.challenge = null; buildAccount(); return; }
   if (b.dataset.av || b.dataset.ti !== undefined && b.closest('form')) {
     const k = b.dataset.av ? 'av' : 'ti'; b.closest('.chips').querySelectorAll(`[data-${k}]`).forEach(x => x.setAttribute('aria-pressed', x === b)); return;
   }
-  if (b.id === 'accOut') { accSignOut().then(() => toast('已退出登录')); return; }
-  if (b.id === 'accEditBtn') { ACC.edit = !ACC.edit; buildAccount(); return; }
+  if (b.id === 'accResend') {
+    accAction(b.form, async () => {
+      const { kind, email } = ACC.challenge;
+      if (kind === 'recovery') await accSendRecovery(email);
+      else {
+        const { error } = await ACC.sb.auth.resend({ type: kind, email });
+        if (error) throw error;
+      }
+      toast('已重新发送验证码');
+    });
+    return;
+  }
+  if (b.id === 'accOut' && !ACC.busy) {
+    b.disabled = true;
+    accSignOut().then(() => toast('已退出登录')).catch(e => { b.disabled = false; toast('退出失败：' + errCN(e)); }); return;
+  }
+  if ((b.id === 'accEditBtn' || b.id === 'accPasswordBtn') && !ACC.busy) {
+    const panel = b.id === 'accPasswordBtn' ? 'password' : 'profile';
+    ACC.edit = ACC.edit === panel ? false : panel; buildAccount(); return;
+  }
   if (b.id === 'rankRetry') { buildRank(); return; }
   if (b.id === 'accRetry') { accInit(); return; }
 });
@@ -5023,7 +5192,7 @@ document.addEventListener('click', e => {
 /* ============================================================
    联机：大厅（在线玩家、快速匹配、邀请）· 房间 · 帧同步对战
    ============================================================ */
-const NET = { lobby: null, members: [], status: 'idle', invite: null, pending: null, queue: null, leaving: null };
+const NET = { lobby: null, members: [], status: 'idle', invite: null, invitePoll: 0, readingInvites: false, queue: null, leaving: null };
 const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pulse: 0, joinedAt: 0, spar: false, rounds: 2 };
 const KEYS12 = ['left', 'right', 'up', 'down', 'jump', 'guard', 'l', 'h', 's', 'brk', 'fin', 'ast'];
 const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
@@ -5038,20 +5207,15 @@ const median = a => { const s = [...a].sort((x, y) => x - y); return s.length ? 
 function lobbyJoin() {
   if (NET.lobby || ACC.state !== 'in') return;
   const uid = ACC.user.id;
-  const ch = ACC.sb.channel('duanlian-lobby', { config: { presence: { key: uid }, broadcast: { self: false } } });
+  const ch = ACC.sb.channel('duanlian-lobby-v14', { config: { presence: { key: uid }, broadcast: { self: false } } });
   NET.lobby = ch;
   ch.on('presence', { event: 'sync' }, () => {
     if (NET.lobby !== ch) return;
     NET.members = Object.values(ch.presenceState()).map(a => a[a.length - 1]).filter(m => m?.uid);
-    if (G.page === 'PG_ONLINE') (NET.tab === 'friends' ? buildOnline() : renderPlayers());
+    if (G.page === 'PG_ONLINE') (NET.tab === 'friends' ? renderFriends() : renderPlayers());
     else if (G.page === 'PG_SELECT' && G.mode === 'online' && !ROOM.peer && $('#frInvList')) $('#frInvList').innerHTML = frRoomInviteHTML();
   }).on('broadcast', { event: 'invite' }, ({ payload: p }) => {
-    if (p?.to !== uid || !p.from?.uid || !/^\d{4}$/.test(p.room)) return;
-    if (NET.status === 'room') { lobbySend('reply', { to: p.from.uid, ok: false, why: 'busy' }); return; }
-    NET.invite = p; showInvite();
-  }).on('broadcast', { event: 'reply' }, ({ payload: p }) => {
-    if (p?.to !== uid || p.from !== NET.pending || p.ok || !ROOM.host || ROOM.peer) return;
-    toast(p.why === 'busy' ? '对方正忙，稍后再邀请吧' : '对方拒绝了邀请'); roomLeave(); go('PG_ONLINE');
+    if (p?.to === uid) lobbyInvites();
   }).on('broadcast', { event: 'fr' }, ({ payload: p }) => {
     if (p?.to === uid) frNotify(p.from, 'fr');
   }).on('broadcast', { event: 'fra' }, ({ payload: p }) => {
@@ -5060,29 +5224,30 @@ function lobbyJoin() {
     if (p?.to === uid) frLoad();
   }).subscribe(st => {
     if (NET.lobby !== ch) return;
-    if (st === 'SUBSCRIBED') lobbyTrack();
-    else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { const el = $('#onState'); if (el) el.textContent = '连接大厅失败，请检查网络'; }
+    if (st === 'SUBSCRIBED') { lobbyTrack(); frLoad(); lobbyInvites(); }
+    else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { const el = $('#onState'); if (el) el.textContent = '连接大厅失败，正在重试…'; }
   });
+  NET.invitePoll = setInterval(lobbyInvites, 5000);
 }
 function lobbyTrack() {
   if (!NET.lobby || !ACC.user) return;
-  const open = !!(ROOM.ch && ROOM.host && !ROOM.peer && !ROOM.match?.pair);
-  NET.lobby.track({ ...myInfo(), status: NET.status, room: open ? ROOM.code : '', open, spar: open && ROOM.spar }).catch(() => {});
+  const open = !!(ROOM.ch && ROOM.host && !ROOM.member && !ROOM.match?.pair);
+  NET.lobby.track({ ...myInfo(), status: NET.status, room: open ? ROOM.code : '', roomId: open ? ROOM.id : null, open, spar: open && ROOM.spar }).catch(() => {});
 }
-function lobbySend(event, payload) { if (NET.lobby) NET.lobby.send({ type: 'broadcast', event, payload: { ...payload, from: event === 'invite' ? payload.from : ACC.user?.id } }).catch(() => {}); }
+function lobbySend(event, payload) { if (NET.lobby) NET.lobby.send({ type: 'broadcast', event, payload: { ...payload, from: ACC.user?.id } }).catch(() => {}); }
 function lobbySetStatus(status) {
   if (NET.status === status) return;
   NET.status = status; lobbyTrack();
   if (G.page === 'PG_ONLINE') buildOnline();
 }
 function lobbyLeave() {
-  queueStop();
+  queueStop(); clearInterval(NET.invitePoll);
   const ch = NET.lobby; NET.lobby = null; NET.members = []; NET.status = 'idle';
   if (ch) ACC.sb.removeChannel(ch);
 }
 function queueStart() {
   if (NET.leaving || NET.queue || ACC.state !== 'in') return;
-  const q = { uid: ACC.user.id, timer: 0, request: backendCall('mm_join') };
+  const q = { uid: ACC.user.id, timer: 0, request: backendCall('mm_join', { p_protocol: 14 }) };
   NET.queue = q; lobbySetStatus('queue');
   q.request.then(() => queuePoll(q)).catch(e => queueError(q, e));
 }
@@ -5101,7 +5266,7 @@ function queueError(q, e) {
 async function queuePoll(q) {
   if (NET.queue !== q) return;
   try {
-    q.request = backendCall('mm_poll');
+    q.request = backendCall('mm_poll', { p_protocol: 14 });
     const data = await q.request;
     if (NET.queue !== q) return;
     if (data.status === 'matched') {
@@ -5114,13 +5279,40 @@ async function queuePoll(q) {
 }
 function modal(html) { const el = $('#modal'); if (!el) return; el.innerHTML = `<div class="ibox">${html}</div>`; el.hidden = false; const b = el.querySelector('.primary'); b && b.focus({ preventScroll: true }); }
 function modalClose() { const el = $('#modal'); if (el) el.hidden = true; }
+async function lobbyInvites() {
+  if (NET.readingInvites || ACC.state !== 'in' || NET.status === 'room'
+      || !['PG_TITLE', 'PG_ACCOUNT', 'PG_ONLINE', 'PG_RESULT'].includes(G.page)) return;
+  const uid = ACC.user.id;
+  NET.readingInvites = true;
+  try {
+    const invites = await backendCall('room_invites');
+    if (ACC.user?.id !== uid || NET.status === 'room' || !['PG_TITLE', 'PG_ACCOUNT', 'PG_ONLINE', 'PG_RESULT'].includes(G.page)) return;
+    const active = invites.find(row => row.id === NET.invite?.id);
+    if (active) { NET.invite = active; return; }
+    hideInvite();
+    if (invites.length) { NET.invite = invites[0]; showInvite(); }
+  } catch (e) { /* Retry on the next poll or lobby notification. */ }
+  finally { NET.readingInvites = false; }
+}
 function showInvite() {
   const p = NET.invite; if (!p) return;
-  modal(`${avHTML(p.from.avatar, 'lg')}<div><b>${esc(p.from.nick)}</b>${p.from.title ? `<span class="ptitle">${esc(p.from.title)}</span>` : ''}<p>${p.spar ? '邀请你好友切磋（不计战绩）' : '邀请你联机对战'}</p></div>
+  const title = titleOf(p);
+  modal(`${avHTML(p.avatar, 'lg')}<div><b>${esc(p.nick)}</b>${title ? `<span class="ptitle">${esc(title)}</span>` : ''}<p>${p.spar ? '邀请你好友切磋（不计战绩）' : '邀请你联机对战'}</p></div>
     <div class="ibtn"><button class="btn" id="invNo">拒绝</button><button class="btn primary" id="invYes">接受</button></div>`);
   SFX.play('ui');
 }
 function hideInvite() { if (NET.invite) modalClose(); NET.invite = null; }
+async function sendRoomInvite(uid, spar = false) {
+  const to = NET.members.find(m => m.uid === uid);
+  if (!to || to.status === 'room') { toast('对方暂时无法接受邀请'); return; }
+  if (ROOM.ch && (!ROOM.host || ROOM.peer)) { toast('房间已经有对手了'); return; }
+  if (!ROOM.ch && !await roomJoin(null, true, { spar })) return;
+  try {
+    const sent = await backendCall('room_invite', { p_room: ROOM.id, p_guest: uid });
+    if (!sent) { toast('无法邀请，对方可能已经加入或好友关系已变化'); return; }
+    lobbySend('invite', { to: uid }); toast(`已邀请 ${to.nick}，邀请 45 秒内有效`);
+  } catch (e) { toast('邀请失败：' + errCN(e)); }
+}
 function lsAskQuit() {
   modal('<div><b>离开这场联机对战？</b><p>现在离开会结束本场。</p></div><div class="ibtn"><button class="btn" id="quitNo">继续对战</button><button class="btn primary" id="quitYes">认输离开</button></div>');
 }
@@ -5131,60 +5323,127 @@ function lsQuit() {
 }
 
 /* ---------- 房间 ---------- */
-function roomJoin(code, host, match = null, recovering = false) {
-  if (ACC.state !== 'in') { go('PG_ACCOUNT'); return Promise.resolve(false); }
-  if (!recovering) {
+const roomErrors = {
+  missing: '房间不存在或已关闭，请检查房号', full: '房间已满', reserved: '座位已为受邀玩家保留',
+  friends_only: '这是好友切磋房间，请先互加好友'
+};
+async function roomJoin(code, host, match = null, recovering = false) {
+  if (ACC.state !== 'in') { go('PG_ACCOUNT'); return false; }
+  if (NET.joining || LS.on) return false;
+  if (!recovering && !host) {
     const saved = lsSaved();
     if (saved?.code === code) return lsRecover(saved);
   }
-  queueStop();
-  roomLeave(true, recovering);
-  lobbyJoin();
-  Object.assign(ROOM, { code, host, match, joinedAt: Date.now(), spar: !!match?.spar, rounds: Math.min(3, Math.max(1, CFG.ROUNDS_TO_WIN | 0)) });
-  const uid = ACC.user.id;
-  const topic = match?.pair ? 'duanlian-rated-' + match.pair : 'duanlian-room-' + code;
+  const uid = ACC.user.id, page = G.page, ticket = match?.room || match?.pair || null;
+  const attempt = Symbol();
+  NET.joining = attempt;
+  try {
+    const r = await (host && !ticket ? backendCall('room_create', { p_spar: !!match?.spar })
+      : backendCall('room_enter', { p_code: code, p_room: ticket }));
+    if (!r.id) { toast(roomErrors[r.status] || '房间暂时无法加入'); return false; }
+    if (ACC.user?.id !== uid || NET.joining !== attempt || (!recovering && G.page !== page)) {
+      if (ACC.user?.id === uid && r.id !== ROOM.id) backendCall('room_exit', { p_room: r.id }).catch(() => {});
+      return false;
+    }
+    const amHost = r.host === uid, member = amHost ? r.guest : r.host;
+    if (match?.peer && member !== match.peer) {
+      if (r.id !== ROOM.id) backendCall('room_exit', { p_room: r.id }).catch(() => {});
+      toast('房间成员已变化，请重新加入'); return false;
+    }
+    queueStop(); hideInvite();
+    roomLeave(true, recovering || ROOM.id === r.id);
+    lobbyJoin();
+    Object.assign(ROOM, {
+      id: r.id, code: r.code, host: amHost, match: { ...match, room: r.id }, member, joinedAt: Date.now(),
+      spar: r.spar, rounds: Math.min(3, Math.max(1, CFG.ROUNDS_TO_WIN | 0)), renewAt: performance.now() + 25000
+    });
+    await ACC.sb.realtime.setAuth();
+    if (ACC.user?.id !== uid || ROOM.id !== r.id) return false;
+    if (!recovering && G.page !== page) { roomLeave(true); return false; }
+    return await roomSubscribe(r, recovering);
+  } catch (e) {
+    if (NET.joining === attempt) {
+      if (ROOM.id && !ROOM.ch) roomLeave(true, recovering);
+      toast('连接房间失败：' + errCN(e));
+    }
+    return false;
+  } finally { if (NET.joining === attempt) NET.joining = null; }
+}
+function roomSubscribe(r, recovering) {
+  const uid = ACC.user.id, host = ROOM.host;
   return new Promise(resolve => {
     let joined = false;
-    const ch = ACC.sb.channel(topic, { config: { presence: { key: uid }, broadcast: { self: false } } });
+    const ch = ACC.sb.channel('duanlian-room:' + r.id, { config: { private: true, presence: { key: uid }, broadcast: { self: false } } });
     ROOM.ch = ch;
     const giveUp = () => {
-      if (ROOM.ch === ch && !joined) { toast('连接房间失败，请检查网络'); roomLeave(true, recovering); }
+      if (ROOM.ch === ch && !joined) { toast('连接房间失败，请重试'); roomLeave(true, recovering); }
       resolve(false);
     };
-    const timer = setTimeout(giveUp, 7500);
+    const timer = setTimeout(giveUp, 9000);
     ch.on('presence', { event: 'sync' }, () => { if (ROOM.ch === ch) roomPresence(); })
       .on('broadcast', { event: 'm' }, ({ payload }) => { if (ROOM.ch === ch) roomMsg(payload); })
       .subscribe(async st => {
         if (ROOM.ch !== ch) { clearTimeout(timer); resolve(false); return; }
         if (st === 'SUBSCRIBED') {
-          await ch.track({ ...myInfo(), host, t: ROOM.joinedAt }).catch(() => {});
-          if (ROOM.ch !== ch || joined) return;
+          let tracked;
+          try { tracked = await ch.track({ ...myInfo(), host, t: ROOM.joinedAt }); } catch (e) { return; }
+          if (ROOM.ch !== ch || joined || tracked !== 'ok') return;
           joined = true; clearTimeout(timer); lobbySetStatus('room');
           G.mode = 'online'; go('PG_SELECT'); resolve(true);
-          if ((!host || match?.pair) && !recovering) setTimeout(() => {
-            if (ROOM.ch === ch && !ROOM.peer && !LS.on) { toast(`没找到房间 ${code}，请确认房间号`); roomLeave(); go('PG_ONLINE'); }
-          }, 6500);
-        } else if (!joined && (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT')) { clearTimeout(timer); giveUp(); }
+          if ((!host || r.matched) && !recovering) setTimeout(() => {
+            if (ROOM.ch === ch && !ROOM.peer && !LS.on) {
+              toast('对方没有进入房间，请重新加入'); roomLeave(); go('PG_ONLINE');
+            }
+          }, 8500);
+        } else if (!joined && (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED')) { clearTimeout(timer); giveUp(); }
       });
     ROOM.pulse = setInterval(roomPulse, 500);
   });
 }
 function roomSend(k, d = {}) {
-  const room = ROOM.host && (k === 'sel' || k === 'ready') ? { room: { spar: ROOM.spar, rounds: ROOM.rounds } } : null;
+  const room = ROOM.host && (k === 'sel' || k === 'ready') ? { room: { rounds: ROOM.rounds } } : null;
   if (ROOM.ch) ROOM.ch.send({ type: 'broadcast', event: 'm', payload: { k, ...d, ...room, uid: ACC.user?.id } }).catch(() => {});
 }
-function roomPresence() {
+async function roomRenew() {
+  const id = ROOM.id;
+  if (!id || ROOM.renewing) return;
+  ROOM.renewing = true; ROOM.renewAt = performance.now() + 25000;
+  try {
+    const r = await backendCall('room_touch', { p_room: id });
+    if (ROOM.id !== id) return;
+    if (!r && !LS.on) {
+      toast('房间已关闭，请重新加入'); roomLeave(true);
+      if (G.page === 'PG_SELECT') go('PG_ONLINE');
+      return;
+    }
+    if (r) {
+      const member = ROOM.host ? r.guest : r.host;
+      const changed = ROOM.member !== member;
+      ROOM.member = member;
+      roomPresence(false); if (changed && ROOM.host) lobbyTrack();
+    }
+  } catch (e) {
+    if (ROOM.id === id) ROOM.renewAt = performance.now() + 5000;
+  } finally { if (ROOM.id === id) ROOM.renewing = false; }
+}
+function roomPresence(refresh = true) {
+  if (!ROOM.ch || LS.on) return; // The private input channel controls the battle reconnect window.
   const uid = ACC.user.id;
   const others = Object.entries(ROOM.ch.presenceState()).filter(([key]) => key !== uid)
-    .map(([, list]) => list[list.length - 1]).filter(m => m?.uid && m.host !== ROOM.host);
-  const expected = LS.on ? LS.peer.uid : ROOM.match?.peer;
-  const peer = others.filter(m => !expected || m.uid === expected).sort((a, b) => a.t - b.t || a.uid.localeCompare(b.uid))[0];
-  if (LS.on) return; // The private input channel, rather than selection presence, controls the reconnect window.
+    .map(([key, list]) => list.findLast(m => m?.uid === key && m.host !== ROOM.host)).filter(Boolean);
+  const peer = others.find(m => m.uid === ROOM.member);
   if (peer && ROOM.peer?.uid !== peer.uid) {
-    ROOM.peer = peer; ROOM.ready = [false, false]; NET.pending = null;
-    roomSend('sel', { sel: mySelection() });
-    SFX.play('ui'); if (G.page === 'PG_SELECT') buildSelect(); lobbyTrack();
-  } else if (!peer && ROOM.peer) { roomPeerLeft(); lobbyTrack(); }
+    ROOM.peer = peer; ROOM.ready = [false, false];
+    roomSend('sel', { sel: mySelection() }); lobbyTrack();
+    SFX.play('ui'); if (G.page === 'PG_SELECT') buildSelect();
+  } else if (!peer && ROOM.peer) {
+    roomPeerLeft();
+    const id = ROOM.id;
+    if (id) setTimeout(() => { if (ROOM.id === id) roomRenew(); }, 450);
+  }
+  if (refresh && others.some(m => m.uid !== ROOM.member) && performance.now() >= (ROOM.seatsAt || 0)) {
+    ROOM.seatsAt = performance.now() + 1500; roomRenew();
+  }
 }
 function roomPeerLeft() {
   if (LS.on || !ROOM.peer) return;
@@ -5196,13 +5455,16 @@ function roomPeerLeft() {
 }
 function roomLeave(silent, keepJournal = false) {
   clearInterval(ROOM.pulse);
-  if (ROOM.ch) {
-    if (!silent) roomSend('bye');
-    const ch = ROOM.ch; ROOM.ch = null; ACC.sb.removeChannel(ch);
-  }
+  const id = ROOM.id, ch = ROOM.ch;
+  if (ch && !silent) roomSend('bye');
+  ROOM.ch = null;
+  if (ch) ACC.sb.removeChannel(ch);
+  if (id && !keepJournal) backendCall('room_exit', { p_room: id }).catch(() => {});
   lsDispose(keepJournal);
-  Object.assign(ROOM, { code: '', host: false, match: null, peer: null, ready: [false, false], rtt: [], launch: null, accepting: null, pingAt: 0, spar: false, rounds: 2 });
-  NET.pending = null;
+  Object.assign(ROOM, {
+    id: null, code: '', host: false, match: null, member: null, peer: null, ready: [false, false], rtt: [],
+    launch: null, accepting: null, pingAt: 0, spar: false, rounds: 2, renewAt: 0, seatsAt: 0, renewing: false
+  });
   if (NET.status === 'room') lobbySetStatus('idle');
 }
 const mySlots = () => ROOM.host ? ['p1', 'g1', 'a1', 'stage'] : ['p2', 'g2', 'a2'];
@@ -5218,8 +5480,8 @@ function roomMsg(m) {
       if (!mySlots().includes(k) && Object.hasOwn(PICK_OPTIONS[k], v) && G.sel[k] !== v) { G.sel[k] = v; changed = true; }
     }
     if (!ROOM.host && m.room && typeof m.room === 'object') {   // 房主定的切磋设置
-      const spar = m.room.spar === true, rounds = [1, 2, 3].includes(m.room.rounds) ? m.room.rounds : ROOM.rounds;
-      if (spar !== ROOM.spar || rounds !== ROOM.rounds) { ROOM.spar = spar; ROOM.rounds = rounds; ROOM.ready[1] = false; changed = true; }
+      const rounds = [1, 2, 3].includes(m.room.rounds) ? m.room.rounds : ROOM.rounds;
+      if (rounds !== ROOM.rounds) { ROOM.rounds = rounds; ROOM.ready[1] = false; changed = true; }
     }
     const i = ROOM.host ? 1 : 0, ready = m.k === 'ready' && m.v === true;
     if (ROOM.ready[i] !== ready || changed) { ROOM.ready[i] = ready; buildSelect(); }
@@ -5233,6 +5495,7 @@ function roomMsg(m) {
   else if (m.k === 'again' && G.page === 'PG_RESULT') toast(`${ROOM.peer.nick} 想再来一局`);
 }
 function roomPulse() {
+  if (performance.now() >= ROOM.renewAt) roomRenew();
   if (!ROOM.peer) return;
   if (LS.on) {
     if (ROOM.host && ROOM.launch?.id === LS.id && !LS.peerHeard) roomSend('start', { id: LS.id });
@@ -5253,7 +5516,7 @@ function roomToggleReady() {
 }
 async function roomMaybeStart() {
   if (!ROOM.host || !ROOM.peer || !ROOM.ready.every(Boolean) || ROOM.launch || LS.on) return;
-  const { ch, code, peer } = ROOM, id = crypto.randomUUID();
+  const { ch, peer } = ROOM, id = crypto.randomUUID();
   const rtt = ROOM.rtt.length ? median(ROOM.rtt) : 150;
   const D = Math.max(7, Math.min(20, Math.ceil(rtt / 33.334) + 5));
   const cfg = Object.fromEntries(Object.entries(CFG).filter(([k, v]) => !NET_CFG_SKIP.has(k) && typeof v !== 'object'));
@@ -5261,7 +5524,7 @@ async function roomMaybeStart() {
   const setup = { seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg, spar: !!ROOM.spar };
   const launch = { id }; ROOM.launch = launch;
   try {
-    await backendCall('online_open', { p_game: id, p_code: code, p_guest: peer.uid, p_setup: setup });
+    await backendCall('room_start', { p_room: ROOM.id, p_game: id, p_setup: setup });
     if (ROOM.ch !== ch || ROOM.peer?.uid !== peer.uid || !ROOM.ready.every(Boolean)) return;
     roomSend('start', { id }); lsStart(id, setup);
   } catch (e) {
@@ -5527,11 +5790,11 @@ function buildOnline() {
     B.innerHTML = ACC.state === 'off' ? '<p>联机需要账户服务，作者还没开通。</p>' : `<p>联机对战需要先登录账户，对手会看到你的昵称、头像和称号。</p><div class="actions" style="justify-content:flex-start"><button class="btn primary" data-go="PG_ACCOUNT">去登录 / 注册</button></div>`;
     return;
   }
-  lobbyJoin();
+  lobbyJoin(); lobbyInvites();
   sub.textContent = '和在线玩家实时对战，或者找好友切磋';
-  const q = NET.status === 'queue', nIn = frIncoming().length, keep = ($('#frName') || {}).value || '';
+  const q = NET.status === 'queue', nIn = frIncoming().length, keep = ($('#frName') || {}).value || '', roomCode = $('#onCode')?.value || '';
   const tabs = `<div class="tabs ontabs"><button data-ontab="lobby" aria-selected="${NET.tab === 'lobby'}">在线大厅</button><button data-ontab="friends" aria-selected="${NET.tab === 'friends'}">好友${nIn ? ` <em class="badge">${nIn}</em>` : ''}</button></div>`;
-  if (NET.tab === 'friends') { B.innerHTML = tabs + frHTML(); const i = $('#frName'); if (i && keep) i.value = keep; return; }
+  if (NET.tab === 'friends') { B.innerHTML = tabs + '<div id="frPanel"></div>'; renderFriends(keep); return; }
   B.innerHTML = tabs + `<div class="onact">
     <button class="btn primary" id="onQuick">${q ? '取消匹配' : '快速匹配'}</button>
     <button class="btn" id="onCreate"${q ? ' disabled' : ''}>创建房间</button>
@@ -5539,6 +5802,7 @@ function buildOnline() {
   </div>
   <p class="hint" id="onState">${q ? '正在按段位分找对手…等待越久，匹配范围越大' : '创建房间后把房间号发给好友，或者直接邀请下面的在线玩家。'}</p>
   <h3>在线玩家 <small class="mute" id="onCount"></small></h3><div class="plist" id="onList"></div>`;
+  $('#onCode').value = roomCode;
   renderPlayers();
 }
 function renderPlayers() {
@@ -5552,20 +5816,35 @@ function renderPlayers() {
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.id === 'onQuick') { if (NET.queue) queueStop(); else queueStart(); return; }
-  if (b.id === 'onCreate') { roomJoin(String(1000 + Math.floor(Math.random() * 9000)), true); return; }
-  if (b.id === 'onJoin') { const c = ($('#onCode').value || '').trim(); if (!/^\d{4}$/.test(c)) { toast('请输入 4 位数字房间号'); return; } roomJoin(c, false); return; }
-  if (b.dataset.inv) {
-    const to = NET.members.find(m => m.uid === b.dataset.inv); if (!to) return;
-    const code = String(1000 + Math.floor(Math.random() * 9000));
-    roomJoin(code, true).then(ok => { if (ok) { NET.pending = to.uid; lobbySend('invite', { to: to.uid, from: myInfo(), room: code }); toast(`已邀请 ${to.nick}，等待对方接受`); } });
+  if (b.id === 'onCreate') { roomJoin(null, true); return; }
+  if (b.id === 'onJoin') { joinByCode(); return; }
+  if (b.id === 'copyRoom') { copyRoom(); return; }
+  if (b.dataset.inv) { sendRoomInvite(b.dataset.inv); return; }
+  if (b.id === 'invYes') {
+    const p = NET.invite; hideInvite();
+    if (p && Date.parse(p.expires) > Date.now()) {
+      queueStop(); roomJoin(p.code, false, { room: p.id, peer: p.uid });
+    }
     return;
   }
-  if (b.id === 'invYes') { const p = NET.invite; hideInvite(); if (p) { queueStop(); lobbySend('reply', { to: p.from.uid, ok: true }); roomJoin(p.room, false, { peer: p.from.uid, spar: p.spar === true }); } return; }
-  if (b.id === 'invNo') { const p = NET.invite; hideInvite(); if (p) lobbySend('reply', { to: p.from.uid, ok: false }); return; }
+  if (b.id === 'invNo') {
+    const p = NET.invite; hideInvite();
+    if (p) backendCall('room_decline', { p_room: p.id }).then(lobbyInvites).catch(e => toast('操作失败：' + errCN(e)));
+    return;
+  }
   if (b.id === 'onBack') { go('PG_TITLE'); return; }
   if (b.id === 'quitNo') { modalClose(); return; }
   if (b.id === 'quitYes') { modalClose(); lsQuit(); return; }
 });
+function joinByCode() {
+  const code = $('#onCode')?.value.trim();
+  if (!/^\d{4}$/.test(code || '')) { toast('请输入 4 位数字房间号'); return; }
+  roomJoin(code, false);
+}
+async function copyRoom() {
+  try { await navigator.clipboard.writeText(ROOM.code); toast('房间号已复制'); }
+  catch (e) { toast(`房间号 ${ROOM.code}`); }
+}
 /* ---------- 好友：加好友、好友列表（在线状态）、邀请切磋、加入好友的房间 ----------
    好友关系存在 friendships 表（见 supabase_setup.sql）；在线状态来自大厅 presence。
    好友切磋（ROOM.spar）不计战绩，房主可以选一局定胜负 / 三局两胜 / 五局三胜。 */
@@ -5573,22 +5852,40 @@ NET.fr = { rows: [], prof: {}, loaded: false, busy: false };
 NET.tab = 'lobby';
 async function frLoad() {
   if (ACC.state !== 'in' || !ACC.sb) return;
-  const uid = ACC.user.id;
+  const uid = ACC.user.id, state = NET.fr;
+  if (state.loading) { state.refresh = true; return; }
+  state.loading = true;
   try {
     const { data, error } = await ACC.sb.from('friendships').select('*'); if (error) throw error;
     const rows = (data || []).filter(r => r.requester === uid || r.addressee === uid);
     const ids = [...new Set(rows.map(r => r.requester === uid ? r.addressee : r.requester))];
-    if (ids.length) { const p = await ACC.sb.from('profiles').select('id,username,nickname,avatar,title').in('id', ids); if (!p.error) for (const x of p.data || []) NET.fr.prof[x.id] = x; }
-    NET.fr.rows = rows; NET.fr.loaded = true; NET.fr.err = '';
-  } catch (e) { NET.fr.err = errCN(e); NET.fr.loaded = true; }
-  frBadge(); if (G.page === 'PG_ONLINE') buildOnline();
+    if (ids.length) {
+      const p = await ACC.sb.from('profiles').select('id,username,nickname,avatar,title').in('id', ids);
+      if (p.error) throw p.error;
+      state.prof = Object.fromEntries((p.data || []).map(x => [x.id, x]));
+    } else state.prof = {};
+    state.rows = rows; state.err = '';
+  } catch (e) { state.err = errCN(e); }
+  finally { state.loading = false; state.loaded = true; }
+  if (ACC.user?.id !== uid || NET.fr !== state) return;
+  if (state.refresh) { state.refresh = false; frLoad(); }
+  frBadge(); if (G.page === 'PG_ONLINE' && NET.tab === 'friends') renderFriends();
+  if (G.page === 'PG_SELECT' && G.mode === 'online' && !ROOM.peer && $('#frInvList')) $('#frInvList').innerHTML = frRoomInviteHTML();
+}
+function renderFriends(keep = $('#frName')?.value || '') {
+  const panel = $('#frPanel'); if (!panel) return;
+  // Presence updates should not replace an input while the player is typing.
+  if (document.activeElement === $('#frName')) return;
+  panel.innerHTML = frHTML();
+  if ($('#frName')) $('#frName').value = keep;
 }
 const frOther = r => r.requester === ACC.user.id ? r.addressee : r.requester;
 /* 收到好友请求 / 同意的广播：重新读好友表，名字取自数据库（广播里的内容不可信） */
 async function frNotify(from, kind) {
   if (typeof from !== 'string') return;
   await frLoad();
-  const me = ACC.user?.id, r = NET.fr.rows.find(x => frOther(x) === from && (kind === 'fr' ? x.status === 'pending' && x.addressee === me : x.status === 'accepted'));
+  const me = ACC.user?.id; if (!me) return;
+  const r = NET.fr.rows.find(x => frOther(x) === from && (kind === 'fr' ? x.status === 'pending' && x.addressee === me : x.status === 'accepted'));
   if (!r) return;
   const p = NET.fr.prof[from]; SFX.play('ui');
   toast(kind === 'fr' ? `${p ? p.nickname : '有人'} 想加你为好友` : `${p ? p.nickname : '对方'} 同意了你的好友请求`);
@@ -5602,18 +5899,21 @@ async function frAdd(name) {
   const u = String(name || '').trim().toLowerCase();
   if (!UNAME.test(u)) { toast('账号名是 3–16 位小写字母、数字或下划线'); return; }
   if (u === (ACC.profile || {}).username) { toast('不能加自己为好友'); return; }
-  if (NET.fr.busy) return; NET.fr.busy = true;
+  const uid = ACC.user?.id, state = NET.fr;
+  if (!uid || state.busy) return; state.busy = true;
   try {
     const { data: p, error } = await ACC.sb.from('profiles').select('id,username,nickname,avatar,title').eq('username', u).maybeSingle(); if (error) throw error;
+    if (ACC.user?.id !== uid || NET.fr !== state) return;
     if (!p) { toast(`没有找到账号「${u}」`); return; }
-    NET.fr.prof[p.id] = p;
-    const ex = NET.fr.rows.find(r => frOther(r) === p.id);
+    state.prof[p.id] = p;
+    const ex = state.rows.find(r => frOther(r) === p.id);
     if (ex && ex.status === 'accepted') { toast(`${p.nickname} 已经是你的好友了`); return; }
-    if (ex && ex.addressee === ACC.user.id) { await frAccept(ex.id); return; }
+    if (ex && ex.addressee === uid) { await frAccept(ex.id); return; }
     if (ex) { toast('已经发过请求了，等对方同意'); return; }
-    const r = await ACC.sb.from('friendships').insert({ requester: ACC.user.id, addressee: p.id }).select().single(); if (r.error) throw r.error;
+    const r = await ACC.sb.from('friendships').insert({ requester: uid, addressee: p.id }).select().single(); if (r.error) throw r.error;
+    if (ACC.user?.id !== uid || NET.fr !== state) return;
     lobbySend('fr', { to: p.id }); toast(`已向 ${p.nickname} 发送好友请求`); const i = $('#frName'); if (i) i.value = ''; await frLoad();
-  } catch (e) { toast('加好友失败：' + errCN(e)); } finally { NET.fr.busy = false; }
+  } catch (e) { toast('加好友失败：' + errCN(e)); } finally { state.busy = false; }
 }
 async function frAccept(id) {
   const r = NET.fr.rows.find(x => x.id === id); if (!r) return;
@@ -5627,17 +5927,10 @@ async function frRemove(id, quiet) {
 }
 function frOnStatus(uid) {
   const m = NET.members.find(x => x.uid === uid); if (!m) return { on: false, t: '离线' };
-  if (m.status === 'room' && m.room && m.open) return { on: true, m, t: m.spar ? '在切磋房间里等人' : '在房间里等人', join: m.room };
+  if (m.status === 'room' && m.room && m.roomId && m.open) return { on: true, m, t: m.spar ? '在切磋房间里等人' : '在房间里等人', join: m.room };
   return { on: true, m, t: { idle: '在线', queue: '匹配中', room: '对战中' }[m.status] || '在线' };
 }
-/* 邀请好友切磋：已经在自己开的空房间里就直接邀请，否则先开一个切磋房间 */
-function frInvite(uid) {
-  const to = NET.members.find(m => m.uid === uid); if (!to) { toast('对方不在线'); return; }
-  const send = code => { NET.pending = uid; lobbySend('invite', { to: uid, from: myInfo(), room: code, spar: true }); toast(`已邀请 ${to.nick} 切磋，等待对方接受`); };
-  if (ROOM.ch && ROOM.host && !ROOM.peer) { send(ROOM.code); return; }
-  const code = String(1000 + Math.floor(Math.random() * 9000));
-  roomJoin(code, true, { spar: true }).then(ok => { if (ok) send(code); });
-}
+
 function frHTML() {
   if (!NET.fr.loaded) { frLoad(); return '<p class="hint">正在读取好友…</p>'; }
   const prof = id => NET.fr.prof[id] || { nickname: '？', avatar: 'CH_JIN', username: '' };
@@ -5651,7 +5944,7 @@ function frHTML() {
     ${inc.length ? `<h3>好友请求</h3><div class="plist fr">${inc.map(r => row(r.requester, `<button class="btn" data-frno="${r.id}">拒绝</button><button class="btn primary" data-frok="${r.id}">同意</button>`, '想加你为好友')).join('')}</div>` : ''}
     <h3>我的好友 <small class="mute">${fr.length ? `${fr.filter(x => x.s.on).length} / ${fr.length} 在线` : ''}</small></h3>
     <div class="plist fr">${fr.length ? fr.map(({ r, id, s }) => row(id,
-      (s.join ? `<button class="btn primary" data-frjoin="${esc(s.join)}" data-frhost="${esc(id)}" data-frspar="${s.m.spar ? 1 : ''}"${busyMe ? ' disabled' : ''}>加入</button>` : s.on && s.m.status !== 'room' ? `<button class="btn primary" data-frinv="${esc(id)}"${busyMe ? ' disabled' : ''}>邀请切磋</button>` : '') + `<button class="btn ghost" data-frdel="${r.id}" title="删除好友">删除</button>`,
+      (s.join ? `<button class="btn primary" data-frjoin="${esc(s.join)}" data-frhost="${esc(id)}" data-frroom="${esc(s.m.roomId)}"${busyMe ? ' disabled' : ''}>加入</button>` : s.on && s.m.status !== 'room' ? `<button class="btn primary" data-frinv="${esc(id)}"${busyMe ? ' disabled' : ''}>邀请切磋</button>` : '') + `<button class="btn ghost" data-frdel="${r.id}" title="删除好友">删除</button>`,
       `<i class="dot${s.on ? ' on' : ''}"></i>${s.t}`)).join('') : '<p class="hint">还没有好友。输入对方的账号名就能加。</p>'}</div>
     ${out.length ? `<h3>等待对方同意</h3><div class="plist">${out.map(r => row(r.addressee, `<button class="btn ghost" data-frdel="${r.id}">撤回</button>`, '已发送请求')).join('')}</div>` : ''}`;
 }
@@ -5672,12 +5965,16 @@ document.addEventListener('click', e => {
   if (b.dataset.frok) { frAccept(+b.dataset.frok); return; }
   if (b.dataset.frno) { frRemove(+b.dataset.frno, true); return; }
   if (b.dataset.frdel) { const r = NET.fr.rows.find(x => x.id === +b.dataset.frdel); const p = r && NET.fr.prof[frOther(r)]; if (r && r.status === 'accepted' && !confirm(`删除好友 ${p ? p.nickname : ''}？`)) return; frRemove(+b.dataset.frdel); return; }
-  if (b.dataset.frinv) { frInvite(b.dataset.frinv); return; }
-  if (b.dataset.frjoin) { if (/^\d{4}$/.test(b.dataset.frjoin)) roomJoin(b.dataset.frjoin, false, { peer: b.dataset.frhost, spar: !!b.dataset.frspar }); return; }
-  if (b.id === 'frRoom') { if (ROOM.ch && ROOM.host && ROOM.spar) { go('PG_SELECT'); return; } roomJoin(String(1000 + Math.floor(Math.random() * 9000)), true, { spar: true }); return; }
+  if (b.dataset.frinv) { sendRoomInvite(b.dataset.frinv, true); return; }
+  if (b.dataset.frjoin) { if (/^\d{4}$/.test(b.dataset.frjoin) && GAME_UUID.test(b.dataset.frroom)) roomJoin(b.dataset.frjoin, false, { peer: b.dataset.frhost, room: b.dataset.frroom }); return; }
+  if (b.id === 'frRoom') { if (ROOM.ch && ROOM.host && ROOM.spar) { go('PG_SELECT'); return; } roomJoin(null, true, { spar: true }); return; }
   if (b.dataset.rounds && ROOM.host) { ROOM.rounds = +b.dataset.rounds; ROOM.ready = [false, false]; roomSend('sel', { sel: mySelection() }); buildSelect(); return; }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'frName') { e.preventDefault(); frAdd(e.target.value); } });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target?.id === 'frName') { e.preventDefault(); frAdd(e.target.value); }
+  if (e.target?.id === 'onCode' && !$('#onJoin').disabled) { e.preventDefault(); joinByCode(); }
+});
 function netLeaveAll() { roomLeave(true); lobbyLeave(); hideInvite(); NET.fr = { rows: [], prof: {}, loaded: false, busy: false }; frBadge(); }
 
 accInit();
