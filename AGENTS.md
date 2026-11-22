@@ -18,7 +18,7 @@
 | `docs/BACKEND.md` | 后端说明：表与权限、结算规则、重连、流量估算、已知限制 |
 | `.github/workflows/android.yml` | push 到 main 后自动打 APK 并发布到 Releases（版本号取自 `<div class="ver">vX.Y`） |
 | `dev/mock-supabase.js` | 本地测试用的假 supabase-js（BroadcastChannel 模拟 Realtime，可调延迟、抖动、丢包） |
-| `dev/test_online.py` | Playwright：两个页面注册、进大厅、开房间、打完一整局，检查两边是否同步 |
+| `dev/test_online.py` | Playwright：两个页面注册、进大厅、开房间、打完一整局，检查两边是否同步（含直连 / 中转、输入延迟统计） |
 | `dev/test_friends.py` | Playwright：加好友 → 同意 → 邀请切磋 → 打一局（不计战绩）→ 加入好友房间 → 删除好友 |
 | `dev/test_accounts_rooms.py` | Playwright：登录、邮箱验证、改密与找回、私有房间和邀请 |
 | `dev/test_backend.sql` | 数据库断言（在测试项目或本地 Postgres 跑，结束时回滚）：权限、双边结算、争议、过期、Elo、匹配、限流、好友、切磋不计分 |
@@ -53,6 +53,16 @@
 8. **在分支上验证并通过 PR 发布，不要直接推 main**。以最新主线为基线，避免覆盖作者同时进行的玩法和画面改动。通过验收后直接发布正式版，作者指定保留草稿时再停在草稿。
 9. 联机战绩只能由数据库认定：客户端不写 `profiles.stats / achievements / rating`，也不直接插 `matches`（权限已收紧）。
 
+## 联机网络（v1.8）
+
+- **直连优先**：开局后房主通过游戏频道的 `rtc` 广播（`{k: offer|answer|ice, n, d}`）发起 WebRTC，DataChannel `in` 设为无序、不重传（`ordered:false, maxRetransmits:0`），每 33ms 发一次完整输入包。STUN 在 `RTC_ICE`，没有 TURN；对称 NAT 打不通时最多重试 4 次（`rtcTick`），之后只走 Supabase。
+- **服务器中转降频**：对方最近 1.2 秒内收到过直连（包里 `k:1`），中转只每 500ms 发一次兜底；否则恢复 15 次/秒。免费版 Supabase 每秒 100 条消息（一次广播算发送 1 条 + 每个接收者 1 条），v1.7 每局约 60 条/秒，两局同时打就会超限断线；直连后每局约 5–10 条/秒。
+- **自适应输入延迟**：输入按帧号打标签，双方各自改 `LS.D` 不会影响确定性。每 500ms 上报余量 `s`（这段时间里「已收到对方的最新帧 − 当前帧」的最小值，等过包记 −1）和序号 `sn`、自己的延迟 `d`。对方余量 < 1 就加延迟（等过包 +2，否则 +1，最高 20）；连续两次 ≥ 4 就按余量降（最低 `LS_D_MIN` = 2）。开局 90 帧内不调整。两边节奏不齐时，跑在前面的一方每 100ms 让出一帧（`syncDebt`）。
+- **包字段**（全部向下兼容，协议仍为 15）：`f a b h done quit` 同 v1.7；新增 `s sn d`（余量）、`k`（直连在用）、`t / e`（测 RTT：`e = [对方的 t, 收到后过了多久]`）。v1.7 客户端会忽略这些字段，双方照常走中转，延迟保持开局值。
+- 开局延迟用房间 RTT 的中位数 × 1.3（v1.7 用最大值），之后由自适应调整。对局里屏幕下方显示「直连 / 服务器中转 · RTT · 输入延迟」。
+- 发出的每个输入都要先写进日志（`lsJournalSave()`），直连和中转都一样，否则刷新重连会对不上。
+- 测试：`RTC=off python3 dev/test_online.py …` 模拟打不通直连；默认时直连延迟取中转的一半（`__RTC_LAT / __RTC_JIT / __RTC_DROP`）。结果里的 `direct dc_sent delay_range stall_ms hitch_ms` 用来对比效果。
+
 ## 待办（给 Codex）
 
 - **联机协议**：v1.7 地面战斗使用协议 15。修改确定性对战规则时，同步更新大厅、房间、开局参数和匹配协议。先部署兼容旧客户端的数据库迁移，再发布客户端。
@@ -73,6 +83,7 @@ python3 dev/test_online.py 60 30          # 延迟 60ms、抖动 30ms
 python3 dev/test_online.py 50 40 no 0.15  # 再加 15% 丢包
 python3 dev/test_online.py 50 40 reload 0.15  # 对局中断线、刷新后恢复
 python3 dev/test_online.py 50 40 quick 0.15   # 快速匹配 + 844×390 排行榜
+RTC=off python3 dev/test_online.py 100 40 no 0.1  # 直连打不通，只走服务器中转
 python3 dev/test_friends.py
 python3 dev/test_accounts_rooms.py
 ```

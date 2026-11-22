@@ -246,7 +246,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v1.7 · 背景为电脑自动对战演示</div>
+  <div class="ver">v1.8 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -5237,6 +5237,9 @@ const decIn = b => { const r = { held: {}, pressed: {} }; KEYS12.forEach((k, i) 
 const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'SFX_VOLUME', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'GRAPHICS', 'FPS_LIMIT', 'TOUCH_LIFT', 'AI_LEVEL']);
 const LS_REJOIN_MS = 20000, LS_SEND_MS = 1000 / 15, LS_BATCH = 32, LS_CHUNK = 256, LS_MAX_FRAME = 432000;
 const LS_STEP_MS = 1000 / 60, LS_INPUT_RESERVE = 4;
+const LS_RTC_MS = 1000 / 30, LS_RELAY_IDLE_MS = 500, LS_D_MIN = 2, LS_SLACK_MS = 500;
+// 直连打洞用的 STUN：国内（小米、芒果 TV）+ 海外（Cloudflare、Google）。以后有 TURN 服务器可以加在这里。
+const RTC_ICE = [{ urls: ['stun:stun.miwifi.com:3478', 'stun:stun.hitv.com:3478'] }, { urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }];
 const GAME_UUID = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 let LS = { on: false, me: 0 };
 const myInfo = () => { const p = ACC.profile || {}, s = cloudStats(); return { uid: ACC.user.id, nick: p.nickname || '玩家', avatar: p.avatar || 'CH_JIN', title: titleOf(p), wins: s.onW, games: s.onG, rating: p.rating ?? 1000 }; };
@@ -5557,7 +5560,7 @@ async function roomMaybeStart() {
   if (!ROOM.host || !ROOM.peer || !ROOM.ready.every(Boolean) || ROOM.launch || LS.on) return;
   const { ch, peer } = ROOM, id = crypto.randomUUID();
   // 双向延迟折算为单程，再留两个广播周期给发送间隔和一次补包。
-  const rtt = ROOM.rtt.length ? Math.max(...ROOM.rtt) : 220;
+  const rtt = ROOM.rtt.length ? median(ROOM.rtt) * 1.3 : 220;   // 开局后双方会按实际网络自动调整输入延迟
   const D = clamp(Math.ceil((rtt / 2 + 2 * LS_SEND_MS) / LS_STEP_MS), 7, 20);
   const cfg = Object.fromEntries(Object.entries(CFG).filter(([k, v]) => !NET_CFG_SKIP.has(k) && typeof v !== 'object'));
   if (ROOM.spar) cfg.ROUNDS_TO_WIN = ROOM.rounds;
@@ -5685,7 +5688,9 @@ function lsStart(id, m, saved = null, inputs = null) {
     id, on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc, rem, remTop: rem.length - 1, ack: -1,
     startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, sampledAt: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
     cfgBak: { ...CFG }, journal: saved || { uid: ACC.user.id, id, code: ROOM.code, match: ROOM.match, peer: ROOM.peer, counts: [0, 0] },
-    replaying: !!saved, sent: 0
+    replaying: !!saved, sent: 0,
+    dcSent: 0, rtc: null, rtcNext: 0, dcAt: 0, peerDcAt: 0, slk: { min: 99, t0: performance.now(), sn: 0, rep: 99 }, slkSeen: -1, good: 0, tuneAt: 0,
+    peerT: 0, peerTAt: 0, rtt: 0, stallMs: 0, stalls: 0, tickAt: 0, dMin: m.D, dMax: m.D, syncDebt: 0, syncAt: 0
   };
   for (const [k, v] of Object.entries(m.cfg)) {
     if (Object.hasOwn(CFG, k) && !NET_CFG_SKIP.has(k) && typeof v === typeof CFG[k]
@@ -5716,6 +5721,7 @@ async function lsConnect(state) {
   const ch = ACC.sb.channel('duanlian-game:' + state.id, { config: { private: true, broadcast: { self: false, ack: false } } });
   state.ch = ch;
   ch.on('broadcast', { event: 'in' }, ({ payload }) => { if (LS === state && state.ch === ch) lsRecv(payload); })
+    .on('broadcast', { event: 'rtc' }, ({ payload }) => { if (LS === state && state.ch === ch) rtcSignal(state, payload); })
     .subscribe(status => {
       if (LS !== state || state.ch !== ch) return;
       state.subscribed = status === 'SUBSCRIBED';
@@ -5736,6 +5742,7 @@ function lsStop() {
 function lsDispose(keepJournal = false) {
   clearInterval(LS.clockTimer);
   if (LS.on) lsStop();
+  rtcClose(LS);
   const ch = LS.ch; LS.ch = null;
   if (ch) ACC.sb.removeChannel(ch);
   if (LS.journal && !keepJournal) { lsJournalDrop(LS.journal); LS.journal = null; }
@@ -5754,8 +5761,9 @@ function lsForfeit(winner) {
   G.rs = 'RS_KO'; endMatch();
 }
 function lsRecv(p) {
-  if ((!LS.on && !LS.endedAt) || !p || !Number.isInteger(p.f) || p.f < 0
-      || p.f > Math.min(LS.remTop + 1, LS_MAX_FRAME + 20)) return;
+  if ((!LS.on && !LS.endedAt) || !p || !Number.isInteger(p.f) || p.f < 0) return;
+  lsFeedback(p);
+  if (p.f > Math.min(LS.remTop + 1, LS_MAX_FRAME + 20)) return;
   const inputs = lsUnpack(p.b, LS_BATCH);
   if (!inputs) return;
   LS.peerHeard = true;
@@ -5772,16 +5780,128 @@ function lsRecv(p) {
     }
   }
 }
-function lsSend(now) {
-  if (!LS.subscribed || now < LS.nextSend) return;
-  LS.nextSend = Math.max(LS.nextSend + LS_SEND_MS, now);
-  if (LS.nextSend === now) LS.nextSend += LS_SEND_MS;
-  lsJournalSave();
+/* ---------- 直连（v1.8）：WebRTC DataChannel（P2P、UDP、不经服务器）----------
+   房主在对局频道里用广播事件 'rtc' 牵线（offer / answer / ice），打通后双方每秒 30 包直发输入；
+   Supabase 广播降到每秒 2 包兜底（免费版整个项目每秒最多 100 条实时消息，一条广播按“1 发 + 每个接收者 1 收”计）。
+   直连断了自动恢复每秒 15 包广播；打不通（对称 NAT 等）就一直走服务器，和旧版本完全兼容。 */
+const rtcOpen = state => { const r = state.rtc; return !!(r && r.open && r.dc && r.dc.readyState === 'open'); };
+function rtcLive(state, now) { return rtcOpen(state) && now - state.dcAt < 1000; }   // 直连通道开着，而且最近 1 秒收到过对方的直连数据
+function rtcClose(state) {
+  const r = state.rtc; state.rtc = null;
+  if (r) { try { if (r.dc) r.dc.close(); r.pc.close(); } catch (e) { /* already closed */ } }
+}
+function rtcSig(state, k, d) {
+  if (state.ch && state.subscribed) state.ch.send({ type: 'broadcast', event: 'rtc', payload: { k, n: state.rtc ? state.rtc.n : 0, d } }).catch(() => {});
+}
+function rtcNew(state, n) {
+  rtcClose(state);
+  let pc;
+  try { pc = new RTCPeerConnection({ iceServers: RTC_ICE }); } catch (e) { state.rtcOff = true; return null; }
+  const r = { pc, dc: null, n, at: performance.now(), open: false, dead: false };
+  state.rtc = r;
+  pc.onicecandidate = e => { if (e.candidate && state.rtc === r) rtcSig(state, 'ice', e.candidate.toJSON()); };
+  pc.onconnectionstatechange = () => { if (state.rtc === r && (pc.connectionState === 'failed' || pc.connectionState === 'closed')) { r.open = false; r.dead = true; } };
+  return r;
+}
+function rtcBind(state, r, dc) {
+  r.dc = dc;
+  dc.onopen = () => { if (state.rtc === r) { r.open = true; state.rtcEver = true; } };
+  dc.onclose = () => { if (state.rtc === r) { r.open = false; r.dead = true; } };
+  dc.onmessage = e => {
+    if (state.rtc !== r || LS !== state || window.__DISCONNECT || typeof e.data !== 'string' || e.data.length > 4096) return;
+    let p; try { p = JSON.parse(e.data); } catch (x) { return; }
+    state.dcAt = performance.now(); lsRecv(p);
+  };
+}
+async function rtcFlushIce(state, r) {
+  const pend = (state.icePend || []).filter(x => x.n === r.n); state.icePend = (state.icePend || []).filter(x => x.n > r.n);
+  for (const x of pend) await r.pc.addIceCandidate(x.d).catch(() => {});
+}
+async function rtcOffer(state) {
+  const r = rtcNew(state, (state.rtcN = (state.rtcN || 0) + 1)); if (!r) return;
+  rtcBind(state, r, r.pc.createDataChannel('in', { ordered: false, maxRetransmits: 0 }));
+  try { await r.pc.setLocalDescription(await r.pc.createOffer()); if (state.rtc === r) rtcSig(state, 'offer', r.pc.localDescription.toJSON()); }
+  catch (e) { r.dead = true; }
+}
+async function rtcSignal(state, p) {
+  if (!p || typeof p.k !== 'string' || !Number.isInteger(p.n) || p.n < 1 || typeof RTCPeerConnection === 'undefined' || state.rtcOff) return;
+  const d = p.d;
+  try {
+    if (p.k === 'offer' && state.me === 1 && d && d.type === 'offer' && typeof d.sdp === 'string' && d.sdp.length < 20000) {
+      const r = rtcNew(state, p.n); if (!r) return;
+      r.pc.ondatachannel = e => { if (state.rtc === r) rtcBind(state, r, e.channel); };
+      await r.pc.setRemoteDescription(d); await rtcFlushIce(state, r);
+      await r.pc.setLocalDescription(await r.pc.createAnswer());
+      if (state.rtc === r) rtcSig(state, 'answer', r.pc.localDescription.toJSON());
+    } else if (p.k === 'answer' && state.me === 0 && state.rtc && state.rtc.n === p.n && d && d.type === 'answer' && typeof d.sdp === 'string' && d.sdp.length < 20000) {
+      const r = state.rtc;
+      if (!r.pc.remoteDescription) { await r.pc.setRemoteDescription(d); await rtcFlushIce(state, r); }
+    } else if (p.k === 'ice' && d && typeof d.candidate === 'string' && d.candidate.length < 1000) {
+      const r = state.rtc;
+      if (r && r.n === p.n && r.pc.remoteDescription) await r.pc.addIceCandidate(d).catch(() => {});
+      else if (!r || p.n >= r.n) { (state.icePend = state.icePend || []).push({ n: p.n, d }); if (state.icePend.length > 60) state.icePend.shift(); }
+    }
+  } catch (e) { if (state.rtc) state.rtc.dead = true; }
+}
+/* 房主负责发起；没打通 6 秒就重来，最多 4 次 */
+function rtcTick(state, now) {
+  if (state.me !== 0 || !state.subscribed || !state.peerHeard || state.rtcOff || typeof RTCPeerConnection === 'undefined') return;
+  const r = state.rtc;
+  if (r && (r.open || (!r.dead && now - r.at < 6000))) return;
+  if ((state.rtcTries || 0) >= 4 || now < (state.rtcRetry || 0)) return;
+  state.rtcTries = (state.rtcTries || 0) + 1; state.rtcRetry = now + 6500; rtcOffer(state);
+}
+function rtcSend(state, p) {
+  const dc = state.rtc && state.rtc.dc;
+  if (!dc || dc.readyState !== 'open' || dc.bufferedAmount > 65536 || window.__DISCONNECT) return;
+  const s = JSON.stringify(p); state.dcSent++;
+  const lat = window.__RTC_LAT;   // 本地测试用：模拟直连的延迟 / 抖动 / 丢包
+  if (lat === undefined) { try { dc.send(s); } catch (e) { /* closing */ } return; }
+  if (Math.random() < (window.__RTC_DROP || 0)) return;
+  setTimeout(() => { try { if (dc.readyState === 'open') dc.send(s); } catch (e) { /* closing */ } }, lat + Math.random() * (window.__RTC_JIT || 0));
+}
+/* 自适应输入延迟：对方每 0.5 秒报一次“你的输入最少比我需要的早到几帧”（-1 = 我在等你） */
+function lsTune(s, d, now) {
+  if (!LS.on || LS.replaying || LS.frame < 90) return;   // 开局双方前后脚开始，那一下的等待不算
+  if (s < 1) { LS.good = 0; if (now - LS.tuneAt >= 250 && LS.D < 20) { LS.D = Math.min(20, LS.D + (s < 0 ? 2 : 1)); LS.tuneAt = now; } }
+  else if (s >= 4) { if (++LS.good >= 2 && LS.D > LS_D_MIN && now - LS.tuneAt >= 500) { LS.D = Math.max(LS_D_MIN, LS.D - Math.min(3, Math.max(1, (s - 2) >> 1))); LS.good = 0; LS.tuneAt = now; } }   // 余量越大降得越快，目标留 2 帧
+  else LS.good = 0;
+  // 时间同步：我测到的余量 = 对方延迟 + 对方领先 - 网络；对方测到的 = 我的延迟 - 对方领先 - 网络
+  // → 对方领先 ≈ (我的余量 - 对方余量 - 对方延迟 + 我的延迟) / 2；我跑在前面就分几次各让一帧，把两边拉齐
+  const mine = LS.slk.rep;
+  if (s >= 0 && mine >= 0 && mine !== 99 && Number.isInteger(d)) {
+    const lead = (mine - s - d + LS.D) / 2;
+    if (lead <= -1.5) LS.syncDebt = Math.min(6, Math.round(-lead / 2));
+  }
+}
+function lsFeedback(p) {
+  const now = performance.now();
+  if (Number.isFinite(p.t) && p.t > LS.peerT) { LS.peerT = p.t; LS.peerTAt = now; }
+  if (Array.isArray(p.e) && p.e.length === 2 && Number.isFinite(p.e[0]) && Number.isFinite(p.e[1])) {
+    const rtt = now - p.e[0] - p.e[1];
+    if (rtt >= 0 && rtt < 5000) LS.rtt = LS.rtt ? LS.rtt * .8 + rtt * .2 : rtt;
+  }
+  if (p.k === 1) LS.peerDcAt = now;
+  if (Number.isInteger(p.sn) && p.sn > LS.slkSeen && Number.isInteger(p.s) && p.s >= -1 && p.s <= 99) { LS.slkSeen = p.sn; lsTune(p.s, p.d, now); }
+}
+function lsPayload(now) {
   const from = LS.ack + 1, end = Math.min(from + LS_BATCH, LS.loc.length), hashes = [];
   for (let f = Math.floor(LS.frame / 60) * 60; f > 0 && hashes.length < 4; f -= 60) if (LS.hash.has(f)) hashes.push([f, LS.hash.get(f)]);
+  return { f: from, a: LS.remTop, b: lsPack(LS.loc, from, end), h: hashes, done: !LS.on, quit: !!LS.quit,
+    s: LS.slk.rep, sn: LS.slk.sn, d: LS.D, k: rtcLive(LS, now) ? 1 : 0, t: Math.round(now), e: LS.peerT ? [LS.peerT, Math.round(now - LS.peerTAt)] : null };
+}
+function lsSend(now) {
+  const live = rtcLive(LS, now), quiet = live && now - LS.peerDcAt < 1200;
+  if (rtcOpen(LS) && now >= LS.rtcNext) { LS.rtcNext = now + LS_RTC_MS; lsJournalSave(); rtcSend(LS, lsPayload(now)); }
+  if (!LS.subscribed) return;
+  if (!quiet && LS.nextSend - now > LS_SEND_MS) LS.nextSend = now;   // 直连刚断：马上恢复广播
+  if (now < LS.nextSend) return;
+  const every = quiet ? LS_RELAY_IDLE_MS : LS_SEND_MS;
+  LS.nextSend = Math.max(LS.nextSend + every, now);
+  if (LS.nextSend === now) LS.nextSend += every;
+  lsJournalSave();
   LS.sent++;
-  LS.ch.send({ type: 'broadcast', event: 'in', payload: { f: from, a: LS.remTop, b: lsPack(LS.loc, from, end), h: hashes,
-    done: !LS.on, quit: !!LS.quit } }).catch(() => {});
+  LS.ch.send({ type: 'broadcast', event: 'in', payload: lsPayload(now) }).catch(() => {});
 }
 const lsHashOf = () => { let h = 2166136261; const mix = v => { h ^= Math.round(v * 16) | 0; h = Math.imul(h, 16777619); };
   for (const f of G.f) { mix(f.x); mix(f.y); mix(f.z); mix(f.hp); mix(f.grd); mix(f.brk); mix(f.wins); mix(f.state.length); mix(f.chain ? f.chain.hits * 1000 + f.chain.mom : -1); }
@@ -5806,17 +5926,24 @@ function lsCapture(now) {
 }
 function lsTick(now) {
   let n = 0;
+  if (now - LS.slk.t0 >= LS_SLACK_MS) { if (LS.slk.min !== 99) { LS.slk.rep = LS.slk.min; LS.slk.sn++; } LS.slk.min = 99; LS.slk.t0 = now; }
+  if (LS.syncDebt > 0 && now >= LS.syncAt && acc >= 1) { acc -= 1; LS.syncDebt--; LS.syncAt = now + 100; }   // 时间同步：让出一帧
   while (LS.peerHeard && acc >= 1 && n < 6) {
-    if (LS.loc.length <= LS.frame + LS.D) lsCapture(now);
+    while (LS.loc.length <= LS.frame + LS.D) lsCapture(now);
     if (LS.rem[LS.frame] === undefined) {
+      LS.slk.min = -1;
       // 等对方补帧时继续收少量本地输入，避免双方等一帧才发下一帧。
       if (LS.loc.length <= LS.frame + LS.D + LS_INPUT_RESERVE && now - LS.sampledAt >= LS_STEP_MS) lsCapture(now);
       break;
     }
+    LS.slk.min = Math.min(LS.slk.min, LS.remTop - LS.frame);
     lsAdvance();
     if (!LS.on) return;
     acc -= 1; n++;
   }
+  const dt = LS.tickAt ? now - LS.tickAt : 0; LS.tickAt = now;
+  if (!n && acc >= 1 && LS.peerHeard) { LS.stallMs += dt; if (!LS.stalling) { LS.stalls++; LS.stalling = true; } } else if (n) LS.stalling = false;
+  LS.dMin = Math.min(LS.dMin, LS.D); LS.dMax = Math.max(LS.dMax, LS.D);
   if (n) LS.lastProgress = now;
   LS.wait = now - LS.lastProgress;
   if (LS.wait >= LS_REJOIN_MS || LS.frame >= LS_MAX_FRAME) {
@@ -5824,6 +5951,7 @@ function lsTick(now) {
   }
   if (acc > 6) acc = 6;
   lsSend(now);
+  rtcTick(LS, now);
 }
 function lsTail(now) {
   if (!LS.endedAt) return;
@@ -5837,6 +5965,8 @@ function lsHUD(c) {
   const f = G.f[LS.me], t = G.camT, x = (f.x - t.cx) * t.z + W / 2, y = (f.y - 250 * f.ch.scale - t.fy) * t.z + t.fy - t.ly;
   c.save(); c.fillStyle = f.col; c.beginPath(); c.moveTo(x - 9, y - 12); c.lineTo(x + 9, y - 12); c.lineTo(x, y); c.closePath(); c.fill();
   c.font = `700 18px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; otxt(c, '你', x, y - 20); c.restore();
+  { const live = rtcLive(LS, performance.now()); c.save(); c.font = `600 13px ${FU}`; c.textAlign = 'center'; c.fillStyle = live ? 'rgba(127,224,168,.85)' : 'rgba(239,233,223,.7)';
+    otxt(c, `${live ? '直连' : '服务器中转'}${LS.rtt ? ` · ${Math.round(LS.rtt)} ms` : ''} · 输入延迟 ${LS.D} 帧`, W / 2, H - 8); c.restore(); }
   if (LS.wait > 1500) {
     c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80);
     txt(c, `等待同步… ${Math.max(0, Math.ceil((LS_REJOIN_MS - LS.wait) / 1000))} 秒`, W / 2, H / 2 + 9, 26, FU, BONE, 'center', 4, 700);
