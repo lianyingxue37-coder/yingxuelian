@@ -66,21 +66,23 @@
   const roomMember = (r, uid) => roomLive(r) && (r.host === uid || (seatLive(r) && r.guest === uid));
   const friendsWith = (a, b) => LS_.get('t.friendships', []).some(f => f.status === 'accepted'
     && ((f.requester === a && f.addressee === b) || (f.requester === b && f.addressee === a)));
-  function makeRoom(id, host, guest, spar) {
+  function makeRoom(id, host, guest, spar, protocol = 14) {
     const rooms = mockRooms().filter(r => roomLive(r) && r.host !== host);
     let code;
     do { code = String(1000 + Math.floor(Math.random() * 9000)); } while (rooms.some(r => r.code === code));
-    const r = { id, host, guest, spar, code, matched: !!guest, hostUntil: Date.now() + 90000, guestUntil: guest ? Date.now() + 90000 : 0 };
+    const r = { id, host, guest, spar, protocol, code, matched: !!guest, hostUntil: Date.now() + 90000, guestUntil: guest ? Date.now() + 90000 : 0 };
     rooms.push(r); saveRooms(rooms); return r;
   }
   function roomRPC(name, args, uid, profiles) {
     const rooms = mockRooms(), r = rooms.find(x => x.id === args.p_room);
     const ok = data => ({ data, error: null });
-    const view = r => ({ id: r.id, host: r.host, guest: seatLive(r) ? r.guest : null, spar: r.spar, matched: r.matched, code: r.code });
-    if (name === 'room_create') return ok(view(makeRoom(uuid(), uid, null, !!args.p_spar)));
+    const protocol = args.p_protocol ?? 14;
+    const view = r => ({ id: r.id, host: r.host, guest: seatLive(r) ? r.guest : null, spar: r.spar, matched: r.matched, code: r.code, protocol: r.protocol ?? 14 });
+    if (name === 'room_create') return ok(view(makeRoom(uuid(), uid, null, !!args.p_spar, protocol)));
     if (name === 'room_enter') {
       const target = rooms.find(row => row.code === args.p_code && (!args.p_room || row.id === args.p_room));
       if (!roomLive(target)) return ok({ status: 'missing' });
+      if ((target.protocol ?? 14) !== protocol) return ok({ status: 'version_mismatch' });
       if (target.host === uid) return ok(view(target));
       if (target.spar && !friendsWith(uid, target.host)) return ok({ status: 'friends_only' });
       if ((target.matched || seatLive(target)) && target.guest !== uid) return ok({ status: 'full' });
@@ -104,7 +106,7 @@
       if (allowed) { r.invited = args.p_guest; r.inviteUntil = Date.now() + 45000; saveRooms(rooms); }
       return ok(!!allowed);
     }
-    if (name === 'room_invites') return ok(rooms.filter(r => roomLive(r) && r.invited === uid
+    if (name === 'room_invites') return ok(rooms.filter(r => roomLive(r) && (r.protocol ?? 14) === protocol && r.invited === uid
       && r.inviteUntil > Date.now() && (!r.spar || friendsWith(uid, r.host)))
       .sort((a, b) => b.inviteUntil - a.inviteUntil)
       .map(r => {
@@ -129,6 +131,7 @@
     if (name === 'room_start') {
       const room = mockRooms().find(r => r.id === a.p_room);
       if (!roomLive(room) || room.host !== uid || !seatLive(room) || room.spar !== a.p_setup.spar
+          || (room.protocol ?? 14) !== (a.p_setup.protocol ?? 14)
           || (room.spar && !friendsWith(room.host, room.guest))) return deny();
       a = { ...a, p_code: room.code, p_guest: room.guest }; name = 'online_open';
     }
@@ -206,7 +209,7 @@
         if (!row.assignment && peer) {
           const host = row.at < peer.at || (row.at === peer.at && row.uid < peer.uid);
           const pair = crypto.randomUUID();
-          const code = protocol === 14 ? makeRoom(pair, host ? uid : peer.uid, host ? peer.uid : uid, false).code
+          const code = protocol >= 14 ? makeRoom(pair, host ? uid : peer.uid, host ? peer.uid : uid, false, protocol).code
             : String(1000 + Math.floor(Math.random() * 9000));
           const assignment = { status: 'matched', pair, code };
           row.assignment = { ...assignment, host, peer: peer.uid };
