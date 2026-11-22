@@ -32,6 +32,7 @@
 - `外援 AS`、`AI`、`特效`、`回合流程`、`主循环`（`step` → `simStep`，`clampAll`）
 - 绘制：场景、`角色专属技能表现 SK`、`技能化：每人三个技能`（`KIT` 技能表、冷却、技能实体 `G.ents` 里 `id: 'SK'`）、角色、粒子、HUD
 - `忍术化（v1.3）`：结印（`wpose: 'sealW'`）、术名（`jn`）、各技能的画法 `NJ_DRAW` / `NJ_FRONT`、奥义演出 `G.cine`（`njUltStart` / `njCineTick` / `NJ_ULT`）、替身术 `njSubstitute`
+- `兵器化（v1.4）`：每人一件兵器（`WP`）、轻击三段 / 重击 / 空中的招式表 `WP_MOVES`（`L → L2 → L3`，靠 `move.next` 串起来）、兵器画法 `wpJian` / `wpHammer` / `wpSpear` 等、出招特效 `WP_FX`、命中追加 `WP_HIT`、兵器音效 `WP_SFX`
 - 界面与事件、全屏、虚拟摇杆
 - **`账户 · 战绩 · 成就 · 联机（Supabase）`**：`SUPA` / `ACC` / `REC` / `ACH` / `NET` / `ROOM` / `LS`
   - 战绩：本机记录 + 服务器结算（`onlineResult` → `submit_online_result`，待提交的报告存本机重试）
@@ -46,10 +47,21 @@
 4. **不要提交任何密钥**：客户端只用 anon / publishable key。`service_role`、数据库密码、签名证书一律不进仓库（用 Supabase 后台或 GitHub Secrets）。
 5. 保留 `window.DUANLIAN` 现有字段（测试依赖它）。
    奥义演出 `G.cine` 期间 `simStep` 只推进演出帧（双方同一帧开始、同样长度）；改演出长度或替身落点时，两边必须仍然一致。
+   v1.4 起**没有防御**：没有防御键、护架条和弹反；躲攻击靠侧闪、后撤步、跳跃和替身术，在它们的无敌帧里躲开攻击算「闪避」（`evade()`，统计仍记在 `stats.parries`）。联机输入里 `guard` 那一位保留但永远是 0，不要删（旧版本的包格式不变）。
 6. 界面文字用中文，语气和现有文案一致；手机横屏（844×390）也要能用。
 7. 版本号在 `<div class="ver">v…` 里，改动发布时顺手加一位；安卓打包会自动按它打 tag。
 8. **在分支上工作并开 Draft PR，不要直接推 main**——作者那边同时在改玩法和画面（主要在 `index.html` 前半部分），你的改动尽量集中在「账户 · 战绩 · 成就 · 联机」那一段，避免冲突。
 9. 联机战绩只能由数据库认定：客户端不写 `profiles.stats / achievements / rating`，也不直接插 `matches`（权限已收紧）。
+
+## 待办（给 Codex）
+
+- **联机版本校验**：房间和匹配目前不比对客户端版本。v1.3 和 v1.4 的对战逻辑不同，两边版本不一致时 lockstep 会不同步。建议在 `online_open` / `mm_join`（以及房间 Presence 里）带上 `APP_VER`，版本不同就提示对方更新、不开局。
+
+## 优化分支与 Claude 交接
+
+- 每项 Codex 优化从最新的 `origin/main` 建立独立的 `codex/<主题>` 分支。提交后推送同名分支，开一个目标分支为 `main` 的 Draft PR。后续修改继续推到同一个分支，草稿由作者决定何时转为正式评审。
+- 在 Draft PR 描述中交接给 Claude。写明分支和提交号、改动摘要、关键文件路径、验证命令及实际结果，以及部署步骤和待验证项。用 GitHub 上的提交、文件或 PR 链接定位代码，便于对照主线读取差异。
+- 如果暂时无法推送，保留本地分支，并提供源码或可应用的补丁，以及包含相同信息的交接说明。打包时排除 `.git` 和本机凭据。
 
 ## 本地运行与测试
 
