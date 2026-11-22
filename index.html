@@ -1106,7 +1106,6 @@ const Input = {
 const SFX = {
   c: null,
   init() {
-    if (!CFG.SOUND || !CFG.SFX_VOLUME) return;
     if (this.c) { if (this.c.state === 'suspended') this.c.resume(); return; }
     try {
       const C = window.AudioContext || window.webkitAudioContext; this.c = new C();
@@ -4437,8 +4436,7 @@ function appUpdateCheck() {
 }
 setTimeout(appUpdateCheck, 2500);
 let last = performance.now(), acc = 0, nextPaint = 0, lastPaint = 0;
-function loop(now) {
-  requestAnimationFrame(loop);
+function advanceClock(now) {
   const dt = Math.min(100, now - last); last = now;
   if (G.slow > 0) G.slow -= dt / 16.67;
   acc += dt / 16.667 * (G.slow > 0 ? .33 : 1);
@@ -4448,7 +4446,11 @@ function loop(now) {
     if (G.paused || (G.demo && G.page !== 'PG_TITLE' && G.page !== 'PG_SELECT')) acc = 0;
     else { let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0; }
   }
+}
 
+function loop(now) {
+  requestAnimationFrame(loop);
+  advanceClock(performance.now());
   // 绘制限帧独立于每秒 60 次的模拟与联机输入。
   const fighting = G.page === 'PG_BATTLE', result = G.page === 'PG_RESULT';
   const animated = fighting || result || G.page === 'PG_TITLE' || G.page === 'PG_SELECT';
@@ -5782,6 +5784,12 @@ function lsStart(id, m, saved = null, inputs = null) {
     CFG.SOUND = LS.cfgBak.SOUND; CFG.VIBRATE = LS.cfgBak.VIBRATE;
   }
   acc = 0;
+  last = performance.now();
+  // 绘制回调受浏览器限流时，仍按同一个时钟推进联机同步。
+  LS.clockTimer = setInterval(() => {
+    const now = performance.now();
+    if (now - last >= 32) advanceClock(now);
+  }, 16);
   lsJournalSave(); lsConnect(LS);
 }
 async function lsConnect(state) {
@@ -5808,6 +5816,7 @@ function lsStop() {
   else lsJournalSave();
 }
 function lsDispose(keepJournal = false) {
+  clearInterval(LS.clockTimer);
   if (LS.on) lsStop();
   const ch = LS.ch; LS.ch = null;
   if (ch) ACC.sb.removeChannel(ch);
