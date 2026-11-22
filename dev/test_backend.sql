@@ -232,6 +232,94 @@ exception when raise_exception then
 end;
 $$;
 
+-- 房间席位、邀请隐私、好友限制，以及新旧协议分开匹配。
+do $$
+declare
+  a uuid := 'de000000-0000-4000-8000-000000000001';
+  b uuid := 'de000000-0000-4000-8000-000000000002';
+  c uuid := 'de000000-0000-4000-8000-000000000003';
+  game uuid := 'de000000-0000-4000-8100-000000000010';
+  setup jsonb := '{"seed":1,"D":8,"spar":false,"sel":{"p1":"CH_JIN","p2":"CH_LAN","stage":"STG_01"},"cfg":{}}';
+  r jsonb;
+  rm uuid;
+  code text;
+  fid bigint;
+  ticket jsonb;
+begin
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  r := public.room_create(false);
+  rm := (r->>'id')::uuid; code := r->>'code';
+  if not public.can_join_duanlian_room('duanlian-room:' || rm)
+    or not public.room_invite(rm, b) then raise exception 'host failed to create or send an invite'; end if;
+
+  perform set_config('request.jwt.claim.sub', c::text, true);
+  if public.room_invites() <> '[]' or public.can_join_duanlian_room('duanlian-room:' || rm)
+    or public.room_touch(rm) is not null or public.room_enter(code)->>'status' is distinct from 'reserved'
+  then raise exception 'non-recipient gained an invite or room seat'; end if;
+
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  if public.room_invites() #>> '{0,id}' is distinct from rm::text then raise exception 'recipient invite missing'; end if;
+  r := public.room_enter(code, rm);
+  if r->>'guest' is distinct from b::text or not public.can_join_duanlian_room('duanlian-room:' || rm) then
+    raise exception 'recipient could not join and use private channel';
+  end if;
+  begin
+    perform public.room_start(rm, game, setup);
+    raise exception 'guest started the room';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', c::text, true);
+  if public.room_enter(code)->>'status' is distinct from 'full' then raise exception 'third player took occupied seat'; end if;
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  if public.room_start(rm, game, setup) is distinct from game then raise exception 'host failed to start'; end if;
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  if public.online_game(game)->>'guest' is distinct from b::text then raise exception 'wrong guest bound to game'; end if;
+  perform public.room_exit(rm);
+  if public.can_join_duanlian_room('duanlian-room:' || rm) then raise exception 'former guest retained room access'; end if;
+
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  if public.room_touch(rm)->>'guest' is not null then raise exception 'guest seat did not release'; end if;
+  perform public.room_exit(rm);
+  if public.room_enter(code)->>'status' is distinct from 'missing' then raise exception 'closed room code still active'; end if;
+
+  delete from public.friendships where requester = a and addressee = b;
+  -- The previous rate-limit assertion fills A's counter for friend requests; B sends this one.
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  insert into public.friendships (addressee) values (a) returning id into fid;
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  update public.friendships set status = 'accepted' where id = fid;
+  r := public.room_create(true); rm := (r->>'id')::uuid; code := r->>'code';
+  if public.room_invite(rm, c) or not public.room_invite(rm, b) then raise exception 'spar invite membership incorrect'; end if;
+  perform set_config('request.jwt.claim.sub', c::text, true);
+  if public.room_enter(code)->>'status' is distinct from 'friends_only' then raise exception 'stranger joined friends-only room'; end if;
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  perform public.room_decline(rm);
+  if public.room_invites() <> '[]' then raise exception 'declined invite remains visible'; end if;
+  if public.room_enter(code)->>'spar' is distinct from 'true' then raise exception 'friend could not join spar'; end if;
+  perform public.room_exit(rm);
+
+  perform public.mm_leave();
+  perform set_config('request.jwt.claim.sub', c::text, true);
+  perform public.mm_leave();
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  perform public.room_exit(rm);
+  perform public.mm_join(14);
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  perform public.mm_join(13);
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  if public.mm_poll(14)->>'status' is distinct from 'searching' then raise exception 'mixed queue protocols matched'; end if;
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  perform public.mm_join(14); ticket := public.mm_poll(14);
+  if ticket->>'status' is distinct from 'matched' or not public.can_join_duanlian_room('duanlian-room:' || (ticket->>'pair')) then
+    raise exception 'matchmaking did not produce a private room';
+  end if;
+  perform set_config('request.jwt.claim.sub', c::text, true);
+  if public.can_join_duanlian_room('duanlian-room:' || (ticket->>'pair'))
+    or public.room_enter(ticket->>'code')->>'status' is distinct from 'full' then raise exception 'third party claimed a ranked seat'; end if;
+end;
+$$;
+
 reset role;
 rollback;
-select 'backend v2 + friends assertions passed' as verification;
+select 'backend, friends and rooms assertions passed' as verification;
