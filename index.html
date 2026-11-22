@@ -232,7 +232,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v1.3 · 背景为电脑自动对战演示</div>
+  <div class="ver">v1.4 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -356,7 +356,7 @@ const CFG_DESC = {
   HP: '生命值上限', ROUND_TIME: '每回合秒数（0 = 不限时）', ROUNDS_TO_WIN: '获胜所需回合数',
   GROUND: '地面高度（像素）', STAGE_W: '场地宽度（像素）；大于 1280 时镜头横向跟随', WALL_L: '左墙', WALL_R: '右墙（自动 = 场地宽度 − 左墙）', PARALLAX: '远景视差（0 = 远景不动，1 = 和地面一起动）', MAX_SEP: '两人最远距离（保证两人都在画面里）', MOVE_MUL: '移动速度倍率（走路、纵深、跳跃、冲刺）', GRAVITY: '重力', BUFFER: '按键预输入缓存（帧）',
   BRK_MAX: '破链能量上限', BRK_COST: '破链一次消耗的能量', BRK_START: '每回合开局的破链能量',
-  GAIN: '其他充能：防御成功 / 命中对手 / 每次掉落结算（守方）/ 每帧自然增长',
+  GAIN: '其他充能：命中对手 / 每次掉落结算（守方）/ 每帧自然增长',
   CHAIN_WINDOW: '连段窗口（帧）：上一击命中后，下一击必须在这段时间内命中', WINDOW_MUL: '连段窗口倍率（设置页）', CHAIN_DIST: '连段中守方被锁定在攻方前方的距离',
   BURN_TIME: '燃链持续帧数', BURN_MOM: '燃链期间连段势倍率', BURN_WIN: '燃链期间连段窗口倍率', BURN_DMG: '燃链期间伤害倍率',
   WALL_MOM: '撞墙时额外连段势（每次连段最多 2 次）', THROW_RANGE: '投技距离',
@@ -365,13 +365,12 @@ const CFG_DESC = {
   REPEAT_LIMIT: '同一招连续命中达到此次数，连段中断', REPEAT_MOM_MUL: '重复招式的连段势倍率', REPEAT_DMG_MUL: '重复招式的伤害倍率',
   IMMEDIATE_RATIO: '每击立即生效的伤害比例，其余进入暂存', FIN_MIN_LV: '可用终结技的最低掉落阶段', COUNTER_MOM: '反击起手（打断对手出招）额外的连段势',
   END_PROTECT: '连段结束后守方额外的无敌帧（防止立刻再起手）', FIN_DOWN: '吃到终结技后的倒地帧数',
-  GRD_REGEN: '护架每帧恢复量', GRD_CRUSH_STUN: '破防硬直（帧）',
   SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
   BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
   AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置', TOUCH_LIFT: '触屏时战斗画面最多上移多少像素，给按键让出底部', SKETCH: '手绘风渲染角色',
   Z_MAX: 'Z 轴（纵深）范围', Z_Y0: 'Z=0（最里）时脚底的屏幕高度', Z_Y1: 'Z 最大（最外）时脚底的屏幕高度', Z_SCALE0: '最里侧角色缩放', Z_SCALE1: '最外侧角色缩放',
   Z_SPEED: '纵深移动速度', Z_HIT: '招式默认的纵深判定宽度（Z 差超过就打不中）', Z_BODY: '身体碰撞的纵深厚度（Z 差小于它两人才会互相挡住；比判定窄，不会“撞得到却打不到”）', Z_TRACK: '出手时朝对手纵深自动修正的最大距离（转向）', SIDE_DIST: '侧闪移动的纵深距离', BOUNCE_MOM: '坠击落地反弹额外连段势',
-  PARRY_WINDOW: '弹反判定：在被打中前多少帧内按下防御', PARRY_STUN: '被弹反后攻方的硬直（帧）', PARRY_GAIN: '弹反成功获得的破链能量',
+  PARRY_GAIN: '闪避成功获得的破链能量（侧闪 / 后撤步的无敌时间里躲开一次攻击）',
   DOUBLE_TAP: '双击方向触发冲刺 / 后撤步的间隔（帧）', EMBER_DMG: '烬「余烬」每层伤害', ASSIST_CD: '外援冷却（帧）', ASSIST_START: '每回合开局外援剩余冷却（帧）',
   HEAL: '药师外援的回复量', ELIXIR: '回春丹的回复量', CAMERA: '动态镜头（连段时推近）',
 };
@@ -392,13 +391,11 @@ const STATES = {
   ST_IDLE: { name: '站立', desc: '可自由行动' },
   ST_WALK: { name: '移动', desc: '后退速度略慢' },
   ST_JUMP: { name: '跳跃', desc: '空中可出一次空中击' },
-  ST_GUARD: { name: '防御', desc: '按住防御键；挡下攻击会消耗护架值' },
   ST_ATTACK: { name: '出招', desc: '发生 → 持续 → 收招；连段中命中后可取消收招' },
   ST_CHAINED: { name: '被连锁定', desc: '被连段锁定，只能使用破链' },
   ST_STAGGER: { name: '踉跄', desc: '连段在低阶段结束后的硬直' },
   ST_KNOCKDOWN: { name: '倒地', desc: '连段在高阶段结束或吃到终结技，倒地期间无敌' },
   ST_WAKEUP: { name: '起身', desc: '倒地后起身，无敌' },
-  ST_CRUSH: { name: '破防', desc: '护架耗尽，短时间无法行动' },
   ST_BREAK: { name: '破链爆发', desc: '守方破链后的短暂无敌' },
   ST_REPELLED: { name: '被弹开', desc: '连段被破链后攻方的硬直' },
   ST_KO: { name: '战败', desc: '本回合落败' },
@@ -406,7 +403,7 @@ const STATES = {
 };
 
 /* ---------- 四、角色与招式 CH / MV ----------
-   招式字段：startup 发生帧 / active 持续帧 / recovery 收招帧 / dmg 伤害 / mom 连段势 / grd 削护架
+   招式字段：startup 发生帧 / active 持续帧 / recovery 收招帧 / dmg 伤害 / mom 连段势 / grd（旧的削护架，v1.4 起没有防御，不再使用）
    range 攻击距离 / hbY 判定中心离脚底的高度 / hbH 判定高度 / cpush 连段中击退 / lift 浮空 / advance 前冲距离 */
 const MV = (id, name, startup, active, recovery, dmg, mom, grd, range, hbY, hbH, hitstop, pose, extra = {}) =>
   ({ id, name, startup, active, recovery, dmg, mom, grd, range, hbY, hbH, hitstop, pose, cpush: 6, ...extra });
@@ -437,7 +434,7 @@ const CHARS = [
       AIR: MV('MV_LAN_AIR', '落潮', 5, 9, 7, 32, 12, 10, 116, 55, 62, 5, 'airkick', { cpush: 3 }),
       FIN: MV('MV_LAN_FIN', '沧澜尽', 12, 12, 30, 150, 0, 0, 160, 120, 130, 18, 'upper', { finisher: true, cpush: 0 }),
     } },
-  { id: 'CH_YUE', name: '岳', title: '镇山力士', role: '力量型：出招慢，每击连段势高，护架厚',
+  { id: 'CH_YUE', name: '岳', title: '镇山力士', role: '力量型：出招慢，每击连段势高，重锤打得远',
     mech: { id: 'MECH_ARMOR', name: '不动', desc: '技能一「岩枪阵」、技能二「山崩」在发生前带霸体：能硬吃一击（受 80% 伤害）而不被打断。' },
     color: '#b0812f', dark: '#5f4318', alt: '#7d7d78', altDark: '#3e3e3a', skin: '#c79a72', hair: '#2a1d10', sash: '#3b2b1a',
     scarf: { at: 'head', n: 3, len: 10 }, build: 34, scale: 1.08,
@@ -515,13 +512,14 @@ const COMMON = {
   AIRH: MV('MV_AIRH', '坠击', 7, 6, 12, 40, 18, 14, 112, 46, 84, 8, 'airkick', { spike: true, cpush: 2, zr: 34 }),
 };
 const MECHS = [
-  { id: 'MECH_SKILL', name: '技能与冷却', desc: '每个角色有三个技能：特技、前 + 特技、后 + 特技——飞行物、贴地冲击波、范围爆发、持续区域、陷阱、落雷、护体、穿身冲刺各不相同。技能有冷却（屏幕上方血条下的三个图标），命中同样能起手或接续连段；远距离命中时连段窗口会变长，方便追上去。飞行物能被防御、弹反抵消，两边的飞行物相撞会互相抵消。出招前会结印、头顶亮出术名；终结技改称「奥义」，命中后全屏演出。被连时破链就是「替身术」：原地留下一截木桩，闪到对手身后（背后靠墙就闪到前方）。' },
-  { id: 'MECH_PARRY', name: '弹反', desc: '在被打中前约 0.1 秒内按下防御：不掉护架，攻方硬直，自己获得破链能量。' },
-  { id: 'MECH_DASH', name: '冲刺 / 后撤步', desc: '快速双击前 / 后方向。冲刺中可直接出招；后撤步开头无敌。' },
-  { id: 'MECH_CANCEL', name: '取消', desc: '攻击命中或被防御后，可立刻取消收招接下一招，立回也能打出连贯的压制。' },
+  { id: 'MECH_SKILL', name: '技能与冷却', desc: '每个角色有三个技能：特技、前 + 特技、后 + 特技——飞行物、贴地冲击波、范围爆发、持续区域、陷阱、落雷、护体、穿身冲刺各不相同。技能有冷却（屏幕上方血条下的三个图标），命中同样能起手或接续连段；远距离命中时连段窗口会变长，方便追上去。两边的飞行物相撞会互相抵消。出招前会结印、头顶亮出术名；终结技改称「奥义」，命中后全屏演出。被连时破链就是「替身术」：原地留下一截木桩，闪到对手身后（背后靠墙就闪到前方）。' },
+  { id: 'MECH_WEAPON', name: '兵器与轻击三段', desc: '每个角色有自己的兵器和路数：拳、剑、锤、双刃、铃与符、长刀、长枪。轻击连按打出三段（第二、三段没打中也能接，命中时可以更早接），第三段把对手挑起来；重击是各自兵器的大招，空中轻击也换成兵器下劈。' },
+  { id: 'MECH_PARRY', name: '闪避', desc: '没有防御键：躲攻击靠侧闪、后撤步、跳跃和替身术。侧闪 / 后撤步开头无敌，在无敌时间里躲开一次攻击（近身招式或飞行物）就是「闪避」，破链能量 +12。' },
+  { id: 'MECH_DASH', name: '冲刺 / 后撤步', desc: '快速双击前 / 后方向。冲刺中可直接出招；后撤步开头无敌，可以用来闪避。' },
+  { id: 'MECH_CANCEL', name: '取消', desc: '攻击命中后（或被霸体、铁卫挡下后），可立刻取消收招接下一招。轻击连按是三段，没打中也能接下一段。' },
   { id: 'MECH_BURN', name: '燃链', desc: '没被连时，破链能量达到破链所需就能按破链键「燃链」：消耗这些能量，6 秒内连段势 +25%、连段窗口 +25%、伤害 +10%。能量要留着保命还是拿来进攻，由你决定。' },
   { id: 'MECH_WALL', name: '撞墙', desc: '连段达到「压制」后把对手打到墙边会撞墙：额外 +25 连段势，每次连段最多 2 次。' },
-  { id: 'MECH_THROW', name: '投技', desc: '贴身时按住前 + 重击：无视防御的投，命中直接起手连段（+30 连段势）。打空收招很长，对手跳起来就抓不到。' },
+  { id: 'MECH_THROW', name: '投技', desc: '贴身时按住前 + 重击：投，命中直接起手连段（+30 连段势）。打空收招很长，对手跳起来或侧闪就抓不到。' },
   { id: 'MECH_DEPTH', name: '纵深（Z 轴）', desc: '上下方向在地面上往里 / 往外走。身体只在几乎同一条线上才会互相挡住；纵深差在 30 以内都打得中，出招时还会自动转向、朝对手的纵深修正一点。差得更远就打不中——可以绕开对手，也能躲开飞来的箭（脚下影子亮起描边 = 在对方的打击范围里）。被连段时会被拉到攻方同一条线上。' },
   { id: 'MECH_SIDE', name: '侧闪', desc: '快速双击上或下：往里 / 往外闪一步，前 10 帧无敌。看准对手出招时侧闪，再从侧面反打。' },
   { id: 'MECH_AIR', name: '浮空追击（Y 轴）', desc: '特技会把对手打到空中。连段命中后按跳跃可以追上去，空中轻击接「坠击」（空中重击）把对手砸回地面反弹，额外 +20 连段势，落地后继续连。' },
@@ -560,10 +558,10 @@ const GEAR = [
   { id: 'GR_JADE', name: '护心玉', desc: '每回合一次：被“掉落”结算时，这次结算伤害减半' },
   { id: 'GR_GLASS', name: '流沙漏', desc: '自己的连段窗口延长 20%' },
   { id: 'GR_BUCKLE', name: '断链扣', desc: '每回合开局破链能量 +30' },
-  { id: 'GR_FAN', name: '铁骨扇', desc: '护架 +40%，弹反判定多 3 帧' },
+  { id: 'GR_FAN', name: '铁骨扇', desc: '侧闪、后撤步的无敌时间多 4 帧，更容易闪避' },
   { id: 'GR_TALISMAN', name: '血符', desc: '造成的伤害 +12%，受到的伤害也 +12%' },
   { id: 'GR_BOOTS', name: '疾风履', desc: '移动速度 +12%，冲刺 / 后撤步距离 +30%' },
-  { id: 'GR_MIRROR', name: '镜心', desc: '弹反成功时回复 40 生命，并让对手破链能量 -15' },
+  { id: 'GR_MIRROR', name: '镜心', desc: '闪避成功时回复 40 生命，并让对手破链能量 -15' },
 ];
 const GEAR_BY = Object.fromEntries(GEAR.map(g => [g.id, g]));
 const gearAtk = f => f.gear === 'GR_TALISMAN' ? 1.12 : 1, gearDef = f => f.gear === 'GR_TALISMAN' ? 1.12 : 1;
@@ -572,8 +570,8 @@ const ASSISTS = [
   { id: 'AS_ARCHER', name: '弓手', role: '在身后射出一箭：命中可直接起手，连段中命中可接续连段', col: '#d6a44a' },
   { id: 'AS_HOUND', name: '猎犬', role: '贴地扑向对手，命中使其踉跄；连段中命中可接续连段', col: '#c08a54' },
   { id: 'AS_HEALER', name: '药师', role: '回复 80 生命与 15 破链能量', col: '#6fd39a' },
-  { id: 'AS_FALCON', name: '猎鹰', role: '锁定对手当前位置从天而降，无视防御；命中可起手或接续连段。对手看到落点影子可以走开', col: '#9db4c8' },
-  { id: 'AS_MONK', name: '武僧', role: '上前推出定身掌：命中让对手定身约 0.8 秒（可被防御）；连段中命中可接续连段', col: '#e09a4a' },
+  { id: 'AS_FALCON', name: '猎鹰', role: '锁定对手当前位置从天而降；命中可起手或接续连段。对手看到落点影子可以走开', col: '#9db4c8' },
+  { id: 'AS_MONK', name: '武僧', role: '上前推出定身掌：命中让对手定身约 0.8 秒；连段中命中可接续连段', col: '#e09a4a' },
 ];
 const AS_BY = Object.fromEntries(ASSISTS.map(a => [a.id, a]));
 
@@ -994,11 +992,11 @@ const EVENTS = {
   EV_ROUND_START: '回合开始', EV_CHAIN_START: '起手命中，连段开始', EV_CHAIN_HIT: '连段中每次命中',
   EV_DROP_COMMIT: '越过阶段阈值，暂存伤害结算（掉落）', EV_CHAIN_DROP: '连段窗口耗尽，连段中断', EV_CHAIN_REPEAT: '同招重复过多，连段中断',
   EV_CHAIN_END: '连段以其他方式结束（破链 / 终结 / 时间到 / 击倒）', EV_BREAK: '守方破链', EV_FINISH: '终结技命中',
-  EV_GUARD: '防御成功', EV_GUARD_CRUSH: '破防', EV_PARRY: '弹反成功', EV_ASSIST: '呼叫外援', EV_MECH: '角色特性触发', EV_BURN: '燃链', EV_WALL: '撞墙', EV_THROW: '投技命中', EV_SHARD_SPAWN: '链晶出现', EV_SHARD_PICK: '拾取链晶', EV_KO: '击倒', EV_TIMEUP: '时间到',
+  EV_PARRY: '闪避成功（侧闪 / 后撤步的无敌时间里躲开攻击）', EV_ASSIST: '呼叫外援', EV_MECH: '角色特性触发', EV_BURN: '燃链', EV_WALL: '撞墙', EV_THROW: '投技命中', EV_SHARD_SPAWN: '链晶出现', EV_SHARD_PICK: '拾取链晶', EV_KO: '击倒', EV_TIMEUP: '时间到',
 };
 const DUMMY = [
   { id: 'DM_STAND', key: 'stand', name: '站立', desc: '不动，不破链' },
-  { id: 'DM_GUARD', key: 'guard', name: '一直防御', desc: '练习破防' },
+  { id: 'DM_DODGE', key: 'dodge', name: '一直闪避', desc: '看准出招就侧闪：练习追身和压制' },
   { id: 'DM_BREAK', key: 'break', name: '自动破链', desc: '能量常满，会在阈值前破链' },
   { id: 'DM_CPU', key: 'cpu', name: '电脑', desc: '普通难度 AI' },
 ];
@@ -1011,10 +1009,10 @@ const HOOKS = {};
 const on = (ev, fn) => (HOOKS[ev] = HOOKS[ev] || []).push(fn);
 
 /* ---------- 六、按键 ---------- */
-const ACTIONS = { left: '左移', right: '右移', up: '往里走（双击侧闪）', down: '往外走（双击侧闪）', jump: '跳跃 / 浮空追击', guard: '防御', l: '轻击', h: '重击（贴身+前 = 投）', s: '特技（+前 = 前冲技）', brk: '破链 / 燃链', fin: '终结技（坠落起）', ast: '呼叫外援' };
+const ACTIONS = { left: '左移', right: '右移', up: '往里走（双击侧闪）', down: '往外走（双击侧闪）', jump: '跳跃 / 浮空追击', l: '轻击', h: '重击（贴身+前 = 投）', s: '特技（+前 = 前冲技）', brk: '破链 / 燃链', fin: '终结技（坠落起）', ast: '呼叫外援' };
 const KEYMAP = {
-  P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], down: ['KeyS'], jump: ['Space'], guard: ['KeyH', 'ShiftLeft'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'], ast: ['KeyU'] },
-  P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], down: ['ArrowDown'], jump: ['ShiftRight', 'Numpad0'], guard: ['Enter', 'NumpadDecimal'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'], ast: ['KeyM', 'Numpad4'] },
+  P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], down: ['KeyS'], jump: ['Space'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'], ast: ['KeyU'] },
+  P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], down: ['ArrowDown'], jump: ['ShiftRight', 'Numpad0'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'], ast: ['KeyM', 'Numpad4'] },
 };
 const KN = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", Space: '空格', ShiftLeft: '左Shift', ShiftRight: '右Shift', Enter: '回车', NumpadDecimal: '小键盘.' };
 const keyName = c => KN[c] || (c.startsWith('Key') ? c.slice(3) : c.startsWith('Numpad') ? '小键盘' + c.slice(6) : c);
@@ -1192,7 +1190,7 @@ class Fighter {
   reset() {
     Object.assign(this, { x: CFG.STAGE_W / 2 + (this.idx ? 210 : -210), z: 50, y: gy(50), vx: 0, vy: 0, airH: false, spiked: false, face: this.idx ? -1 : 1, fv: this.idx ? -1 : 1, spinT: 0, hp: CFG.HP, trail: CFG.HP,
       brk: Math.min(CFG.BRK_MAX, CFG.BRK_START + (this.gear === 'GR_BUCKLE' ? 30 : 0)),
-      grdMax: this.ch.grd * (this.gear === 'GR_FAN' ? 1.4 : 1), state: 'ST_IDLE', t: 0, move: null, mt: 0, hitDone: false, blockHit: false, stun: 0, inv: 0, chain: null, chainedBy: null,
+      grdMax: this.ch.grd, state: 'ST_IDLE', t: 0, move: null, mt: 0, hitDone: false, blockHit: false, stun: 0, inv: 0, chain: null, chainedBy: null,
       flash: 0, buf: null, inp: EMPTY, airUsed: false, landed: false, walkPh: 0, hitAlt: false, refill: 0, denyT: 0, serial: -1,
       ember: 0, marks: 0, markT: 0, flowT: 0, armorUsed: false, jadeUsed: false, astCD: CFG.ASSIST_START, parryT: -99, lastTapDir: 0, lastTapT: -99,
       squash: 0, bounced: false, frost: 0, frostT: 0, charge: 0, chargeT: 0, charged: false, burnT: 0, iceT: 0, frozenT: 0, cd: { S: 0, FS: 0, BS: 0 }, stoneT: 0, stoneUsed: false, castX: 0 });
@@ -1207,7 +1205,6 @@ class Fighter {
     if (p.fin) a = 'FIN';
     else if (p.s) a = (back && this.ch.moves.BS) ? 'BS' : fwd ? 'FS' : 'S';
     else if (p.h) a = fwd && canThrow(this) ? 'THROW' : 'H'; else if (p.l) a = 'L';
-    if (p.guard || (this.face > 0 ? p.left : p.right)) this.parryT = G.frame;
     if (p.jump && this.state === 'ST_ATTACK') a = a || 'JUMP';
     for (const [k, d] of [['up', -1], ['down', 1]]) if (p[k]) {
       if (this.lastTapZ === d && G.frame - this.lastTapZT <= CFG.DOUBLE_TAP) { a = a || (d < 0 ? 'SIDE_U' : 'SIDE_D'); this.lastTapZT = -99; }
@@ -1231,7 +1228,6 @@ class Fighter {
     }
     if (this.marks && ++this.markT > 360) this.marks = 0;
     if (this.buf && --this.buf.t <= 0) this.buf = null;
-    if (this.state !== 'ST_GUARD') this.grd = Math.min(this.grdMax, this.grd + CFG.GRD_REGEN);
     switch (this.state) {
       case 'ST_KO': case 'ST_WIN': phys(this); break;
       case 'ST_CHAINED':
@@ -1271,7 +1267,7 @@ class Fighter {
     if (fast) { this.ghosts.push({ x: this.x, y: this.y, face: skFv(this), pose: { ...this.pose } }); if (this.ghosts.length > 4) this.ghosts.shift(); }
     else if (this.ghosts.length) this.ghosts.shift();
     if (this.state === 'ST_ATTACK' && m && m.dmg > 0 && this.mt >= m.startup - 1 && this.mt <= m.startup + m.active + 2) {
-      const k = skel(this); this.swoosh.push(toWorld(this, skTip(this, k))); if (this.swoosh.length > (SK_BLADE[this.ch.id] ? 9 : 7)) this.swoosh.shift();
+      const k = skel(this), tp = toWorld(this, skTip(this, k)); tp.pv = toWorld(this, k.sh); this.swoosh.push(tp); if (this.swoosh.length > (SK_BLADE[this.ch.id] ? 9 : 7)) this.swoosh.shift();
     } else if (this.swoosh.length) this.swoosh.splice(0, 2);
     if (this.state === 'ST_ATTACK') { skTick(this); skKit(this); }
   }
@@ -1286,9 +1282,6 @@ class Fighter {
         if (isHuman(this) && this.denyT < G.frame) { this.denyT = G.frame + 50; pop(`终结技需连段达到「${DROP_LEVELS[CFG.FIN_MIN_LV].name}」`, this.x, this.y - 240, MUTE, 20); }
       } else if (this.startMove(a)) return;
     }
-    const back = this.face > 0 ? inp.held.left : inp.held.right;
-    const threat = op.state === 'ST_ATTACK' && op.move && op.move.dmg > 0 && op.mt <= op.move.startup + op.move.active && Math.abs(op.x - this.x) < 330 && Math.abs(op.z - this.z) < 50 || G.ents.some(e => e.id === 'SK' && e.owner === op && !e.done && e.sk !== 'zone' && Math.abs(e.x - this.x) < 240 && Math.abs(e.z - this.z) < 40);
-    if (inp.held.guard || (back && threat)) { if (this.state !== 'ST_GUARD') this.setState('ST_GUARD'); return; }
     const d = (inp.held.right ? 1 : 0) - (inp.held.left ? 1 : 0), dz = (inp.held.down ? 1 : 0) - (inp.held.up ? 1 : 0);
     if (jumpNow) { this.vy = -this.ch.jump; this.vx = d * this.ch.walk * 1.15 * CFG.MOVE_MUL; this.y -= 1; this.airUsed = false; this.airH = false; this.squash = 3; this.setState('ST_JUMP'); return; }
     if (d || dz) {
@@ -1304,6 +1297,7 @@ class Fighter {
     else if (a === 'JUMP') return false;
     else if (!this.grounded) { if (a === 'H') { if (this.airH) return false; a = 'AIRH'; } else { if (this.airUsed) return false; a = 'AIR'; } }
     else if (a === 'AIR' || a === 'AIRH') a = 'L';
+    if (a === 'L' && this.state === 'ST_ATTACK' && this.move && this.move.next && this.grounded) a = this.move.next;   // 轻击三段
     const m = this.ch.moves[a] || COMMON[a]; if (!m) return false;
     if (!skCanCast(this, m)) return false;
     this.castX = this.x;
@@ -1312,8 +1306,8 @@ class Fighter {
     if (this.ch.mech.id === 'MECH_THUNDER' && this.charge > 0 && (m === this.ch.moves.S || m === this.ch.moves.FS)) { this.charge--; this.charged = true; spark(this.x, this.y - 120 * this.ch.scale, '#ffe066', 10, 6); }
     if (a === 'AIR') this.airUsed = true; else if (a === 'AIRH') this.airH = true; else this.vx = 0;
     if (m.teleport) this.inv = Math.max(this.inv, m.startup + m.recovery);
-    if (m.invF) this.inv = Math.max(this.inv, m.invF);
-    SFX.play(m.dash || m.teleport ? 'dash' : 'swing', m.dmg); skStart(this, m);
+    if (m.invF) this.inv = Math.max(this.inv, m.invF + (this.gear === 'GR_FAN' ? 4 : 0));
+    SFX.play(m.dash || m.teleport ? 'dash' : (m.sfx || 'swing'), m.dmg); skStart(this, m);
     if (!m.dash) G.lastMove = { who: this.idx, m };
     return true;
   }
@@ -1347,6 +1341,7 @@ class Fighter {
         if (this.chain && this.grounded) { const t = this.chain.target; this.move = null; this.vy = -this.ch.jump * .95; this.vx = clamp((t.x - this.x) / 26, -5, 5); this.y -= 1; this.airUsed = false; this.airH = false; this.squash = 3; this.setState('ST_JUMP'); emit('EV_AIRCHASE', { who: this.idx }); return; }
       } else if ((b.act !== 'FIN' || (this.chain && this.chain.lv >= CFG.FIN_MIN_LV)) && this.startMove(b.act)) return;
     }
+    if (m.next && this.buf && this.buf.act === 'L' && this.grounded && this.mt > m.startup + m.active + (m.gap || 0)) { this.buf = null; if (this.startMove('L')) return; }   // 轻击三段：没打中也能接下一段
     if (this.mt >= total) { this.move = null; this.setState(this.grounded ? 'ST_IDLE' : 'ST_JUMP'); }
   }
   updPose() {
@@ -1414,6 +1409,7 @@ function resolveHits() {
       a.hitDone = true; a.blockHit = true; shield.life = shield.t + 10; G.hitstop = Math.max(G.hitstop, 6); shake(6);
       spark(shield.x - a.face * 20, a.y - m.hbY * a.ch.scale, '#cfd6de', 14, 8); pop('铁卫 · 挡下', shield.x, gy(shield.z) - 240, '#cfd6de', 24, FB); SFX.play('block'); continue;
     }
+    if (d.inv > 0 && !d.chainedBy && d.dodgeSer !== a.serial && d.state === 'ST_ATTACK' && d.move && (d.move.side || d.move.dash < 0) && !m.throw && Math.abs(a.z - d.z) <= (m.zr || CFG.Z_HIT) + 40 && overlap(hr, hurtRect(d))) evade(d, a);   // 闪避
     if (d.inv > 0 || (d.chainedBy && d.chainedBy !== a)) continue;
     if (m.throw && (!d.grounded || d.state === 'ST_JUMP')) continue;
     if (!zNear(a, d, m.zr || CFG.Z_HIT)) continue;
@@ -1426,7 +1422,6 @@ function resolveHits() {
 function onHit(a, d, m) {
   if (a.chain && a.chain.target === d) return chainHit(a, d, m);
   if (d.stoneT > 0 && !d.stoneUsed && !m.throw && d.state !== 'ST_GUARD') { d.stoneUsed = true; pop('石肤', d.x, d.y - 270, '#c9b48e', 28, FB); return armorHit(a, d, m); }
-  if (d.state === 'ST_GUARD' && d.grounded && !m.throw && !m.overhead) return block(a, d, m);
   if (m.finisher) return;
   if (!m.throw && d.state === 'ST_ATTACK' && d.move && d.move.armor && d.mt <= d.move.startup && !d.armorUsed) return armorHit(a, d, m);
   const counter = d.state === 'ST_ATTACK';
@@ -1580,25 +1575,12 @@ function doBreak(d) {
   if (d.ch.mech.id === 'MECH_FLOW') { d.flowT = 90; pop('回流 · 就绪', d.x, d.y - 280, d.col, 26, FB); }
   SFX.play('break'); buzz([30, 40, 90]); emit('EV_BREAK', { who: d.idx, text: `在 ${DROP_LEVELS[lv].id} 破链，返还 ${Math.round(refund)}` });
 }
-function block(a, d, m) {
-  a.blockHit = true;
-  if (G.frame - d.parryT <= CFG.PARRY_WINDOW + (d.gear === 'GR_FAN' ? 3 : 0)) return parry(a, d, m);
-  d.grd -= m.grd; d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.GAIN.guard * bgain(d));
-  d.x += a.face * m.cpush * 1.6; a.x -= a.face * m.cpush * .4;
-  G.hitstop = Math.max(G.hitstop, Math.max(3, m.hitstop - 3));
-  spark(d.x - a.face * 30, a.y - m.hbY * a.ch.scale, '#9fd3d0', 8, 6); SFX.play('block'); buzz(4); emit('EV_GUARD', { who: d.idx, text: m.id });
-  if (d.grd <= 0) {
-    d.grd = 0; d.setState('ST_CRUSH'); d.stun = CFG.GRD_CRUSH_STUN; shake(12);
-    pop('破防', d.x, d.y - 240, RED, 40, FB); SFX.play('crush'); buzz(45); emit('EV_GUARD_CRUSH', { who: d.idx });
-  }
-}
-function parry(a, d, m) {
-  d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.PARRY_GAIN); d.stats.parries++; d.parryT = -99;
-  a.move = null; a.buf = null; a.setState('ST_STAGGER'); a.stun = CFG.PARRY_STUN; a.vx = -a.face * 4;
-  G.hitstop = Math.max(G.hitstop, 10); G.slow = Math.max(G.slow, 14); G.flash = Math.max(G.flash, .22); shake(8);
-  const x = d.x - a.face * 30, y = a.y - (m.hbY || 110) * a.ch.scale;
-  ring(x, y, '#bfe9ff', 6, 120, 18); spark(x, y, '#e6f7ff', 16, 9);
-  pop('弹反', d.x, d.y - 245, '#bfe9ff', 42, FB); SFX.play('parry'); buzz([10, 20, 30]); emit('EV_PARRY', { who: d.idx });
+/* 闪避：侧闪 / 后撤步的无敌时间里躲开一次攻击 → 破链能量 +PARRY_GAIN（没有防御键了） */
+function evade(d, a) {
+  d.dodgeSer = a.serial; d.brk = Math.min(CFG.BRK_MAX, d.brk + CFG.PARRY_GAIN); d.stats.parries++;
+  G.slow = Math.max(G.slow, 10); G.flash = Math.max(G.flash, .12);
+  const y = d.y - 110 * d.ch.scale; ring(d.x, y, '#bfe9ff', 6, 120, 16); spark(d.x, y, '#e6f7ff', 10, 7);
+  pop('闪避', d.x, d.y - 245, '#bfe9ff', 40, FB); SFX.play('parry'); buzz([10, 20]); emit('EV_PARRY', { who: d.idx });
   if (d.gear === 'GR_MIRROR') { d.hp = Math.min(CFG.HP, d.hp + 40); d.trail = Math.max(d.trail, d.hp); a.brk = Math.max(0, a.brk - 15); pop('镜心 +40', d.x, d.y - 290, '#ffe2a8', 26, FB); }
 }
 function checkKO(d, a) {
@@ -1660,11 +1642,6 @@ function hitAt(px, py, w, op, e, zr) { const r = hurtRect(op); return !!r && op.
 function assistHit(f, op, m, e) {
   if (op.chainedBy && op.chainedBy !== f) return;
   if (f.chain && f.chain.target === op) { chainHit(f, op, m); return; }
-  if (op.state === 'ST_GUARD' && op.grounded && !m.overhead) {
-    op.grd -= m.grd; spark(op.x - (e.vx > 0 ? 30 : -30), e.y, '#9fd3d0', 8, 6); SFX.play('block');
-    if (op.grd <= 0) { op.grd = 0; op.setState('ST_CRUSH'); op.stun = CFG.GRD_CRUSH_STUN; pop('破防', op.x, op.y - 240, RED, 40, FB); SFX.play('crush'); }
-    return;
-  }
   if (m === AS_MOVE.MONK) {
     op.move = null; op.buf = null; op.setState('ST_STAGGER'); op.stun = CFG.MONK_FREEZE; op.frozenT = CFG.MONK_FREEZE; op.vx = 0;
     op.hp = Math.max(1, op.hp - m.dmg * gearDef(op)); op.flash = 4; ring(op.x, op.y - 110, '#f2c84b', 10, 130, 18);
@@ -1770,17 +1747,18 @@ class AI {
       const close = dist < op.move.range * op.ch.scale + (op.move.advance || 0) + 70 && Math.abs(op.z - me.z) < 34;
       if (close && me.grounded && Math.random() < .08 + .22 * P.parry) { o.dash = me.z < 25 ? 'SIDE_D' : me.z > 75 ? 'SIDE_U' : (Math.random() < .5 ? 'SIDE_U' : 'SIDE_D'); return o; }
       const bs = me.ch.moves.BS; if (close && bs && (bs.teleport || (bs.sk && ['ring', 'buff'].includes(bs.sk.type))) && !(me.cd && me.cd.BS > 0) && Math.random() < .12 * P.agg) { o.held[aw] = true; o.pressed.s = true; return o; }
-      if (close && Math.random() < P.guard) { this.guardT = op.move.startup + op.move.active + 8; this.parry = Math.random() < P.parry; }
+      if (close && Math.random() < P.guard) { this.evS = op.serial; this.evAt = Math.max(1, op.move.startup - (Math.random() < P.parry ? 3 : randi(6, 12))); }
     }
-    if (this.guardT > 0 && me.grounded) {
-      this.guardT--; o.held.guard = true;
-      if (this.parry && op.state === 'ST_ATTACK' && op.move && op.mt === Math.max(1, op.move.startup - 2)) o.pressed.guard = true;
-      return o;
+    if (this.evS === op.serial && op.state === 'ST_ATTACK' && op.move && op.mt >= this.evAt && me.grounded) {   // 闪避
+      this.evS = -1; const r = Math.random();
+      if (r < .55) { o.dash = me.z < 25 ? 'SIDE_D' : me.z > 75 ? 'SIDE_U' : (Math.random() < .5 ? 'SIDE_U' : 'SIDE_D'); return o; }
+      if (r < .85) { o.dash = 'BDASH'; return o; }
+      o.pressed.jump = true; o.held[aw] = true; return o;
     }
     if (this.cd > 0) this.cd--;
     const dz = op.z - me.z; if (Math.abs(dz) > 10) o.held[dz < 0 ? 'up' : 'down'] = true;
     if (me.burnT <= 0 && me.brk >= CFG.BRK_MAX && dist < 300 && Math.random() < .004 * P.agg * (op.hp < CFG.HP * .45 ? 3 : 1)) { o.pressed.brk = true; return o; }
-    if (this.cd <= 0 && canThrow(me) && Math.random() < (op.state === 'ST_GUARD' ? .3 : .04) * P.agg) { o.held[tw] = true; o.pressed.h = true; this.cd = 30; return o; }
+    if (this.cd <= 0 && canThrow(me) && Math.random() < .05 * P.agg) { o.held[tw] = true; o.pressed.h = true; this.cd = 30; return o; }
     if (me.grounded && me.state !== 'ST_JUMP') { const sk = aiSkill(this, me, op, dist, dz, tw, aw); if (sk) return sk; }
     const s = G.shards[0];
     if (s && Math.abs(s.x - me.x) + 40 < Math.abs(s.x - op.x) + 80 && (Math.abs(s.x - me.x) > 18 || Math.abs(s.z - me.z) > 12) && me.grounded) { o.held.up = o.held.down = false; if (Math.abs(s.x - me.x) > 18) o.held[s.x > me.x ? 'right' : 'left'] = true; if (Math.abs(s.z - me.z) > 8) o.held[s.z < me.z ? 'up' : 'down'] = true; return o; }
@@ -1805,7 +1783,7 @@ class AI {
   }
 }
 function dummyInput(me, op) {
-  if (G.dummy === 'guard') return { held: { guard: true }, pressed: {} };
+  if (G.dummy === 'dodge') { const m = op.move; return op.state === 'ST_ATTACK' && m && m.dmg && op.mt === Math.max(1, m.startup - 3) && Math.abs(op.x - me.x) < 340 ? { held: {}, pressed: {}, dash: me.z < 30 ? 'SIDE_D' : me.z > 70 ? 'SIDE_U' : (G.frame % 2 ? 'SIDE_U' : 'SIDE_D') } : EMPTY; }
   if (G.dummy === 'break') { me.brk = CFG.BRK_MAX; return { held: {}, pressed: { brk: !!me.chainedBy && smartBreak(me) } }; }
   if (G.dummy === 'cpu') return G.ai[1].think(me, op);
   return EMPTY;
@@ -1867,7 +1845,7 @@ function endMatch() {
   const who = f => G.mode === 'online' ? (f.idx === LS.me ? '你' : esc((LS.peer || ROOM.peer || {}).nick || '对手')) : f.idx === 0 ? '1P' : G.mode === 'cpu' ? 'CPU' : '2P';
   $('#resTitle').textContent = w ? `${w.ch.name} 胜` : '平局';
   $('#resSub').textContent = w ? `${who(w)} · ${w.ch.title}　回合 ${w.wins} : ${(w === A ? B : A).wins}` : `回合 ${A.wins} : ${B.wins}`;
-  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['弹反', f => f.stats.parries], ['终结技', f => f.stats.fins], ['呼叫外援', f => f.stats.assists], ['燃链', f => f.stats.burns || 0], ['拾取道具', f => f.stats.shards]];
+  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['闪避', f => f.stats.parries], ['终结技', f => f.stats.fins], ['呼叫外援', f => f.stats.assists], ['燃链', f => f.stats.burns || 0], ['拾取道具', f => f.stats.shards]];
   $('#resTable').innerHTML = `<tr><th></th><th class="num">${who(A)} · ${A.ch.name}</th><th class="num">${who(B)} · ${B.ch.name}</th></tr>` + rows.map(([n, fn]) => `<tr><td>${n}</td><td class="num">${fn(A)}</td><td class="num">${fn(B)}</td></tr>`).join('');
   $('#resBest').innerHTML = [A, B].map(f => { const b = f.stats.best; return `<div><b>${who(f)} · 最佳连段</b>${b ? `<small>${b.hits} 连 · ${DROP_LEVELS[b.lv].name}</small>${b.route.map(e => icSVG(icFor(e.id) || '')).join('')}` : '<small>没有打出连段</small>'}</div>`; }).join('');
   if (w) { w.move = null; w.setState('ST_WIN'); }
@@ -2690,24 +2668,12 @@ function skSpawn(f, m) {
   else if (s.type === 'orb') G.ents.push({ ...b, x: f.x + F * 70 * sc, hy: s.hy, y: gy(f.z) - s.hy, vx: F * s.spd, r: s.r, every: s.every, life: s.life });
   else if (s.type === 'buff') { f.stoneT = s.dur; f.stoneUsed = false; }
 }
-/* 技能打到人：起手 / 接续连段 / 被防 / 被弹反 / 被霸体吃下 */
+/* 技能打到人：起手 / 接续连段 / 被霸体吃下 */
 function skHitE(f, op, hm, e) {
   if (op.state === 'ST_KO' || op.inv > 0 || f.chainedBy || (op.chainedBy && op.chainedBy !== f)) return false;
   const dir = op.x >= e.x ? 1 : -1;
   let res;
   if (f.chain && f.chain.target === op) { chainHit(f, op, hm); res = 'hit'; }
-  else if (op.state === 'ST_GUARD' && op.grounded) {
-    if (G.frame - op.parryT <= CFG.PARRY_WINDOW + (op.gear === 'GR_FAN' ? 3 : 0)) {
-      op.brk = Math.min(CFG.BRK_MAX, op.brk + CFG.PARRY_GAIN); op.stats.parries++; op.parryT = -99; G.hitstop = Math.max(G.hitstop, 6); G.flash = Math.max(G.flash, .15);
-      ring(op.x - dir * 30, op.y - 110, '#bfe9ff', 6, 110, 16); spark(op.x - dir * 30, op.y - 110, '#e6f7ff', 14, 8);
-      pop('弹反 · 抵消', op.x, op.y - 245, '#bfe9ff', 34, FB); SFX.play('parry'); emit('EV_PARRY', { who: op.idx }); return 'parry';
-    }
-    op.grd -= hm.grd; op.brk = Math.min(CFG.BRK_MAX, op.brk + CFG.GAIN.guard * bgain(op)); op.x += dir * hm.cpush * 1.2;
-    G.hitstop = Math.max(G.hitstop, 3); spark(op.x - dir * 30, op.y - 110, '#9fd3d0', 8, 6); SFX.play('block'); emit('EV_GUARD', { who: op.idx, text: hm.id });
-    if (op.grd <= 0) { op.grd = 0; op.setState('ST_CRUSH'); op.stun = CFG.GRD_CRUSH_STUN; pop('破防', op.x, op.y - 240, RED, 40, FB); SFX.play('crush'); emit('EV_GUARD_CRUSH', { who: op.idx }); }
-    if (f.serial === e.cast && f.state === 'ST_ATTACK') f.blockHit = true, f.hitDone = true;
-    return 'block';
-  }
   else if (op.state === 'ST_ATTACK' && op.move && op.move.armor && op.mt <= op.move.startup && !op.armorUsed) { armorHit(f, op, hm); return 'armor'; }
   else { onHit(f, op, hm); res = 'hit'; }
   if (f.serial === e.cast && f.state === 'ST_ATTACK') f.hitDone = true;
@@ -2722,6 +2688,7 @@ function skUpd(e, f, op) {
     if (e.done) return;
     e.x += e.vx; e.y = gy(e.z) - e.hy;
     if (e.back) { if (e.t === e.back) { e.vx = -e.vx; e.hitDone = false; e.ret = true; } if (e.ret && Math.abs(e.x - f.x) < 50) { e.life = e.t; return; } }
+    if (!e.hitDone && op.inv > 0 && op.dodgeEnt !== e && op.state === 'ST_ATTACK' && op.move && (op.move.side || op.move.dash < 0) && !(op.chainedBy && op.chainedBy !== f)) { const r = hurtRect(op), py = e.ground ? gy(op.z) - 50 : e.y; if (r && r.l < e.x + e.w && r.r > e.x - e.w && r.t < py && r.b > py && Math.abs(op.z - e.z) <= 64) { op.dodgeEnt = e; evade(op, f); } }   // 闪避飞行物
     if (!e.hitDone && can && (!e.ground || op.y > gy(op.z) - 50) && hitAt(e.x, e.ground ? gy(op.z) - 50 : e.y, e.w, op, e, 24)) {
       const r = skHitE(f, op, e.hm, e);
       if (r) { e.hitDone = true; if (!e.back || r === 'parry' || r === 'block') { e.done = true; e.life = e.t + 10; } skImpact(e, op); }
@@ -3399,6 +3366,428 @@ function njCineScreen(c) {
 /* 霜「冰棱突」：出手时沿地面刺出一排冰棱；岳「山崩」冲撞时扬起碎石 */
 { const T = SK.CH_SHUANG.tick; SK.CH_SHUANG.tick = function (f, m, sl, t, act, first) { T.call(this, f, m, sl, t, act, first); if (sl === 'FS' && first) { const g = gy(f.z), s = f.ch.scale; for (let i = 0; i < 7; i++) skSpike(f.x + f.face * (34 + i * 28) * s, g + 2, (36 + i * 10) * s, (9 + i) * s, 'rgba(225,248,255,.95)', '#7fd0f0', i, 26, f.face * .3); skFlakes(f.x + f.face * 150 * s, f.y - 60 * s, 10, 4); } }; }
 { const T = SK.CH_YUE.tick; SK.CH_YUE.tick = function (f, m, sl, t, act, first) { T.call(this, f, m, sl, t, act, first); if (sl === 'FS' && act && t % 3 === 0) { skChips(f.x - f.face * 20, gy(f.z) - 10, 3, -f.face); dust(f.x, 2, gy(f.z)); } }; }
+/* ---------- 兵器化（v1.4）：每人一件自己的兵器 · 轻击三段 · 重击 · 空中攻击 ----------
+   烬「朱炎拳套」武术 · 澜「逐浪剑」剑术 · 岳「镇山锤」重兵 · 影「夜刃」双短刃
+   铃「镇魂铃 + 符箓」法术 · 霜「寒江刀」刀术（居合）· 雷「惊雷枪」枪术
+   轻击连按打出三段：第二、三段接在前一段后面（没打中也能接，命中时可以更早接）；
+   重击、空中攻击也都换成各自兵器的招式。没有防御：躲攻击靠侧闪、后撤步、跳跃和替身术。
+   对战数值只在招式表（MV）里；画面上的随机只用 rand()。 */
+Object.assign(POSES, {
+  crossW:     P_(-.02, 0, .42, 0, -.36, -.12, 1.2, 2.6, .2, 1.9),
+  cross:      P_(.38, -.05, .5, .1, -.52, -.22, .55, 2.0, 1.6, 1.58),
+  hslashW:    P_(-.15, .05, .5, 0, -.38, -.12, 2.3, 3.5, .8, 1.9),
+  hslash:     P_(.4, -.08, .9, .3, -.62, -.38, 1.5, 1.45, -.3, .3),
+  wslash:     P_(.55, -.12, 1.1, .5, -.85, -.6, 1.3, 1.05, -.6, -.3),
+  airslashW:  P_(-.1, 0, 1.3, -.4, .9, -.6, 3.2, 3.8, .9, 2),
+  airslash:   P_(.25, .1, 1.0, .3, .7, -.5, 1.0, .6, -.4, -.1),
+  hthrustW:   P_(-.08, 0, .45, 0, -.4, -.15, .3, 1.5, .4, 1.6),
+  hthrust:    P_(.42, -.05, .75, .2, -.6, -.3, 1.45, 1.6, 1.3, 1.6),
+  hswingW:    P_(-.2, .05, .55, 0, -.4, -.15, 2.5, 3.4, 2.3, 3.2),
+  hswing:     P_(.4, -.05, .95, .3, -.65, -.4, 1.55, 1.5, 1.4, 1.45),
+  hupW:       P_(.25, 0, .8, .1, -.55, -.4, -.4, -.7, -.3, -.6),
+  hup:        P_(-.2, -.2, .5, .1, -.4, -.2, 2.7, 2.95, 2.6, 2.85),
+  airsmashW:  P_(-.15, 0, 1.3, -.4, .9, -.6, 3.4, 3.6, 3.3, 3.5),
+  airsmash:   P_(.45, .1, 1.0, .2, .8, -.4, 1.2, .8, 1.1, .7),
+  bstabW:     P_(-.05, 0, .45, 0, -.4, -.15, 1.0, 2.2, -.45, 1.4),
+  bstab:      P_(.38, -.08, .7, .2, -.6, -.3, .3, 1.2, 1.62, 1.6),
+  spinslashW: P_(-.1, .05, .5, 0, -.4, -.15, 2.4, 3.7, 2.6, 3.9),
+  spinslash:  P_(.2, -.15, 1.1, .4, -.5, -.4, 2.4, 2.9, .9, .5),
+  airstabW:   P_(-.1, 0, 1.3, -.4, .9, -.6, 2.8, 3.4, 2.6, 3.2),
+  airstab:    P_(.35, .1, 1.0, .2, .8, -.4, .9, .5, .8, .4),
+  flickW:     P_(-.08, 0, .42, 0, -.36, -.12, .5, 2.6, .6, 2.0),
+  flick:      P_(.3, -.05, .55, .12, -.48, -.2, 1.65, 1.75, .4, 1.8),
+  throwBW:    P_(-.12, .05, .45, 0, -.4, -.15, .8, 2.2, 2.6, 3.4),
+  throwB:     P_(.35, -.05, .6, .15, -.5, -.22, .6, 2.0, 1.55, 1.45),
+  throwFW:    P_(-.18, .05, .5, 0, -.4, -.15, 2.6, 3.4, 2.4, 3.3),
+  throwF:     P_(.42, -.1, .8, .25, -.6, -.3, 1.45, 1.4, 1.6, 1.55),
+  airbellW:   P_(-.1, 0, 1.3, -.4, .9, -.6, 2.8, 3.2, .9, 2),
+  airbell:    P_(.2, .1, 1.0, .3, .8, -.5, 1.2, 1.0, -.3, .2),
+  rslashW:    P_(.1, 0, .5, .05, -.4, -.15, .6, .2, .3, 1.5),
+  rslash:     P_(.32, -.1, .85, .25, -.6, -.35, 2.1, 2.5, -.2, .4),
+  iaiW:       P_(.25, .05, 1.1, -.2, -.7, -.5, -.3, .9, .2, 1.4),
+  iai:        P_(.55, -.1, 1.2, .55, -.9, -.6, 1.6, 1.62, -.9, -.6),
+  sthrustW:   P_(-.1, 0, .5, 0, -.4, -.15, .2, 1.45, .6, 1.5),
+  sthrust:    P_(.45, -.05, .85, .25, -.65, -.35, 1.55, 1.58, 1.2, 1.5),
+  sthrust2W:  P_(-.12, 0, .5, 0, -.4, -.15, .3, 1.6, .7, 1.6),
+  sthrust2:   P_(.5, -.05, .9, .3, -.7, -.4, 1.75, 1.8, 1.35, 1.7),
+  supperW:    P_(.2, 0, .7, .1, -.5, -.35, .6, .4, .5, .6),
+  supper:     P_(-.15, -.2, .5, .1, -.4, -.2, 2.5, 2.7, 1.9, 2.4),
+  slungeW:    P_(-.2, .05, .5, 0, -.38, -.15, -.2, 1.3, .3, 1.4),
+  slunge:     P_(.7, -.15, 1.1, .5, -.9, -.6, 1.6, 1.6, 1.4, 1.5),
+  airplungeW: P_(-.1, 0, 1.3, -.4, .9, -.6, 2.6, 3.1, 2.4, 3.0),
+  airplunge:  P_(.3, .1, 1.0, .2, .8, -.4, .8, .55, .7, .5),
+});
+
+/* 兵器表：名字、路数、挥空 / 命中的声音、刃长（拖尾从刃尖画出） */
+const WP = {
+  CH_JIN:    { name: '朱炎拳套', style: '武术 · 火拳', kind: 'blunt', sfx: 'fire', tip: 0 },
+  CH_LAN:    { name: '逐浪剑', style: '剑术 · 水刃', kind: 'blade', sfx: 'blade', tip: 62 },
+  CH_YUE:    { name: '镇山锤', style: '重兵 · 碎岩', kind: 'blunt', sfx: 'heavy', tip: 68 },
+  CH_YING:   { name: '夜刃', style: '双短刃 · 影袭', kind: 'blade', sfx: 'blade', tip: 34 },
+  CH_LING:   { name: '镇魂铃 · 符箓', style: '法术 · 音与符', kind: 'magic', sfx: 'chime', tip: 0 },
+  CH_SHUANG: { name: '寒江刀', style: '刀术 · 居合', kind: 'blade', sfx: 'blade', tip: 74 },
+  CH_LEI:    { name: '惊雷枪', style: '枪术 · 雷贯', kind: 'pierce', sfx: 'pierce', tip: 92 },
+};
+for (const id in WP) SK_BLADE[id] = WP[id].tip || undefined;
+/* MV(id, 名字, 发生, 持续, 收招, 伤害, 势, 削架, 距离, 判定高度, 判定厚度, 顿帧, 姿势, 其它) */
+const WP_MOVES = {
+  CH_JIN: {
+    L:   MV('MV_JIN_L',   '朱拳',   5, 3, 11, 29, 13, 8, 118, 132, 42, 5, 'punch', { cpush: 4, desc: '火拳刺拳，出手最快' }),
+    L2:  MV('MV_JIN_L2',  '炎拳',   5, 3, 12, 27, 12, 8, 122, 130, 42, 5, 'cross', { cpush: 4, desc: '换手直拳，拳头拖出一道火' }),
+    L3:  MV('MV_JIN_L3',  '升炎拳', 7, 4, 17, 38, 17, 12, 116, 142, 64, 7, 'upper', { cpush: 6, lift: 16, desc: '冲天勾拳卷起火柱，把对手挑起来' }),
+    H:   MV('MV_JIN_H',   '爆炎掌', 11, 4, 18, 54, 22, 16, 170, 120, 72, 8, 'palm', { cpush: 10, desc: '双掌推出一团爆炎，打得比拳远' }),
+    AIR: MV('MV_JIN_AIR', '落焰脚', 6, 9, 8, 40, 14, 12, 112, 60, 64, 6, 'airkick', { cpush: 4, desc: '空中带火的下踢' }),
+  },
+  CH_LAN: {
+    L:   MV('MV_LAN_L',   '点剑',   4, 3, 9, 22, 10, 6, 138, 132, 40, 4, 'stab', { cpush: 3, desc: '剑尖一点，又快又远' }),
+    L2:  MV('MV_LAN_L2',  '回澜斩', 5, 3, 10, 22, 10, 6, 140, 120, 58, 4, 'hslash', { cpush: 3, desc: '横削一剑，剑上带出一弧水' }),
+    L3:  MV('MV_LAN_L3',  '挑浪',   6, 4, 15, 30, 13, 10, 132, 140, 82, 6, 'upslash', { cpush: 5, lift: 18, desc: '上挑一剑，把对手连水一起挑起' }),
+    H:   MV('MV_LAN_H',   '澜涛斩', 9, 4, 16, 44, 18, 13, 172, 118, 64, 7, 'wslash', { advance: 40, cpush: 6, desc: '踏前一大步劈出水月，打得很远' }),
+    AIR: MV('MV_LAN_AIR', '落潮剑', 5, 9, 7, 32, 12, 10, 124, 70, 70, 5, 'airslash', { cpush: 3, desc: '空中向下斜劈' }),
+  },
+  CH_YUE: {
+    L:   MV('MV_YUE_L',   '捣锤',   7, 3, 13, 34, 13, 12, 132, 128, 48, 6, 'hthrust', { cpush: 5, desc: '锤头往前一捣' }),
+    L2:  MV('MV_YUE_L2',  '横扫',   8, 3, 14, 34, 13, 12, 140, 118, 60, 6, 'hswing', { cpush: 6, desc: '抡锤横扫，碎石乱飞' }),
+    L3:  MV('MV_YUE_L3',  '崩撩',   10, 4, 20, 46, 18, 18, 132, 140, 84, 8, 'hup', { cpush: 7, lift: 22, desc: '锤从下往上撩，把人砸上天' }),
+    H:   MV('MV_YUE_H',   '镇岳锤', 15, 5, 22, 64, 23, 26, 176, 70, 110, 10, 'hammer', { cpush: 9, desc: '高举过头一锤砸地，震出裂地和碎岩' }),
+    AIR: MV('MV_YUE_AIR', '坠岳锤', 8, 8, 12, 50, 18, 16, 118, 62, 76, 7, 'airsmash', { cpush: 5, desc: '空中抡锤往下砸' }),
+  },
+  CH_YING: {
+    L:   MV('MV_YING_L',   '刺',     4, 2, 10, 24, 11, 7, 118, 130, 40, 4, 'stab', { cpush: 3, desc: '右手短刃一刺' }),
+    L2:  MV('MV_YING_L2',  '反刺',   4, 2, 10, 22, 10, 7, 120, 128, 40, 4, 'bstab', { cpush: 3, desc: '左手反握再刺' }),
+    L3:  MV('MV_YING_L3',  '双刃剪', 6, 3, 14, 32, 14, 10, 124, 122, 70, 6, 'xslash', { cpush: 7, desc: '双刃交叉一剪' }),
+    H:   MV('MV_YING_H',   '月影斩', 9, 4, 16, 46, 18, 14, 150, 128, 84, 7, 'spinslash', { advance: 60, cpush: 6, lift: 14, desc: '跃身回旋，斩出一道暗月' }),
+    AIR: MV('MV_YING_AIR', '坠影刃', 5, 9, 8, 36, 13, 11, 118, 62, 66, 6, 'airstab', { cpush: 3, desc: '空中双刃向下扎' }),
+  },
+  CH_LING: {
+    L:   MV('MV_LING_L',   '叩铃',   6, 3, 11, 24, 10, 8, 150, 130, 52, 5, 'flick', { cpush: 3, desc: '叩响铃铛，音波在前方炸开（打得比拳远）' }),
+    L2:  MV('MV_LING_L2',  '掷符',   6, 3, 12, 24, 10, 8, 158, 126, 52, 5, 'throwB', { cpush: 3, sfx: 'talis', desc: '甩出一张符，飞到前方爆开' }),
+    L3:  MV('MV_LING_L3',  '震魂',   8, 4, 16, 32, 14, 12, 150, 140, 92, 7, 'bell', { cpush: 5, lift: 18, desc: '摇铃震出一柱音浪，把对手震上天' }),
+    H:   MV('MV_LING_H',   '三符爆', 12, 4, 18, 46, 19, 15, 200, 120, 92, 8, 'throwF', { cpush: 7, sfx: 'talis', desc: '扇形甩出三张符，在远处一起炸开' }),
+    AIR: MV('MV_LING_AIR', '落铃',   6, 9, 8, 38, 14, 12, 120, 62, 70, 6, 'airbell', { cpush: 4, desc: '空中把铃往下一甩，音波向下炸开' }),
+  },
+  CH_SHUANG: {
+    L:   MV('MV_SHUANG_L',   '霜刃',   5, 3, 10, 26, 11, 7, 140, 124, 52, 5, 'slash', { cpush: 4, desc: '长刀斜劈' }),
+    L2:  MV('MV_SHUANG_L2',  '回刀',   5, 3, 11, 25, 11, 7, 142, 126, 56, 5, 'rslash', { cpush: 4, desc: '翻腕回刀，由下往上斜斩' }),
+    L3:  MV('MV_SHUANG_L3',  '挑雪',   7, 4, 16, 34, 15, 12, 136, 140, 84, 7, 'upslash', { cpush: 5, lift: 18, desc: '刀锋上挑，带起一片冰棱' }),
+    H:   MV('MV_SHUANG_H',   '居合 · 寒江', 12, 3, 18, 50, 20, 15, 210, 118, 52, 9, 'iai', { advance: 50, cpush: 6, desc: '收刀蓄势，一闪拔刀横斩——打得最远的一刀' }),
+    AIR: MV('MV_SHUANG_AIR', '落霜斩', 6, 9, 8, 38, 14, 12, 128, 66, 70, 6, 'airslash', { cpush: 4, desc: '空中向下斜斩' }),
+  },
+  CH_LEI: {
+    L:   MV('MV_LEI_L',   '点枪',   6, 3, 12, 26, 11, 8, 156, 126, 40, 5, 'sthrust', { cpush: 4, desc: '长枪一点，打得最远的轻击' }),
+    L2:  MV('MV_LEI_L2',  '连刺',   6, 3, 12, 26, 11, 8, 160, 132, 40, 5, 'sthrust2', { cpush: 4, desc: '收枪再刺，枪尖带电' }),
+    L3:  MV('MV_LEI_L3',  '挑枪',   8, 4, 17, 36, 15, 12, 146, 140, 84, 7, 'supper', { cpush: 6, lift: 20, desc: '枪杆一挑，把对手挑上天' }),
+    H:   MV('MV_LEI_H',   '雷贯',   11, 4, 19, 52, 20, 16, 214, 122, 46, 8, 'slunge', { advance: 40, cpush: 10, desc: '弓步突刺，枪尖放出一道雷光' }),
+    AIR: MV('MV_LEI_AIR', '霹雳枪', 6, 9, 8, 42, 15, 12, 124, 64, 70, 6, 'airplunge', { cpush: 4, desc: '空中持枪向下扎' }),
+  },
+};
+const WP_SLOTS = new Set(['L', 'L2', 'L3', 'H', 'AIR']);
+for (const c of CHARS) {
+  const W = WP_MOVES[c.id], o = c.moves; if (!W) continue;
+  for (const k in W) Object.assign(W[k], { slot: k, cid: c.id, sfx: W[k].sfx || WP[c.id].sfx });
+  W.L.next = 'L2'; W.L2.next = 'L3';
+  for (const k of ['L', 'L2']) W[k].gap = Math.floor(W[k].recovery * .35);   // 没打中时：收招过了这几帧才能接下一段
+  c.weapon = WP[c.id];
+  c.moves = { L: W.L, L2: W.L2, L3: W.L3, H: W.H, AIR: W.AIR, S: o.S, FS: o.FS, ...(o.BS ? { BS: o.BS } : {}), FIN: o.FIN };
+}
+Object.assign(MOVE_INPUT, { L: '轻击', L2: '轻击 · 第二段', L3: '轻击 · 第三段', H: '重击', AIR: '空中 轻击' });
+
+/* ---- 兵器画法（角色自己的坐标，x 朝前） ---- */
+const wpAng = (e, h) => Math.atan2(h[1] - e[1], h[0] - e[0]);
+function wpJian(c, e, h, s, white, hot) {
+  const L = 62 * s; c.save(); c.translate(h[0], h[1]); c.rotate(wpAng(e, h));
+  if (!white) { c.strokeStyle = '#2cb7b2'; c.lineWidth = 2.2 * s; c.beginPath(); c.moveTo(-11 * s, 0); c.quadraticCurveTo(-18 * s, 6 * s + Math.sin(G.frame * .2) * 2 * s, -23 * s, 13 * s); c.stroke(); }
+  c.strokeStyle = INK; c.lineWidth = 6 * s; line(c, [-11 * s, 0], [3 * s, 0]);
+  c.strokeStyle = white ? '#fff' : '#1f3a3c'; c.lineWidth = 3.6 * s; line(c, [-10 * s, 0], [2.5 * s, 0]);
+  c.fillStyle = white ? '#fff' : '#c9a24a'; c.strokeStyle = INK; c.lineWidth = 1.6 * s;
+  c.beginPath(); c.moveTo(4 * s, -6.5 * s); c.lineTo(7 * s, -3 * s); c.lineTo(7 * s, 3 * s); c.lineTo(4 * s, 6.5 * s); c.lineTo(2.5 * s, 0); c.closePath(); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(7 * s, -2.6 * s); c.lineTo(L - 7 * s, -2.4 * s); c.lineTo(L, 0); c.lineTo(L - 7 * s, 2.4 * s); c.lineTo(7 * s, 2.6 * s); c.closePath();
+  if (hot && !white) { c.shadowColor = '#8fe6dc'; c.shadowBlur = 12; }
+  c.fillStyle = white ? '#fff' : '#eaf7f6'; c.fill(); c.shadowBlur = 0; c.strokeStyle = INK; c.lineWidth = 1.6 * s; c.stroke();
+  if (!white) { c.strokeStyle = 'rgba(44,183,178,.85)'; c.lineWidth = 1.1 * s; line(c, [9 * s, 0], [L - 8 * s, 0]); }
+  c.restore();
+}
+function wpHammer(c, e, h, s, white, hot) {
+  c.save(); c.translate(h[0], h[1]); c.rotate(wpAng(e, h));
+  c.strokeStyle = INK; c.lineWidth = 7.5 * s; line(c, [-18 * s, 0], [58 * s, 0]);
+  c.strokeStyle = white ? '#fff' : '#6b4a2a'; c.lineWidth = 4.6 * s; line(c, [-17 * s, 0], [57 * s, 0]);
+  if (!white) { c.strokeStyle = '#2a1d10'; c.lineWidth = 1.6 * s; for (const u of [-14, -9, -4]) line(c, [u * s, -2.6 * s], [(u + 2.5) * s, 2.6 * s]); }
+  const x0 = 54 * s, x1 = 82 * s, y0 = -24 * s, y1 = 19 * s, r = 4 * s;
+  if (hot && !white) { c.shadowColor = '#e0c48a'; c.shadowBlur = 14; }
+  c.fillStyle = white ? '#fff' : '#8a7b63'; c.strokeStyle = INK; c.lineWidth = 2.6 * s;
+  c.beginPath(); c.moveTo(x0, y0 + r); c.lineTo(x0 + r, y0); c.lineTo(x1 - r, y0); c.lineTo(x1, y0 + r); c.lineTo(x1, y1 - r); c.lineTo(x1 - r, y1); c.lineTo(x0 + r, y1); c.lineTo(x0, y1 - r); c.closePath(); c.fill(); c.shadowBlur = 0; c.stroke();
+  if (!white) {
+    c.fillStyle = '#c9a24a'; c.strokeStyle = INK; c.lineWidth = 1.3 * s;
+    for (const bx of [x0 + 4 * s, x1 - 9 * s]) { c.beginPath(); c.rect(bx, y0 - 1 * s, 5 * s, y1 - y0 + 2 * s); c.fill(); c.stroke(); }
+    c.fillStyle = 'rgba(216,196,154,.6)'; c.fillRect(x0 + 10 * s, y0 + 3 * s, 8 * s, 6 * s);
+    c.strokeStyle = 'rgba(30,22,14,.7)'; c.lineWidth = 1.3 * s; line(c, [x0 + 12 * s, y1 - 4 * s], [x0 + 16 * s, y1 - 13 * s]); line(c, [x0 + 16 * s, y1 - 13 * s], [x0 + 13 * s, y1 - 18 * s]);
+  }
+  c.restore();
+}
+function wpSpear(c, e, h, s, white, hot) {
+  c.save(); c.translate(h[0], h[1]); c.rotate(wpAng(e, h));
+  c.strokeStyle = INK; c.lineWidth = 6 * s; line(c, [-74 * s, 0], [72 * s, 0]);
+  c.strokeStyle = white ? '#fff' : '#3a2650'; c.lineWidth = 3.4 * s; line(c, [-73 * s, 0], [71 * s, 0]);
+  if (!white) {
+    c.strokeStyle = '#c2a33a'; c.lineWidth = 4.2 * s; for (const u of [-73, -4, 66]) line(c, [u * s, 0], [(u + 3) * s, 0]);
+    c.strokeStyle = '#b48cff'; c.lineWidth = 2 * s; const sw = Math.sin(G.frame * .22) * 3 * s;
+    for (const d of [-1, 1]) { c.beginPath(); c.moveTo(67 * s, 0); c.quadraticCurveTo(60 * s, d * 5 * s + sw, 52 * s, d * 9 * s + sw); c.stroke(); }
+  }
+  c.beginPath(); c.moveTo(70 * s, -4.5 * s); c.quadraticCurveTo(84 * s, -7 * s, 99 * s, 0); c.quadraticCurveTo(84 * s, 7 * s, 70 * s, 4.5 * s); c.closePath();
+  if (hot && !white) { c.shadowColor = '#d9b8ff'; c.shadowBlur = 14; }
+  c.fillStyle = white ? '#fff' : '#eef0ff'; c.fill(); c.shadowBlur = 0; c.strokeStyle = INK; c.lineWidth = 1.7 * s; c.stroke();
+  if (!white) { c.strokeStyle = '#c2a33a'; c.lineWidth = 1.2 * s; line(c, [72 * s, 0], [94 * s, 0]); }
+  if (hot && !white) { c.strokeStyle = '#fff6c4'; c.lineWidth = 1.6 * s; c.beginPath(); let x = 99 * s, y = 0; c.moveTo(x, y); for (let i = 0; i < 3; i++) { x += rand(4, 9) * s; y += rand(-6, 6) * s; c.lineTo(x, y); } c.stroke(); }
+  c.restore();
+}
+function wpTalis(c, h, s, white) {
+  c.save(); c.translate(h[0], h[1]); c.rotate(Math.sin(G.frame * .13) * .2);
+  c.fillStyle = white ? '#fff' : '#f2dc8a'; c.strokeStyle = INK; c.lineWidth = 1.4 * s; c.beginPath(); c.rect(-5 * s, 2 * s, 10 * s, 24 * s); c.fill(); c.stroke();
+  if (!white) { c.strokeStyle = '#c0392b'; c.lineWidth = 1.5 * s; line(c, [0, 5 * s], [0, 23 * s]); line(c, [-3 * s, 9 * s], [3 * s, 9 * s]); line(c, [-3 * s, 15 * s], [3 * s, 17 * s]); line(c, [-3 * s, 20 * s], [3 * s, 19 * s]); }
+  c.restore();
+}
+function wpWrap(c, e, h, s, white) {
+  const an = wpAng(e, h), L = Math.hypot(h[0] - e[0], h[1] - e[1]);
+  c.save(); c.translate(e[0], e[1]); c.rotate(an);
+  for (const u of [.5, .66, .82]) { c.strokeStyle = INK; c.lineWidth = 5.4 * s; line(c, [L * u, -6.4 * s], [L * u + 3 * s, 6.4 * s]); c.strokeStyle = white ? '#fff' : '#c23a22'; c.lineWidth = 3.2 * s; line(c, [L * u, -6 * s], [L * u + 3 * s, 6 * s]); }
+  c.restore();
+}
+Object.assign(SK_PROP, {
+  CH_JIN(c, f, k, s, front, white) { wpWrap(c, front ? k.fe : k.be, front ? k.fh : k.bh, s, white); if (!white) skFireFist(c, f, front ? k.fh : k.bh, s, front ? 0 : 2); },
+  CH_LAN(c, f, k, s, front, white) { if (front) wpJian(c, k.fe, k.fh, s, white, skLive(f)); else if (!white) skWaterRing(c, f, k.bh, s, 1.6); },
+  CH_YUE(c, f, k, s, front, white) { if (front) wpHammer(c, k.fe, k.fh, s, white, skLive(f)); else skBracer(c, k.be, k.bh, s, white); },
+  CH_LING(c, f, k, s, front, white) { if (front) skBell(c, f, k, s, white); else wpTalis(c, k.bh, s, white); },
+  CH_LEI(c, f, k, s, front, white) { if (front) wpSpear(c, k.fe, k.fh, s, white, skLive(f)); else skGauntlet(c, f, k.be, k.bh, s, white, false); },
+});
+
+/* ---- 新粒子：刀光弧、符纸 ---- */
+const wpArc = (x, y, r, a0, a1, dir, col, col2, w, life = 12, delay = 0) => P_ADD({ k: 'arc', x, y, r, a0, a1, dir, col, col2, w, life, max: life, delay });
+Object.assign(PDRAW, {
+  arc(c, p, a) {
+    const age = p.max - p.life, grow = Math.min(1, (age + 1) / 4), a1 = lerp(p.a0, p.a1, grow), n = 16, P = [], Q = [];
+    for (let i = 0; i <= n; i++) {
+      const u = i / n, an = lerp(p.a0, a1, u), th = p.w * Math.pow(Math.sin(Math.PI * Math.min(.98, u * .9 + .08)), .7) * (.35 + .65 * u);
+      P.push([Math.cos(an) * p.r, Math.sin(an) * p.r]); Q.push([Math.cos(an) * (p.r - th), Math.sin(an) * (p.r - th)]);
+    }
+    c.save(); c.translate(p.x, p.y); c.scale(p.dir, 1); c.globalAlpha = Math.min(1, a * 1.7);
+    c.fillStyle = p.col; c.beginPath(); P.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); for (let i = n; i >= 0; i--) c.lineTo(Q[i][0], Q[i][1]); c.closePath(); c.fill();
+    c.strokeStyle = p.col2; c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); P.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.stroke();
+    c.restore();
+  },
+  talis(c, p, a) {
+    c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(p.sc || 1, p.sc || 1); c.globalAlpha = Math.min(1, a * 2);
+    c.fillStyle = '#f2dc8a'; c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath(); c.rect(-12, -5, 24, 10); c.fill(); c.stroke();
+    c.strokeStyle = '#c0392b'; c.lineWidth = 1.6; line(c, [-9, 0], [9, 0]); line(c, [-4, -3], [-4, 3]); line(c, [3, -3], [5, 3]);
+    c.shadowColor = '#f0cf63'; c.shadowBlur = 10; c.strokeStyle = 'rgba(240,207,99,.8)'; c.lineWidth = 1; c.strokeRect(-13, -6, 26, 12); c.shadowBlur = 0;
+    c.restore();
+  },
+  sonic(c, p, a) {
+    const u = 1 - p.life / p.max; c.save(); c.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const v = clamp(u * 1.25 - i * .14, 0, 1); if (v <= 0) continue;
+      const x = lerp(p.x0, p.x1, v), y = lerp(p.y0, p.y1, v), r = 12 + v * 30;
+      c.globalAlpha = (1 - v * .5) * Math.min(1, a * 2); c.strokeStyle = i % 2 ? '#4fc08a' : '#f0cf63'; c.lineWidth = 5 - i * .8;
+      c.beginPath(); c.arc(x - p.dir * r * .6, y, r, p.dir > 0 ? -.9 : Math.PI - .9, p.dir > 0 ? .9 : Math.PI + .9); c.stroke();
+    }
+    c.restore();
+  },
+  fu(c, p, a) {
+    const age = p.max - p.life, k = Math.min(1, (age + 1) / 4), r = p.r * (.6 + .4 * k);
+    c.save(); c.translate(p.x, p.y); c.globalAlpha = Math.min(1, a * 1.6); c.rotate(age * .08);
+    c.strokeStyle = '#f0cf63'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, r, 0, 7); c.stroke();
+    c.strokeStyle = '#c0392b'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r * .78, 0, 7); c.stroke();
+    for (let i = 0; i < 8; i++) { c.rotate(Math.PI / 4); line(c, [r * .78, 0], [r * (i % 2 ? .9 : 1), 0]); }
+    c.rotate(-age * .08 - Math.PI * 2); njText(c, '爆', 0, r * .26, r * .7, '#f0cf63');
+    c.restore();
+  },
+});
+/* 符 / 音的爆点（delay 帧后炸开） */
+function wpBurst(x, y, col, delay, paper) {
+  skGlow(x, y, col, 70, 12, delay); skRing(x, y, col + '.95)', 6, 72, 13, delay); skRing(x, y, 'rgba(79,192,138,.85)', 4, 48, 11, delay + 1);
+  for (let i = 0; i < 10; i++) { const an = rand(0, 6.28), v = rand(3, 8); P_ADD({ k: 'spark', x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v, g: .15, life: randi(12, 20), max: 20, col: i % 2 ? '#f0cf63' : '#fff6c4', sz: rand(2, 4), delay }); }
+  if (paper) for (let i = 0; i < 8; i++) P_ADD({ k: 'chip', x: x + rand(-10, 10), y: y + rand(-10, 10), vx: rand(-5, 5), vy: -rand(1, 6), g: .25, life: 34, max: 34, col: i % 3 ? '#f2dc8a' : '#c0392b', sz: rand(3, 6), rot: rand(0, 6), vr: rand(-.3, .3), delay });
+}
+function wpScraps(x, y, n) { for (let i = 0; i < n; i++) P_ADD({ k: 'chip', x: x + rand(-10, 10), y: y + rand(-10, 10), vx: rand(-5, 5), vy: -rand(1, 6), g: .25, life: 34, max: 34, col: i % 3 ? '#f2dc8a' : '#c0392b', sz: rand(3, 6), rot: rand(0, 6), vr: rand(-.3, .3) }); }
+function wpBoltH(x0, y, x1, col, w = 6) { const pts = [[x0, y]], n = 7; for (let i = 1; i <= n; i++) pts.push([lerp(x0, x1, i / n), y + (i < n ? rand(-12, 12) : 0)]); P_ADD({ k: 'bolt', x: x1, y, pts, w, life: 12, max: 12, col }); }
+
+/* ---- 出招特效：tick(f, m, 招式位置, 招式帧, 判定中, 判定第一帧, 位置) ----
+   q.hx/hy 刃尖，q.rx/ry 判定远端，q.cx/cy 肩部（挥砍弧线的圆心），q.F 朝向，q.s 缩放，q.g 地面 */
+const WP_FX = {
+  CH_JIN(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, g } = q;
+    if (t < m.startup && t % 2) skFlame(hx, hy, 1, 5);
+    if (act) skFlame(hx, hy, 1, sl === 'H' ? 10 : 6, F * 1.5);
+    if (!first) return;
+    if (sl === 'L' || sl === 'L2') { skRing(hx, hy, 'rgba(255,150,60,.85)', 4, 40, 10); for (let i = 0; i < 6; i++) P_ADD({ k: 'flame', x: hx, y: hy + rand(-6, 6), vx: F * rand(3, 8), vy: rand(-1.5, .5), g: -.05, life: randi(10, 16), max: 16, sz: rand(5, 9), col: i % 2 ? '#ff7a2a' : '#ffd36e' }); }
+    else if (sl === 'L3') { for (let i = 0; i < 12; i++) P_ADD({ k: 'flame', x: hx + rand(-10, 10), y: hy + rand(0, 40), vx: rand(-1, 1), vy: -rand(4, 9), g: -.05, life: randi(14, 22), max: 22, sz: rand(7, 12), col: i % 3 ? '#ff7a2a' : '#ffd36e' }); skGlow(hx, hy, 'rgba(255,140,50,', 60, 12); }
+    else if (sl === 'H') { for (let i = 0; i < 20; i++) P_ADD({ k: 'flame', x: hx, y: hy + rand(-16, 16), vx: F * rand(6, 15), vy: rand(-2.4, 1), g: -.05, life: randi(12, 20), max: 20, sz: rand(8, 14), col: i % 3 ? '#ff7a2a' : '#ffd36e' }); skGlow(q.rx, q.ry, 'rgba(255,130,40,', 90, 14); skRing(q.rx, q.ry, 'rgba(255,190,90,.9)', 10, 90, 14); }
+    else if (sl === 'AIR') { skRing(hx, hy, 'rgba(255,150,60,.8)', 6, 52, 10); skFlame(hx, hy, 6, 8, 0, 2.5); }
+  },
+  CH_LAN(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, cx, cy } = q;
+    if (act && t % 2) skDrops(hx, hy, 2, 4);
+    if (!first) return;
+    if (sl === 'L') { skSlash(hx - F * 40, hy, 0, 170, 'rgba(143,230,220,.6)', 10, 0, 10); skSlash(hx - F * 40, hy, 0, 160, 'rgba(255,255,255,.95)', 9, 0, 2.5); skDrops(hx, hy, 5, 5); }
+    else if (sl === 'L2') { wpArc(cx, cy, 108 * s, -2.1, .55, F, 'rgba(63,180,184,.55)', 'rgba(235,255,252,.95)', 22 * s); skDrops(hx, hy, 7, 6); }
+    else if (sl === 'L3') { wpArc(cx, cy, 104 * s, 1.0, -1.45, F, 'rgba(63,180,184,.55)', 'rgba(235,255,252,.95)', 22 * s); skDrops(hx, hy, 9, 7); }
+    else if (sl === 'H') { wpArc(cx, cy, 150 * s, -2.3, .7, F, 'rgba(63,180,184,.6)', 'rgba(235,255,252,1)', 36 * s, 16); P_ADD({ k: 'wave', x: f.x + F * 90 * s, y: q.g + 2, vx: F * 3, dir: F, L: 120, h: 90, life: 20, max: 20 }); skDrops(q.rx, q.ry, 14, 8); skRing(q.rx, q.ry, 'rgba(223,243,239,.85)', 6, 70, 12); }
+    else if (sl === 'AIR') { wpArc(cx, cy, 100 * s, -1.6, 1.0, F, 'rgba(63,180,184,.55)', 'rgba(235,255,252,.95)', 20 * s); skDrops(hx, hy, 6, 6); }
+  },
+  CH_YUE(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, g, cx, cy } = q;
+    if (sl === 'H' && t <= m.startup && t % 3 === 1) P_ADD({ k: 'chip', x: f.x + rand(-60, 60), y: g - 4, vy: -rand(1.5, 3), g: .04, life: 30, max: 30, col: '#c2a77a', sz: rand(3, 6), rot: rand(0, 6), vr: rand(-.2, .2) });
+    if (!first) return;
+    if (sl === 'L') { skChips(hx, hy, 6, F); skRing(hx, hy, 'rgba(201,180,142,.85)', 6, 54, 10); }
+    else if (sl === 'L2') { wpArc(cx, cy + 10 * s, 120 * s, -2.0, .6, F, 'rgba(120,98,66,.5)', 'rgba(232,214,170,.9)', 28 * s); skChips(hx, hy, 8, F); dust(f.x + F * 60, 4, g); }
+    else if (sl === 'L3') { wpArc(cx, cy, 112 * s, 1.1, -1.5, F, 'rgba(120,98,66,.5)', 'rgba(232,214,170,.9)', 28 * s); skChips(hx, hy, 8, 0); dust(f.x + F * 50, 6, g); }
+    else if (sl === 'H') {
+      const x = f.x + F * 150 * s; skCrackG(x, g + 2, F); skCrackG(x, g + 2, -F); dust(x, 12, g); skChips(x, g - 10, 12, F);
+      for (let i = 0; i < 4; i++) skSpike(x + F * (i * 26 - 10), g + 2, 30 + i * 14, 11 + i * 2, '#8a7b63', '#d8c49a', i * 2, 26, F * .18);
+      skRing(x, g - 6, 'rgba(201,180,142,.9)', 10, 150, 16); shake(10);
+    }
+    else if (sl === 'AIR') { skChips(hx, hy, 8, F); skRing(hx, hy, 'rgba(201,180,142,.85)', 6, 60, 12); }
+  },
+  CH_YING(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, cx, cy } = q;
+    if (act) skSmoke(hx, hy, 1, 9);
+    if (!first) return;
+    if (sl === 'L' || sl === 'L2') { skSlash(hx - F * 20, hy, 0, 120, 'rgba(24,28,58,.8)', 9, 0, 10); skSlash(hx - F * 20, hy, 0, 112, 'rgba(240,244,255,.95)', 8, 0, 2.5); }
+    else if (sl === 'L3') { const x = f.x + F * 92 * s, y = f.y - 120 * s; for (const an of [.75, -.75]) { skSlash(x, y, an, 150, 'rgba(24,28,58,.85)', 13, 0, 12); skSlash(x, y, an, 140, 'rgba(230,236,255,.95)', 12, 1, 3); } }
+    else if (sl === 'H') { wpArc(cx, cy, 128 * s, 1.3, -2.2, F, 'rgba(24,28,58,.75)', 'rgba(230,236,255,.95)', 30 * s, 16); wpArc(cx + F * 20 * s, cy, 110 * s, 1.2, -2.0, F, 'rgba(131,153,222,.4)', 'rgba(230,236,255,.7)', 14 * s, 14, 2); skSmoke(f.x, f.y - 60 * s, 5, 16); }
+    else if (sl === 'AIR') { skSlash(hx, hy, F > 0 ? .9 : Math.PI - .9, 130, 'rgba(24,28,58,.8)', 10, 0, 10); skSlash(hx, hy, F > 0 ? .9 : Math.PI - .9, 120, 'rgba(240,244,255,.95)', 9, 0, 2.5); }
+  },
+  CH_LING(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, g, rx, ry } = q;
+    if (t < m.startup && t % 4 === 1) skNote(hx, hy);
+    if (!first) return;
+    if (sl === 'L') { skRing(hx, hy, 'rgba(232,196,90,.85)', 4, 34, 8); P_ADD({ k: 'sonic', x: hx, y: hy, x0: hx, y0: hy, x1: rx, y1: ry, dir: F, life: 7, max: 7 }); wpBurst(rx, ry, 'rgba(240,207,99,', 3); skNote(rx, ry - 20); skNote(rx + F * 20, ry - 30, '#4fc08a'); }
+    else if (sl === 'L2') { P_ADD({ k: 'talis', x: hx, y: hy, vx: (rx - hx) / 3, vy: (ry - hy) / 3, g: 0, life: 4, max: 4, rot: 0, vr: .35, sc: 1.5 }); wpBurst(rx, ry, 'rgba(240,207,99,', 3, true); }
+    else if (sl === 'L3') { const x = f.x + F * 90 * s; for (let i = 0; i < 4; i++) skRing(x, f.y - (40 + i * 45) * s, i % 2 ? 'rgba(79,192,138,.8)' : 'rgba(232,196,90,.9)', 6, 60 + i * 8, 14, i * 2); for (let i = 0; i < 4; i++) skNote(x + rand(-30, 30), f.y - rand(60, 200) * s); }
+    else if (sl === 'H') {
+      for (const da of [-.18, 0, .18]) { const ty = ry + da * 180; P_ADD({ k: 'talis', x: hx, y: hy, vx: (rx - hx) / 4, vy: (ty - hy) / 4, g: 0, life: 5, max: 5, rot: da, vr: .3, sc: 1.6 }); wpBurst(rx, ty, 'rgba(240,207,99,', 4, true); }
+      P_ADD({ k: 'fu', x: rx, y: ry, r: 70, life: 22, max: 22, delay: 4 }); skGlow(rx, ry, 'rgba(240,207,99,', 130, 16, 4); skRing(rx, ry, 'rgba(79,192,138,.85)', 10, 150, 18, 5);
+    }
+    else if (sl === 'AIR') { for (let i = 0; i < 3; i++) skRing(hx, hy + 20, i % 2 ? 'rgba(79,192,138,.8)' : 'rgba(232,196,90,.9)', 6, 50 + i * 20, 12, i * 2); skNote(hx, hy); }
+  },
+  CH_SHUANG(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, g, cx, cy, rx, ry } = q;
+    if (act) { if (t % 2) skFlakes(hx, hy, 1, 1.5); P_ADD({ k: 'dust', x: hx, y: hy, vx: rand(-.6, .6), vy: rand(-.6, .3), life: 20, max: 20, col: 'rgba(214,244,255,', sz: rand(4, 8) }); }
+    if (sl === 'H' && t === 2) { skGlow(f.x - F * 10 * s, f.y - 95 * s, 'rgba(170,230,255,', 50, m.startup); }
+    if (!first) return;
+    if (sl === 'L') { wpArc(cx, cy, 118 * s, -2.0, .75, F, 'rgba(159,227,255,.5)', 'rgba(255,255,255,.95)', 24 * s); }
+    else if (sl === 'L2') { wpArc(cx, cy, 118 * s, .9, -1.4, F, 'rgba(159,227,255,.5)', 'rgba(255,255,255,.95)', 24 * s); skFlakes(hx, hy, 4, 3); }
+    else if (sl === 'L3') { wpArc(cx, cy, 112 * s, 1.2, -1.6, F, 'rgba(159,227,255,.5)', 'rgba(255,255,255,.95)', 26 * s); for (let i = 0; i < 3; i++) skSpike(f.x + F * (80 + i * 26) * s, g + 2, 34 + i * 12, 9, 'rgba(200,238,252,.95)', '#fff', i * 2, 26, F * .15); }
+    else if (sl === 'H') {
+      const x = f.x + F * 110 * s; skSlash(x, ry, 0, 280, 'rgba(159,227,255,.55)', 12, 0, 18); skSlash(x, ry, 0, 270, 'rgba(255,255,255,1)', 12, 0, 3);
+      for (const an of [.6, -.6]) skSlash(rx, ry, an, 120, 'rgba(255,255,255,.95)', 10, 5, 3);
+      skFlakes(rx, ry, 14, 5); skDim('rgba(150,205,232,', .18, 16);
+    }
+    else if (sl === 'AIR') { wpArc(cx, cy, 108 * s, -1.6, 1.0, F, 'rgba(159,227,255,.5)', 'rgba(255,255,255,.95)', 22 * s); }
+  },
+  CH_LEI(f, m, sl, t, act, first, q) {
+    const { hx, hy, F, s, cx, cy, rx, ry } = q;
+    if (act) P_ADD({ k: 'zig', x: hx, y: hy, pts: skZig(hx, hy, 30), life: 5, max: 5, col: '#b98cff' });
+    if (sl === 'H' && t < m.startup && t % 2) spark(hx, hy, '#ffe066', 1, 4);
+    if (!first) return;
+    if (sl === 'L' || sl === 'L2') { skSlash(hx - F * 60, hy, 0, 170, 'rgba(185,140,255,.55)', 9, 0, 9); skSlash(hx - F * 60, hy, 0, 160, 'rgba(255,246,196,.95)', 8, 0, 2.5); for (let i = 0; i < 2; i++) P_ADD({ k: 'zig', x: hx, y: hy, pts: skZig(hx, hy, 40), life: 7, max: 7, col: '#ffe066' }); }
+    else if (sl === 'L3') { wpArc(cx, cy, 140 * s, 1.0, -1.5, F, 'rgba(138,79,181,.45)', 'rgba(255,246,196,.95)', 24 * s); for (let i = 0; i < 3; i++) P_ADD({ k: 'zig', x: hx, y: hy, pts: skZig(hx, hy, 50), life: 8, max: 8, col: i % 2 ? '#ffe066' : '#d9b8ff' }); }
+    else if (sl === 'H') { wpBoltH(hx, hy, rx + F * 50, '#d9b8ff', 8); wpBoltH(hx, hy, rx + F * 30, '#fff6c4', 3); spark(rx, ry, '#ffe066', 10, 8); skRing(rx, ry, 'rgba(217,184,255,.9)', 6, 80, 12); skGlow(rx, ry, 'rgba(200,170,255,', 80, 12); }
+    else if (sl === 'AIR') { const an = F > 0 ? 1.0 : Math.PI - 1.0; skSlash(hx, hy, an, 150, 'rgba(185,140,255,.55)', 9, 0, 9); skSlash(hx, hy, an, 140, 'rgba(255,246,196,.95)', 8, 0, 2.5); }
+  },
+};
+function wpTick(f, m, sl, t, act, first) {
+  const fx = WP_FX[f.ch.id]; if (!fx) return;
+  const [hx, hy] = skAt(f), F = f.face, zk = zs(f.z), s = f.ch.scale * zk, g = gy(f.z);
+  const sh = skW(f, skel(f).sh);
+  fx(f, m, sl, t, act, first, { hx, hy, F, s, g, rx: f.x + F * m.range * s * .82, ry: f.y - m.hbY * s, cx: sh[0], cy: sh[1] + 6 * s });
+}
+for (const id in WP_FX) { const S = SK[id]; if (!S) continue; const T = S.tick; S.tick = function (f, m, sl, t, act, first) { if (WP_SLOTS.has(sl)) return wpTick(f, m, sl, t, act, first); return T.call(this, f, m, sl, t, act, first); }; }
+
+/* ---- 命中：按兵器种类追加刀痕 / 碎块 / 贯穿 / 符爆 ---- */
+const WP_HIT = {
+  blade(a, x, y, pw) { const r = rand(-.4, .4); skSlash(x, y, .7 + r, 80 + pw * 6, 'rgba(255,255,255,.95)', 10, 0, 3); skSlash(x, y, -.6 + r, 64 + pw * 5, a.col, 10, 1, 5); },
+  blunt(a, x, y, pw) { skRing(x, y, 'rgba(239,233,223,.85)', 4, 40 + pw * 5, 10); },
+  pierce(a, x, y, pw) { skSlash(x + a.face * 20, y, 0, 110 + pw * 6, 'rgba(255,246,196,.9)', 9, 0, 3); P_ADD({ k: 'zig', x, y, pts: skZig(x, y, 44), life: 7, max: 7, col: '#ffe066' }); },
+  magic(a, x, y, pw) { skRing(x, y, 'rgba(240,207,99,.9)', 4, 50 + pw * 4, 12); wpScraps(x, y, 4); },
+};
+{ const H0 = hitFx; hitFx = function (a, x, y, pw) { H0(a, x, y, pw); const w = a.ch.weapon, m = a.move; if (w && m && WP_SLOTS.has(m.slot) && WP_HIT[w.kind]) { WP_HIT[w.kind](a, x, y, pw); SFX.play('h' + w.kind, pw); } }; }
+
+/* ---- 兵器音效 ---- */
+const WP_SFX = {
+  fire(t) { this.noise(t, .14, 'lowpass', 1500, .2); this.tone(t, 300, 120, .12, 'sawtooth', .03); },
+  blade(t) { this.noise(t, .1, 'bandpass', 2600, .14, 2); this.tone(t + .01, 2400, 1500, .12, 'triangle', .045); },
+  heavy(t) { this.noise(t, .22, 'lowpass', 500, .3, .7); this.tone(t, 110, 55, .22, 'sine', .18); },
+  pierce(t) { this.noise(t, .07, 'bandpass', 1800, .16, 3); this.tone(t, 900, 400, .07, 'sawtooth', .03); },
+  chime(t) { this.tone(t, 1320, 1310, .35, 'sine', .1); this.tone(t, 1980, 1975, .28, 'sine', .05); },
+  talis(t) { this.noise(t, .12, 'highpass', 4000, .12); this.tone(t + .05, 660, 990, .12, 'triangle', .05); },
+  hblade(t) { this.noise(t, .09, 'highpass', 3500, .16); this.tone(t, 1800, 900, .1, 'triangle', .05); },
+  hblunt(t) { this.noise(t, .12, 'lowpass', 700, .2); },
+  hpierce(t) { this.noise(t, .06, 'bandpass', 2400, .14, 2); this.tone(t, 1200, 300, .08, 'sawtooth', .03); },
+  hmagic(t) { this.tone(t, 990, 985, .22, 'sine', .07); this.noise(t, .08, 'highpass', 5000, .1); },
+};
+{ const P0 = SFX.play; SFX.play = function (k, p = 0) { const fn = WP_SFX[k]; if (!fn) return P0.call(this, k, p); if (!CFG.SOUND || !this.c || G.demo) return; fn.call(this, this.c.currentTime, p); }; }
+
+/* ---- 图标：轻击 / 重击换成兵器 ---- */
+Object.assign(ICONS, {
+  MV_LAN_L: { fam: 'CH_LAN', l: [
+    ['M12 38L32 12', null, 'k', 7], ['M12 38L32 12', null, 'w', 3.4], ['M30.5 14L35 8L33.5 15.5Z', 'w', 'k', 1.5],
+    ['M9.5 35.5L15 41M8.5 40.5L12 37', null, 'k', 4.2], ['M9.5 35.5L15 41', null, 'y', 2.4], ['M9 41C6.5 43 5 44.5 4 46', null, 'c', 2.2],
+    ['M37 22C40 25 40.5 30 38 34', null, 'e', 2.4, .8]] },
+  MV_LAN_H: { fam: 'CH_LAN', l: [
+    ['M8 30C14 14 30 8 42 14', null, 'c', 6, .75], ['M8 30C14 14 30 8 42 14', null, 'w', 2],
+    ['M14 40L33 18', null, 'k', 6.5], ['M14 40L33 18', null, 'w', 3], ['M31.5 20L36 14.5L34.5 21.5Z', 'w', 'k', 1.4], ['M11.5 37.5L17 43', null, 'y', 3]] },
+  MV_YUE_L: { fam: 'CH_YUE', l: [
+    ['M10 38L27 21', null, 'k', 7.5], ['M10 38L27 21', null, 'e', 4],
+    ['M22 13L35 26L29 32L16 19Z', 'c', 'k', 2.4], ['M24 15L33 24', null, 'y', 2.4], ['M18 21L27 30', null, 'y', 2.4]] },
+  MV_YUE_H: { fam: 'CH_YUE', l: [
+    ['M6 42L42 42', null, 'k', 3], ['M10 42L15 36L20 42M28 42L33 35L38 42', 'e', 'k', 1.6],
+    ['M30 8L18 30', null, 'k', 7.5], ['M30 8L18 30', null, 'e', 4], ['M8 24L22 31L18 40L4 33Z', 'c', 'k', 2.4], ['M9 27L20 33', null, 'y', 2.2]] },
+  MV_YING_L: { fam: 'CH_YING', l: [
+    ['M8 32L30 16', null, 'k', 5.5], ['M8 32L30 16', null, 'e', 2.6], ['M28 16.5L38 10L32 19Z', 'w', 'k', 1.4],
+    ['M14 38L36 30', null, 'k', 5.5], ['M14 38L36 30', null, 'e', 2.6], ['M34 30L44 28.5L36 33Z', 'w', 'k', 1.4]] },
+  MV_YING_H: { fam: 'CH_YING', l: [
+    ['M10 36C8 20 20 8 36 10C24 14 18 24 20 36Z', 'd', 'c', 2.4], ['M12 34C11 22 20 12 33 11', null, 'w', 2],
+    ['M26 34L38 22', null, 'k', 5], ['M26 34L38 22', null, 'e', 2.4], ['M37 22.5L42 17L39.5 24Z', 'w', 'k', 1.2]] },
+  MV_LING_L: { fam: 'CH_LING', l: [
+    [icT(MO.BELL, 16, 26, 1), 'y', 'k', 2], ['M27 20C30 23 30 29 27 32M32 16C37 21 37 31 32 36M37 12C44 19 44 33 37 40', null, 'e', 2.4]] },
+  MV_LING_H: { fam: 'CH_LING', l: [
+    ['M8 30L20 26L21 30L9 34Z', 'p', 'k', 1.4], ['M10 21L22 19L22.5 23L10.5 25Z', 'p', 'k', 1.4], ['M9 39L21 33L23 36.5L11 42.5Z', 'p', 'k', 1.4],
+    ['M13 28L17 31M14 21L18 23M14 38L18 37', null, 'r', 1.4], [icT(MO.STAR4, 34, 28, 1.05), 'y', 'k', 1.6], [icT(MO.STAR4, 34, 28, .5), 'w']] },
+  MV_SHUANG_L: { fam: 'CH_SHUANG', l: [
+    ['M8 40C14 24 26 12 42 8C30 16 20 28 14 42Z', 'w', 'k', 1.8], ['M10 38C16 25 26 15 38 10', null, 'c', 1.6], ['M6 42L11 37', null, 'k', 5], ['M6 42L11 37', null, 'y', 2.4]] },
+  MV_SHUANG_H: { fam: 'CH_SHUANG', l: [
+    ['M4 26L44 26', null, 'c', 7, .55], ['M4 26L44 26', null, 'w', 2.4], ['M10 34L32 32C36 31.5 39 30 41 28L32 34.5L10 36.5Z', 'w', 'k', 1.6], ['M6 37L11 34.5', null, 'y', 3]] },
+  MV_LEI_L: { fam: 'CH_LEI', l: [
+    ['M5 36L34 18', null, 'k', 5.5], ['M5 36L34 18', null, 'd', 2.8], ['M32 18.5L43 11L36 22Z', 'w', 'k', 1.5], ['M30 19L26 15M30 21L27 26', null, 'c', 2], ['M43 11L46 8', null, 'y', 2]] },
+  MV_LEI_H: { fam: 'CH_LEI', l: [
+    ['M4 30L26 30', null, 'k', 5.5], ['M4 30L26 30', null, 'd', 2.8], ['M25 26.5L36 30L25 33.5Z', 'w', 'k', 1.5],
+    ['M36 30L39 24L41 33L44 27', null, 'y', 2.6], ['M30 22L33 18M30 38L33 42', null, 'c', 2]] },
+});
+for (const c of CHARS) for (const k of ['L2', 'L3']) ICONS[c.moves[k].id] = ICONS[c.moves.L.id];
+ICONS.MECH_WEAPON = ICONS.MV_LAN_L;
+
+/* ---- 挥招拖尾：刃尖的轨迹绕肩膀按角度插值，画成弧线（不再是折线） ---- */
+function wpSmooth(s0) {
+  const out = [s0[0]];
+  for (let i = 1; i < s0.length; i++) {
+    const a = s0[i - 1], b = s0[i], pa = a.pv, pb = b.pv;
+    if (!pa || !pb) { out.push(b); continue; }
+    const r0 = Math.hypot(a[0] - pa[0], a[1] - pa[1]), r1 = Math.hypot(b[0] - pb[0], b[1] - pb[1]), t0 = Math.atan2(a[1] - pa[1], a[0] - pa[0]);
+    let dt = Math.atan2(b[1] - pb[1], b[0] - pb[0]) - t0; while (dt > Math.PI) dt -= Math.PI * 2; while (dt < -Math.PI) dt += Math.PI * 2;
+    const n = Math.min(8, Math.max(1, Math.ceil(Math.abs(dt) / .16)));
+    for (let j = 1; j <= n; j++) { const u = j / n, r = lerp(r0, r1, u), t = t0 + dt * u; out.push([lerp(pa[0], pb[0], u) + Math.cos(t) * r, lerp(pa[1], pb[1], u) + Math.sin(t) * r]); }
+  }
+  return out;
+}
+drawSwoosh = function (c, f) {
+  if (f.swoosh.length < 2) return; const s = wpSmooth(f.swoosh);
+  c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+  const tr = SK_TRAIL[CH_FX[f.ch.id]];
+  if (tr) tr(c, s);
+  else for (let i = 1; i < s.length; i++) { const u = i / s.length; c.globalAlpha = u * .7; c.strokeStyle = i >= s.length - 2 ? '#fff' : f.col; c.lineWidth = 2 + u * 10; line(c, s[i - 1], s[i]); }
+  c.restore();
+};
+
 /* HUD：技能冷却（每人三格） */
 function skillRow(c, f, x, s) {   // 和外援 / 特性同一行，放在血条下方靠中间（不挡连段数字）
   const y = 119, x0 = s > 0 ? 302 : W - 302;
@@ -3435,7 +3824,7 @@ function aiDodge(ai, me, op) {
   if (inc.sk === 'strike' || inc.sk === 'zone') { ai.fleeT = 22; ai.fleeDir = me.x >= inc.x ? 'right' : 'left'; o.held[ai.fleeDir] = true; return o; }
   if (inc.ground && r < .6) { o.pressed.jump = true; return o; }
   if (r < .3) { o.dash = me.z < 25 ? 'SIDE_D' : me.z > 75 ? 'SIDE_U' : (r < .15 ? 'SIDE_U' : 'SIDE_D'); return o; }
-  ai.guardT = 22; ai.parry = Math.random() < ai.P.parry; return null;
+  o.dash = 'BDASH'; return o;
 }
 /* 角色专属打击特效 */
 function hitFx(a, x, y, pw) {
@@ -3816,9 +4205,6 @@ function hpBar(c, f, x, y, w, side) {
   c.fillStyle = '#8f2414'; seg(r, tr);
   c.fillStyle = r < .25 ? '#f07a5c' : '#ebe2d2'; seg(0, r);
   if (pend > 0) { c.fillStyle = stripes(c); seg(Math.max(0, r - pend), r); }
-  c.fillStyle = 'rgba(13,10,9,.85)'; c.fillRect(x, y + h + 6, w, 5);
-  const g = f.grd / f.grdMax; c.fillStyle = g < .3 ? RED : 'rgba(239,233,223,.55)';
-  if (side > 0) c.fillRect(x + w * (1 - g), y + h + 6, w * g, 5); else c.fillRect(x, y + h + 6, w * g, 5);
   c.textBaseline = 'alphabetic';
   txt(c, f.ch.name, side > 0 ? x : x + w, y + h + 46, 30, FB, f.col, side > 0 ? 'left' : 'right', 5);
   c.font = `500 14px ${FU}`; c.fillStyle = MUTE; c.textAlign = side > 0 ? 'left' : 'right';
@@ -4037,7 +4423,7 @@ function sideHTML(n) {
   const g = G.sel['g' + n], a = G.sel['a' + n];
   return `<h3><b>${who}</b><span>${ch.name} · ${ch.title}　${Object.entries(ch.stats).map(([k, v]) => `${k}${'■'.repeat(v)}${'□'.repeat(5 - v)}`).join(' ')}</span></h3>
   <div class="roster">${CHARS.map(c => `<button class="pc" data-slot="${slot}" data-id="${c.id}" aria-pressed="${c.id === ch.id}" aria-label="${c.name}"><canvas></canvas><b>${c.name}</b></button>`).join('')}</div>
-  <p class="detail">${ch.role}<br><span class="mech">${icSVG(ch.mech.id)}特性「${ch.mech.name}」</span>${ch.mech.desc}</p>
+  <p class="detail">${ch.role}<br>兵器「${ch.weapon.name}」${ch.weapon.style}<br><span class="mech">${icSVG(ch.mech.id)}特性「${ch.mech.name}」</span>${ch.mech.desc}</p>
   <div class="mvrow">${Object.entries(ch.moves).map(([k, m]) => `<span title="${MOVE_INPUT[k]} · ${m.name}">${icSVG(m.id)}</span>`).join('')}</div>
   <div class="chips"><span class="lab">道具</span>${GEAR.map(x => `<button class="chip" data-slot="g${n}" data-id="${x.id}" aria-pressed="${g === x.id}">${icSVG(x.id)}${x.name}</button>`).join('')}</div>
   <p class="hint">${GEAR_BY[g].desc}</p>
@@ -4068,16 +4454,16 @@ function buildMoves() {
   const D = DROP_LEVELS, max = D[D.length - 1].min * 1.3;
   $('#sysText').innerHTML = `
     <h3>核心规则</h3>
-    <p><b>起手</b>：立回中命中没在防御的对手，就进入连段。对手被锁定，不能移动、防御或出招。</p>
+    <p><b>起手</b>：立回中命中对手就进入连段（没有防御键，躲攻击靠侧闪、后撤步、跳跃和替身术）。对手被锁定，不能移动或出招。</p>
     <p><b>无限连段</b>：每次命中后，要在连段窗口（约 ${(CFG.CHAIN_WINDOW * CFG.WINDOW_MUL / 60).toFixed(2)} 秒，屏幕上方的白色细条）耗尽前命中下一击，就能一直连下去。命中后可以立刻取消收招接下一招。同一招连用会衰减，连续 ${CFG.REPEAT_LIMIT} 次连段中断。</p>
     <p><b>暂存与掉落</b>：每击 ${Math.round(CFG.IMMEDIATE_RATIO * 100)}% 的伤害立即生效，其余进入<b>暂存</b>（血条上的红白斜纹）。连段势越过下面的阈值时，暂存伤害一次性结算，即<b>掉落</b>。连段因中断或破链结束时，没结算的暂存伤害会消散。</p>
     <div class="dlbar">${D.map((d, i) => `<div style="flex:${((D[i + 1] ? D[i + 1].min : max) - d.min)};background:${d.color}"><b>${d.name}</b>${d.min}</div>`).join('')}</div>
     <div class="tablewrap"><table><tr><th>阶段</th><th class="num">阈值</th><th class="num">伤害倍率</th><th class="num">守方每击充能</th><th>连段结束后</th></tr>
     ${D.map(d => `<tr><td>${d.name} <span style="color:var(--mute)">${d.id}</span></td><td class="num">${d.min}</td><td class="num">${d.dmgMul}×</td><td class="num">+${d.gain}</td><td>${STATES[d.end].name} ${d.stun} 帧</td></tr>`).join('')}</table></div>
     <p>${icSVG('SK_BRK')}<b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，按破链键斩断连段。没结算的暂存伤害全部返还，攻方被弹开、硬直 ${CFG.BREAK_STAGGER} 帧。最划算的时机是<b>下一个阈值之前</b>。</p>
-    <p><b>充能方式</b>：被连受击（阶段越高越多）、防御成功 +${CFG.GAIN.guard}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
+    <p><b>充能方式</b>：被连受击（阶段越高越多）、闪避成功 +${CFG.PARRY_GAIN}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
     <p><b>终结技</b>：连段达到「${D[CFG.FIN_MIN_LV].name}」后可用，结算全部暂存伤害并造成重击，连段结束。到「${D[D.length - 1].name}」后伤害减半、对手充能加快，应尽快终结。</p>
-    <p><b>护架</b>：防御会消耗护架值（血条下的细条），耗尽即破防，短时间无法行动。</p>
+    <p><b>兵器</b>：每个角色用自己的兵器打轻击 / 重击 / 空中攻击。轻击连按是三段，第三段会把对手挑起来。${CHARS.map(c => `${c.name}「${c.weapon.name}」${c.weapon.style}`).join('；')}。</p>
     <h3>进阶</h3>
     ${MECHS.map(m => `<p>${icSVG(m.id)}<b>${m.name}</b>：${m.desc}</p>`).join('')}
     <p><b>外援</b>：备战时选一名外援，对战中按外援键呼叫（冷却 ${CFG.ASSIST_CD / 60} 秒，被锁定时不能叫）。${ASSISTS.map(a => `「${a.name}」${a.role}`).join('；')}。</p>
@@ -4088,15 +4474,15 @@ function buildMoves() {
   const ch = CHAR[G.mvTab];
   $('#mvTable').innerHTML = `<tr><th>输入</th><th>招式</th><th>效果</th><th class="num">冷却</th><th class="num">发生</th><th class="num">伤害</th><th class="num">势</th></tr>` +
     Object.entries(ch.moves).map(([k, m]) => `<tr><td>${MOVE_INPUT[k]}</td><td class="mvn">${icSVG(m.id)}${m.name}</td><td class="mvd">${m.desc || ''}</td><td class="num">${m.cd ? (m.cd / 60).toFixed(1) + ' 秒' : '—'}</td><td class="num">${m.startup}</td><td class="num">${m.dmg || (m.hit ? m.hit.dmg : 0)}</td><td class="num">${m.mom || (m.hit ? m.hit.mom : 0)}</td></tr>`).join('');
-  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr><tr><td>冲刺 / 后撤步</td><td colspan="2">快速双击前 / 后方向</td></tr><tr><td>侧闪（Z 轴）</td><td colspan="2">快速双击上 / 下，前 10 帧无敌</td></tr><tr><td>自动防御</td><td colspan="2">对手出招时按住后方向</td></tr><tr><td>弹反</td><td colspan="2">被打中前一瞬间按下防御（或按下后方向）</td></tr><tr><td>浮空追击（Y 轴）</td><td colspan="2">特技把对手打上天后按跳跃追上去：空中轻击 → 空中重击「坠击」砸地反弹</td></tr><tr><td>触屏</td><td colspan="2">左侧摇杆八向移动（上下 = 纵深）；快速拨两下前 / 后冲刺，上 / 下侧闪；对手出招时按住后方向自动防御。右侧「跳」跳跃 / 追击，其余按键出招，「援」呼叫外援</td></tr>`;
+  $('#keyTable').innerHTML = `<tr><th>动作</th><th>1P</th><th>2P</th></tr>` + Object.entries(ACTIONS).map(([k, v]) => `<tr><td>${v}</td><td>${KEYMAP.P1[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td><td>${KEYMAP.P2[k].map(c => `<kbd>${keyName(c)}</kbd>`).join(' ')}</td></tr>`).join('') + `<tr><td>暂停</td><td colspan="2"><kbd>Esc</kbd> <kbd>P</kbd></td></tr><tr><td>全屏 / 退出全屏</td><td colspan="2"><kbd>F</kbd></td></tr><tr><td>冲刺 / 后撤步</td><td colspan="2">快速双击前 / 后方向</td></tr><tr><td>侧闪（Z 轴）</td><td colspan="2">快速双击上 / 下，前 10 帧无敌</td></tr><tr><td>轻击三段</td><td colspan="2">连按轻击：第二、三段接在前一段后面（没打中也能接）</td></tr><tr><td>闪避</td><td colspan="2">没有防御键：看准对手出招，用侧闪 / 后撤步的无敌时间躲开，破链能量 +${CFG.PARRY_GAIN}</td></tr><tr><td>浮空追击（Y 轴）</td><td colspan="2">特技把对手打上天后按跳跃追上去：空中轻击 → 空中重击「坠击」砸地反弹</td></tr><tr><td>触屏</td><td colspan="2">左侧摇杆八向移动（上下 = 纵深）；快速拨两下前 / 后冲刺，上 / 下侧闪；没有防御，看准对手出招拨两下侧闪或后撤。右侧「跳」跳跃 / 追击，其余按键出招，「援」呼叫外援</td></tr>`;
 }
 const CODEX = {
   pages: { name: '页面 PG', note: '界面页面。PG_BATTLE 的内容画在 canvas 上。', cols: ['ID', '名称', '说明'], rows: () => PAGES.map(p => [p.id, p.name, p.desc]) },
-  chars: { name: '角色 CH', note: '角色属性；倍率 1 为基准。', cols: ['ID', '名称', '称号', '特性', '定位', '移速', '跳跃', '攻击', '受伤', '破链充能', '连段窗口', '护架'], rows: () => CHARS.map(c => [c.id, c.name, c.title, c.mech.name, c.role, c.walk, c.jump, c.atk, c.def, c.brkGain, c.chainWin, c.grd]) },
+  chars: { name: '角色 CH', note: '角色属性；倍率 1 为基准。', cols: ['ID', '名称', '称号', '特性', '定位', '移速', '跳跃', '攻击', '受伤', '破链充能', '连段窗口', '兵器'], rows: () => CHARS.map(c => [c.id, c.name, c.title, c.mech.name, c.role, c.walk, c.jump, c.atk, c.def, c.brkGain, c.chainWin, c.weapon ? `${c.weapon.name}（${c.weapon.style}）` : '']) },
   mechs: { name: '机制 MECH', note: '通用机制与角色专属特性。', cols: ['ID', '名称', '说明'], rows: () => [...MECHS.map(m => [m.id, m.name, m.desc]), ...CHARS.map(c => [c.mech.id, `${c.name} · ${c.mech.name}`, c.mech.desc])] },
   gear: { name: '道具 GR', note: '备战时携带，整场生效。', cols: ['ID', '名称', '效果'], rows: () => GEAR.map(g => [g.id, g.name, g.desc]) },
   assists: { name: '外援 AS', note: '与角色无关的外援，对战中按外援键呼叫。', cols: ['ID', '名称', '效果', '冷却（秒）'], rows: () => ASSISTS.map(a => [a.id, a.name, a.role, CFG.ASSIST_CD / 60]) },
-  moves: { name: '招式 MV', note: '帧数以 1/60 秒计；势 = 连段势，决定掉落阶段。外援招式与冲刺也在其中。', cols: ['ID', '角色', '名称', '输入', '发生', '持续', '收招', '伤害', '势', '削架', '距离'], rows: () => [...CHARS.flatMap(c => Object.entries(c.moves).map(([k, m]) => [m.id, c.name, m.name, MOVE_INPUT[k], m.startup, m.active, m.recovery, m.dmg || (m.hit ? m.hit.dmg : 0), m.mom || (m.hit ? m.hit.mom : 0), m.grd || (m.hit ? m.hit.grd : 0), m.range || (m.sk ? m.sk.type : 0)])), ...Object.values(COMMON).map(m => [m.id, '通用', m.name, m.throw ? '贴身 前 + 重' : m.side ? (m.side < 0 ? '双击上' : '双击下') : m.spike ? '空中 重' : m.dash > 0 ? '双击前' : '双击后', m.startup, m.active, m.recovery, 0, 0, 0, 0]), ...Object.values(AS_MOVE).map(m => [m.id, '外援', m.name, '外援键', '-', '-', '-', m.dmg, m.mom, m.grd, '-'])] },
+  moves: { name: '招式 MV', note: '帧数以 1/60 秒计；势 = 连段势，决定掉落阶段。外援招式与冲刺也在其中。', cols: ['ID', '角色', '名称', '输入', '发生', '持续', '收招', '伤害', '势', '距离'], rows: () => [...CHARS.flatMap(c => Object.entries(c.moves).map(([k, m]) => [m.id, c.name, m.name, MOVE_INPUT[k], m.startup, m.active, m.recovery, m.dmg || (m.hit ? m.hit.dmg : 0), m.mom || (m.hit ? m.hit.mom : 0), m.range || (m.sk ? m.sk.type : 0)])), ...Object.values(COMMON).map(m => [m.id, '通用', m.name, m.throw ? '贴身 前 + 重' : m.side ? (m.side < 0 ? '双击上' : '双击下') : m.spike ? '空中 重' : m.dash > 0 ? '双击前' : '双击后', m.startup, m.active, m.recovery, 0, 0, 0]), ...Object.values(AS_MOVE).map(m => [m.id, '外援', m.name, '外援键', '-', '-', '-', m.dmg, m.mom, '-'])] },
   icons: { name: '图标 IC', note: '全部招式、特性、外援、道具的专属图标。每名角色有自己的徽章外形：烬圆、澜方圆、岳六角、影菱形、铃钟形、霜八角、雷五角。', cols: [], rows: () => [] },
   drops: { name: '掉落阶段 DL', note: '连段势越过阈值即结算暂存伤害。', cols: ['ID', '名称', '阈值', '伤害倍率', '守方每击充能', '连段结束后', '硬直帧', '说明'], rows: () => DROP_LEVELS.map(d => [d.id, d.name, d.min, d.dmgMul, d.gain, STATES[d.end].name, d.stun, d.note]) },
   states: { name: '状态 ST', note: '角色状态机。', cols: ['ID', '名称', '说明'], rows: () => Object.entries(STATES).map(([k, v]) => [k, v.name, v.desc]) },
@@ -4104,7 +4490,7 @@ const CODEX = {
   events: { name: '事件 EV', note: '代码中用 on("EV_…", 函数) 订阅，可接成就、统计、演出。', cols: ['ID', '触发时机'], rows: () => Object.entries(EVENTS) },
   keys: { name: '按键', note: '在 KEYMAP 中修改。', cols: ['动作 ID', '动作', '1P', '2P'], rows: () => Object.entries(ACTIONS).map(([k, v]) => [k, v, KEYMAP.P1[k].map(keyName).join(' / '), KEYMAP.P2[k].map(keyName).join(' / ')]) },
   cfg: { name: '参数 CFG', note: '全局参数，当前值已含设置页的修改。', cols: ['键', '当前值', '说明'], rows: () => Object.entries(CFG_DESC).map(([k, v]) => [k, JSON.stringify(CFG[k]), v]) },
-  ai: { name: 'AI 与设置', note: 'AI 难度参数与设置项。', cols: ['ID', '名称', '说明'], rows: () => [...AI_LEVELS.map(a => [a.id, a.name, `防御率 ${a.guard} · 失误率 ${a.drop} · 智能破链 ${a.smart} · 进攻性 ${a.agg}`]), ...SETTINGS.map(s => [s.id, s.label, `对应 CFG.${s.key}`])] },
+  ai: { name: 'AI 与设置', note: 'AI 难度参数与设置项。', cols: ['ID', '名称', '说明'], rows: () => [...AI_LEVELS.map(a => [a.id, a.name, `闪避率 ${a.guard} · 失误率 ${a.drop} · 智能破链 ${a.smart} · 进攻性 ${a.agg}`]), ...SETTINGS.map(s => [s.id, s.label, `对应 CFG.${s.key}`])] },
 };
 function buildCodex() {
   $('#cxTabs').innerHTML = Object.entries(CODEX).map(([k, v]) => `<button data-cxtab="${k}" aria-selected="${G.cxTab === k}">${v.name}</button>`).join('');
@@ -4216,7 +4602,7 @@ $$('#touch button').forEach(b => {
   const up = () => { Input.touchHeld[k] = false; b.classList.remove('on'); };
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => b.addEventListener(t, up));
 });
-/* ---------- 虚拟摇杆：八向移动（上下 = 纵深 Z 轴）· 快速拨两下冲刺 / 侧闪 · 按住后方向自动防御 ---------- */
+/* ---------- 虚拟摇杆：八向移动（上下 = 纵深 Z 轴）· 快速拨两下冲刺 / 侧闪 ---------- */
 const STK = { id: null, cx: 0, cy: 0 };
 const zone = $('#stickZone'), stick = $('#stick');
 const tEm = () => parseFloat(getComputedStyle($('#touch')).fontSize) || 11;
@@ -4391,7 +4777,7 @@ const ACH = [
   { id: 'ACH_LV4', name: '终焉', desc: '连段打到「终焉」阶段', ic: 'MV_LING_FIN', ok: s => s.maxLv >= 4 },
   { id: 'ACH_FIN10', name: '终结者', desc: '累计用终结技收尾 10 次', ic: 'MV_JIN_FIN', ok: s => s.fins >= 10 },
   { id: 'ACH_BRK10', name: '断链者', desc: '累计破链 10 次', ic: 'SK_BRK', ok: s => s.breaks >= 10 },
-  { id: 'ACH_PARRY20', name: '见招拆招', desc: '累计弹反 20 次', ic: 'MECH_PARRY', ok: s => s.parries >= 20 },
+  { id: 'ACH_PARRY20', name: '见招拆招', desc: '累计闪避 20 次', ic: 'MECH_PARRY', ok: s => s.parries >= 20 },
   { id: 'ACH_BURN', name: '燃链', desc: '用一次燃链', ic: 'MECH_BURN', ok: s => s.burns >= 1 },
   { id: 'ACH_AIR', name: '凌空', desc: '坠击落地反弹 5 次', ic: 'MECH_AIR', ok: s => s.bounces >= 5 },
   { id: 'ACH_SIDE', name: '游身', desc: '侧闪 30 次', ic: 'MV_SIDE', ok: s => s.sides >= 30 },
@@ -4571,7 +4957,7 @@ function buildAccount() {
 }
 function statsHTML(cloud = false) {
   const s = cloud ? cloudStats() : REC.stats, rate = s.games ? Math.round(s.wins / s.games * 100) + '%' : '—';
-  const tiles = [['场次', s.games], ['胜', s.wins], ['负', s.losses], ['胜率', rate], ['最高连段', s.maxHits], ['最高掉落', (DROP_LEVELS[s.maxLv] || DROP_LEVELS[0]).name], ...(cloud ? [['段位分', ACC.profile?.rating ?? '—']] : [['终结技', s.fins], ['破链', s.breaks], ['弹反', s.parries]]), ['联机胜 / 场', `${s.onW} / ${s.onG}`]];
+  const tiles = [['场次', s.games], ['胜', s.wins], ['负', s.losses], ['胜率', rate], ['最高连段', s.maxHits], ['最高掉落', (DROP_LEVELS[s.maxLv] || DROP_LEVELS[0]).name], ...(cloud ? [['段位分', ACC.profile?.rating ?? '—']] : [['终结技', s.fins], ['破链', s.breaks], ['闪避', s.parries]]), ['联机胜 / 场', `${s.onW} / ${s.onG}`]];
   const rows = CHARS.map(c => { const r = s.chars[c.id] || { g: 0, w: 0 }; return `<tr><td>${avHTML(c.id, 'sm')}${c.name}<small> · ${c.title}</small></td><td class="num">${r.g}</td><td class="num">${r.w}</td><td class="num">${r.g ? Math.round(r.w / r.g * 100) + '%' : '—'}</td></tr>`; }).join('');
   const earned = cloud ? { ...REC.ach, ...cloudAch() } : REC.ach;
   const n = ACH.filter(a => earned[a.id]).length;
