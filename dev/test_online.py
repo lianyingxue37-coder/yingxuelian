@@ -37,7 +37,8 @@ FINISH = """() => {
   return {
     page: G.page, final: LS.final, desync: LS.desync, sent: window.__sent ?? 0,
     input: LS.sentAtEnd, input_per_s: +(LS.sentAtEnd / LS.elapsed).toFixed(2), verdict: LS.verdict, onG: ACC.profile?.stats.onG ?? 0,
-    onW: ACC.profile?.stats.onW ?? 0, rating: ACC.profile?.rating
+    onW: ACC.profile?.stats.onW ?? 0, rating: ACC.profile?.rating,
+    input_delay: LS.D, peak_sync_wait_ms: Math.round(window.__peakSyncWait ?? 0)
   };
 }"""
 
@@ -113,6 +114,13 @@ async def main():
             await page.wait_for_selector("#PG_SELECT.on")
             await page.wait_for_function("DUANLIAN.ROOM.peer")
             await page.evaluate(AI_INPUT)
+            await page.evaluate("""() => {
+              window.__peakSyncWait = 0;
+              setInterval(() => {
+                const {LS} = DUANLIAN;
+                if (LS.on) window.__peakSyncWait = Math.max(window.__peakSyncWait, LS.wait);
+              }, 70);
+            }""")
         print("room", await a.evaluate("DUANLIAN.ROOM.code"), flush=True)
         await a.click('#sideP1 .pc[data-id="CH_YUE"]')
         await a.click('#pickStage [data-id="STG_05"]')

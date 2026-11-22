@@ -359,7 +359,7 @@ const CFG = {
   GAIN: { guard: 6, landHit: 2, commit: 10, passive: 0.02 },
   CHAIN_WINDOW: 40, WINDOW_MUL: 1, CHAIN_DIST: 100,
   REPEAT_LIMIT: 3, REPEAT_MOM_MUL: 0.5, REPEAT_DMG_MUL: 0.7,
-  IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 3, COUNTER_MOM: 20,
+  IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 2, COUNTER_MOM: 20,
   END_PROTECT: 10, FIN_DOWN: 100,
   GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
   SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
@@ -403,7 +403,7 @@ const DROP_LEVELS = [
   { id: 'DL0', lv: 0, name: '起势', min: 0,   dmgMul: 1.0, gain: 4,  end: 'ST_STAGGER',   stun: 16, color: '#efe9df', note: '连段刚开始，暂存伤害尚未结算' },
   { id: 'DL1', lv: 1, name: '压制', min: 60,  dmgMul: 1.1, gain: 5,  end: 'ST_STAGGER',   stun: 28, color: '#f2b09a', note: '首次掉落；连段结束时对手踉跄' },
   { id: 'DL2', lv: 2, name: '崩势', min: 160, dmgMul: 1.2, gain: 7,  end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '连段结束时对手倒地' },
-  { id: 'DL3', lv: 3, name: '坠落', min: 300, dmgMul: 1.3, gain: 10, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '解锁终结技；对手被重重砸地' },
+  { id: 'DL3', lv: 3, name: '坠落', min: 300, dmgMul: 1.3, gain: 10, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '对手被重重砸地' },
   { id: 'DL4', lv: 4, name: '终焉', min: 480, dmgMul: 0.5, gain: 16, end: 'ST_KNOCKDOWN', stun: 92, color: '#c21f0a', note: '此后伤害减半、对手充能加快，应尽快终结' },
 ];
 
@@ -1030,7 +1030,7 @@ const HOOKS = {};
 const on = (ev, fn) => (HOOKS[ev] = HOOKS[ev] || []).push(fn);
 
 /* ---------- 六、按键 ---------- */
-const ACTIONS = { left: '左移', right: '右移', up: '往里走（双击侧闪）', down: '往外走（双击侧闪）', jump: '跳跃 / 浮空追击', l: '轻击', h: '重击（贴身+前 = 投）', s: '特技（+前 = 前冲技）', brk: '破链 / 燃链', fin: '终结技（坠落起）', ast: '呼叫外援' };
+const ACTIONS = { left: '左移', right: '右移', up: '往里走（双击侧闪）', down: '往外走（双击侧闪）', jump: '跳跃 / 浮空追击', l: '轻击', h: '重击（贴身+前 = 投）', s: '特技（+前 = 前冲技）', brk: '破链 / 燃链', fin: '终结技（连段达标）', ast: '呼叫外援' };
 const KEYMAP = {
   P1: { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], down: ['KeyS'], jump: ['Space'], l: ['KeyJ'], h: ['KeyK'], s: ['KeyL'], brk: ['KeyI'], fin: ['KeyO'], ast: ['KeyU'] },
   P2: { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], down: ['ArrowDown'], jump: ['ShiftRight', 'Numpad0'], l: ['Comma', 'Numpad1'], h: ['Period', 'Numpad2'], s: ['Slash', 'Numpad3'], brk: ['Semicolon', 'Numpad5'], fin: ['Quote', 'Numpad6'], ast: ['KeyM', 'Numpad4'] },
@@ -4311,7 +4311,8 @@ function chainHUD(c, a) {
   for (const d of DROP_LEVELS.slice(1)) {
     const u = d.min / max, tx = L ? bx + bw * u : bx + bw * (1 - u), passed = ch.mom >= d.min;
     c.fillStyle = passed ? d.color : BONE; c.fillRect(tx - 1, by - 4, 2, bh + 8);
-    c.fillStyle = passed ? d.color : MUTE; c.fillText(d.name, tx, by + bh + 16);
+    c.fillStyle = passed ? d.color : MUTE;
+    c.fillText(d.lv === CFG.FIN_MIN_LV ? `${d.name} · 奥义` : d.name, tx, by + bh + 16);
   }
   const wr = clamp(ch.win / ch.maxWin, 0, 1); c.fillStyle = wr < .3 ? RED : BONE; c.fillRect(bx + bw / 2 - bw / 2 * wr, by + bh + 22, bw * wr, 3);
   c.restore();
@@ -4439,7 +4440,7 @@ let last = performance.now(), acc = 0, nextPaint = 0, lastPaint = 0;
 function advanceClock(now) {
   const dt = Math.min(100, now - last); last = now;
   if (G.slow > 0) G.slow -= dt / 16.67;
-  acc += dt / 16.667 * (G.slow > 0 ? .33 : 1);
+  acc += dt / 16.667 * (!LS.on && G.slow > 0 ? .33 : 1);
   if (LS.on) lsTick(now);
   else {
     lsTail(now);
@@ -5325,6 +5326,7 @@ const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (r.held[k]) b |= 1
 const decIn = b => { const r = { held: {}, pressed: {} }; KEYS12.forEach((k, i) => { r.held[k] = !!(b & (1 << i)); r.pressed[k] = !!(b & (1 << (i + 12))); }); return r; };
 const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'SFX_VOLUME', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'GRAPHICS', 'FPS_LIMIT', 'TOUCH_LIFT', 'AI_LEVEL']);
 const LS_REJOIN_MS = 20000, LS_SEND_MS = 1000 / 15, LS_BATCH = 32, LS_CHUNK = 256, LS_MAX_FRAME = 432000;
+const LS_STEP_MS = 1000 / 60, LS_INPUT_RESERVE = 4;
 const GAME_UUID = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 let LS = { on: false, me: 0 };
 const myInfo = () => { const p = ACC.profile || {}, s = cloudStats(); return { uid: ACC.user.id, nick: p.nickname || '玩家', avatar: p.avatar || 'CH_JIN', title: titleOf(p), wins: s.onW, games: s.onG, rating: p.rating ?? 1000 }; };
@@ -5643,8 +5645,9 @@ function roomToggleReady() {
 async function roomMaybeStart() {
   if (!ROOM.host || !ROOM.peer || !ROOM.ready.every(Boolean) || ROOM.launch || LS.on) return;
   const { ch, peer } = ROOM, id = crypto.randomUUID();
-  const rtt = ROOM.rtt.length ? median(ROOM.rtt) : 150;
-  const D = Math.max(7, Math.min(20, Math.ceil(rtt / 33.334) + 5));
+  // 双向延迟折算为单程，再留两个广播周期给发送间隔和一次补包。
+  const rtt = ROOM.rtt.length ? Math.max(...ROOM.rtt) : 220;
+  const D = clamp(Math.ceil((rtt / 2 + 2 * LS_SEND_MS) / LS_STEP_MS), 7, 20);
   const cfg = Object.fromEntries(Object.entries(CFG).filter(([k, v]) => !NET_CFG_SKIP.has(k) && typeof v !== 'object'));
   if (ROOM.spar) cfg.ROUNDS_TO_WIN = ROOM.rounds;
   const setup = { seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg, spar: !!ROOM.spar };
@@ -5717,6 +5720,9 @@ function lsJournalSave() {
   const journal = LS.journal;
   if (!journal || LS.replaying) return;
   const inputs = [LS.loc, LS.rem], counts = [LS.loc.length, LS.remTop + 1];
+  const active = storeRead(sessionStorage, 'duanlian.active', null);
+  if (active === journal.id && LS.frame === journal.frame && LS.desync === journal.desync
+      && counts.every((count, side) => count === journal.counts[side])) return;
   // Acknowledged remote inputs and transmitted local inputs must survive a reload.
   for (const side of [0, 1]) {
     if (counts[side] === journal.counts[side]) continue;
@@ -5728,7 +5734,7 @@ function lsJournalSave() {
   const saved = { ...journal, counts, frame: LS.frame, at: Date.now(), desync: LS.desync };
   if (storeWrite(localStorage, lsJournalKey(journal.uid), saved)) {
     LS.journal = saved;
-    storeWrite(sessionStorage, 'duanlian.active', saved.id);
+    if (active !== saved.id) storeWrite(sessionStorage, 'duanlian.active', saved.id);
   }
 }
 function lsLoadInputs(saved, side) {
@@ -5765,7 +5771,7 @@ function lsStart(id, m, saved = null, inputs = null) {
   const loc = inputs ? inputs[0] : Array(m.D).fill(0), rem = inputs ? inputs[1] : Array(m.D).fill(0);
   LS = {
     id, on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc, rem, remTop: rem.length - 1, ack: -1,
-    startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
+    startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, sampledAt: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
     cfgBak: { ...CFG }, journal: saved || { uid: ACC.user.id, id, code: ROOM.code, match: ROOM.match, peer: ROOM.peer, counts: [0, 0] },
     replaying: !!saved, sent: 0
   };
@@ -5881,12 +5887,20 @@ function lsAdvance() {
     LS.hash.delete(LS.frame - 300); LS.remHash.delete(LS.frame - 300);
   }
 }
+function lsCapture(now) {
+  LS.loc.push(encIn(Input.read('P1')));
+  Input.endFrame();
+  LS.sampledAt = now;
+}
 function lsTick(now) {
   let n = 0;
-  while (acc >= 1 && n < 6) {
-    const tf = LS.frame + LS.D;
-    if (LS.loc[tf] === undefined) { LS.loc[tf] = encIn(Input.read('P1')); Input.endFrame(); }
-    if (LS.rem[LS.frame] === undefined) break;
+  while (LS.peerHeard && acc >= 1 && n < 6) {
+    if (LS.loc.length <= LS.frame + LS.D) lsCapture(now);
+    if (LS.rem[LS.frame] === undefined) {
+      // 等对方补帧时继续收少量本地输入，避免双方等一帧才发下一帧。
+      if (LS.loc.length <= LS.frame + LS.D + LS_INPUT_RESERVE && now - LS.sampledAt >= LS_STEP_MS) lsCapture(now);
+      break;
+    }
     lsAdvance();
     if (!LS.on) return;
     acc -= 1; n++;
@@ -5911,7 +5925,13 @@ function lsHUD(c) {
   const f = G.f[LS.me], t = G.camT, x = (f.x - t.cx) * t.z + W / 2, y = (f.y - 250 * f.ch.scale - t.fy) * t.z + t.fy - t.ly;
   c.save(); c.fillStyle = f.col; c.beginPath(); c.moveTo(x - 9, y - 12); c.lineTo(x + 9, y - 12); c.lineTo(x, y); c.closePath(); c.fill();
   c.font = `700 18px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; otxt(c, '你', x, y - 20); c.restore();
-  if (LS.wait > 450) { c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80); c.font = `700 26px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; c.fillText(`等待同步… ${Math.max(0, Math.ceil((LS_REJOIN_MS - LS.wait) / 1000))} 秒`, W / 2, H / 2 + 9); c.restore(); }
+  if (LS.wait > 1500) {
+    c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80);
+    txt(c, `等待同步… ${Math.max(0, Math.ceil((LS_REJOIN_MS - LS.wait) / 1000))} 秒`, W / 2, H / 2 + 9, 26, FU, BONE, 'center', 4, 700);
+    c.restore();
+  } else if (LS.wait > 350) {
+    txt(c, '网络波动', W / 2, H - 32, 17, FU, BONE, 'center', 4, 700);
+  }
 }
 
 /* ---------- 联机大厅界面 ---------- */
