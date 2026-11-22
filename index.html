@@ -2,6 +2,35 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="dl-ver" content="2.0">
+<meta name="dl-shell" content="1">
+<script>
+/* 安装包热更新（v2.0 起）：安装包里的 index.html 只是保底版本。联网时后台把网站上的新版 index.html 下载到本机（见 hotUpdate），
+   下次启动在这里直接换成新版，不用重新装 APK。连续两次没启动成功就退回安装包自带的版本。
+   dl-ver 必须和下面 .ver 的版本号一致；dl-shell 是安装包外壳版本，新版需要新的安装包文件 / 插件时加一，旧安装包就不会套用它。
+   只在安卓安装包（https://localhost）里生效；网页版本来就是最新的。 */
+(function () {
+  var W = window, K = 'dl-hot';
+  if (W.__HOT_APPLIED) return;   // 已经换成新版：新版里的这段不再执行
+  W.__HOT = { native: (location.hostname === 'localhost' && !location.port) || !!W.__HOT_FORCE, on: false };
+  if (!W.__HOT.native) return;
+  try {
+    var num = function (v) { return String(v || '0').split('.').map(Number); };
+    var newer = function (a, b) { a = num(a); b = num(b); for (var i = 0; i < Math.max(a.length, b.length); i++) { var d = (a[i] || 0) - (b[i] || 0); if (d) return d > 0; } return false; };
+    var meta = function (n) { var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.content : '0'; };
+    var self = meta('dl-ver'), shell = +meta('dl-shell'), ls = localStorage;
+    var ver = ls.getItem(K + '-ver'), need = +(ls.getItem(K + '-shell') || 0), tries = +(ls.getItem(K + '-try') || 0);
+    if (!ver) return;
+    if (!newer(ver, self) || need > shell || tries >= 2) { ls.removeItem(K + '-html'); ls.removeItem(K + '-ver'); ls.removeItem(K + '-shell'); ls.removeItem(K + '-try'); return; }
+    var html = ls.getItem(K + '-html'), at = html ? html.search(/<meta charset="utf-8">/i) : -1;
+    if (at < 0 || html.indexOf('</html>') < 0) return;
+    ls.setItem(K + '-try', tries + 1);
+    W.__HOT_APPLIED = true; W.__HOT.on = true; W.__HOT.bundled = self;
+    // 把新版接在这里继续解析；原文件剩下的部分变成看不见的纯文本，不再执行
+    document.write(html.slice(at + 22) + '<plaintext style="display:none">');
+  } catch (e) { /* 存储不可用：用安装包自带版本 */ }
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a0807">
@@ -246,7 +275,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v1.9 · 背景为电脑自动对战演示</div>
+  <div class="ver">v2.0 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -355,14 +384,14 @@ const CFG = {
   HP: 1600, ROUND_TIME: 99, ROUNDS_TO_WIN: 2,
   GROUND: 620, STAGE_W: 2400, WALL_L: 70, WALL_R: 2330, PARALLAX: 0.42, MAX_SEP: 1060, MOVE_MUL: 1.3, GRAVITY: 0.95, BUFFER: 8,
   BRK_MAX: 100, BRK_COST: 100, BRK_START: 20,
-  GAIN: { guard: 6, landHit: 2, commit: 10, passive: 0.02 },
+  GAIN: { guard: 6, landHit: 2, commit: 6, passive: 0.02 },
   CHAIN_WINDOW: 40, WINDOW_MUL: 1, CHAIN_DIST: 100,
   REPEAT_LIMIT: 3, REPEAT_MOM_MUL: 0.5, REPEAT_DMG_MUL: 0.7,
   IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 2, COUNTER_MOM: 20,
   END_PROTECT: 10, FIN_DOWN: 100,
   GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
   SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
-  BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16,
+  BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16, LOOSE_AT: 0.5, BRK_HOLD: 18,
   PARRY_WINDOW: 6, PARRY_STUN: 26, PARRY_GAIN: 12, DOUBLE_TAP: 12,
   EMBER_DMG: 12, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80, ELIXIR: 60,
   BURN_TIME: 360, BURN_MOM: 1.25, BURN_WIN: 1.25, BURN_DMG: 1.1, WALL_MOM: 25, THROW_RANGE: 112,
@@ -385,6 +414,7 @@ const CFG_DESC = {
   IMMEDIATE_RATIO: '每击立即生效的伤害比例，其余进入暂存', FIN_MIN_LV: '可用终结技的最低掉落阶段', COUNTER_MOM: '反击起手（打断对手出招）额外的连段势',
   END_PROTECT: '连段结束后守方额外的无敌帧（防止立刻再起手）', FIN_DOWN: '吃到终结技后的倒地帧数',
   SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
+  LOOSE_AT: '破绽：连段窗口剩下不到这个比例时才能破链（攻方迟疑）', BRK_HOLD: '没有破绽时按破链键，这么多帧内一出现破绽就自动破链',
   BREAK_STAGGER: '被破链后攻方的硬直（帧）', BREAK_INV: '破链后守方的无敌帧', BREAK_PUSH: '破链把攻方弹开的速度',
   AI_LEVEL: '电脑难度 0 / 1 / 2', SHAKE: '屏幕震动', SOUND: '音效', SFX_VOLUME: '本机音效音量 0–100', VIBRATE: '手机振动反馈（安卓支持，iPhone 浏览器不支持）', STICK_MODE: '触屏摇杆：float 跟随手指 / fixed 固定位置', TOUCH_LIFT: '触屏时战斗画面最多上移多少像素，给按键让出底部', SKETCH: '手绘风渲染角色',
   GRAPHICS: '本机画质', FPS_LIMIT: '本机绘制帧率上限',
@@ -398,12 +428,13 @@ const CFG_DESC = {
 /* ---------- 二、掉落阶段（连段阈值）DL ----------
    连段势 mom 越过 min 时：暂存伤害一次性结算（“掉落”）。
    gain = 守方在该阶段每受一击获得的破链能量；end/stun = 连段在该阶段结束时守方的状态与硬直。 */
+/* v2.0：门槛降低（约 15 击可到终焉），守方每击充能不再随阶段暴涨；终焉由“伤害减半”改为奖励（奥义 ×1.8） */
 const DROP_LEVELS = [
-  { id: 'DL0', lv: 0, name: '起势', min: 0,   dmgMul: 1.0, gain: 4,  end: 'ST_STAGGER',   stun: 16, color: '#efe9df', note: '连段刚开始，暂存伤害尚未结算' },
-  { id: 'DL1', lv: 1, name: '压制', min: 60,  dmgMul: 1.1, gain: 5,  end: 'ST_STAGGER',   stun: 28, color: '#f2b09a', note: '首次掉落；连段结束时对手踉跄' },
-  { id: 'DL2', lv: 2, name: '崩势', min: 160, dmgMul: 1.2, gain: 7,  end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '连段结束时对手倒地' },
-  { id: 'DL3', lv: 3, name: '坠落', min: 300, dmgMul: 1.3, gain: 10, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '对手被重重砸地' },
-  { id: 'DL4', lv: 4, name: '终焉', min: 480, dmgMul: 0.5, gain: 16, end: 'ST_KNOCKDOWN', stun: 92, color: '#c21f0a', note: '此后伤害减半、对手充能加快，应尽快终结' },
+  { id: 'DL0', lv: 0, name: '起势', min: 0,   dmgMul: 1.0, gain: 4, fin: 1.0, end: 'ST_STAGGER',   stun: 16, color: '#efe9df', note: '连段刚开始，暂存伤害尚未结算' },
+  { id: 'DL1', lv: 1, name: '压制', min: 40,  dmgMul: 1.1, gain: 4, fin: 1.0, end: 'ST_STAGGER',   stun: 28, color: '#f2b09a', note: '首次掉落；连段结束时对手踉跄' },
+  { id: 'DL2', lv: 2, name: '崩势', min: 100, dmgMul: 1.2, gain: 5, fin: 1.0, end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '连段结束时对手倒地；可以放奥义' },
+  { id: 'DL3', lv: 3, name: '坠落', min: 170, dmgMul: 1.3, gain: 6, fin: 1.3, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '对手被重重砸地；奥义伤害 +30%' },
+  { id: 'DL4', lv: 4, name: '终焉', min: 250, dmgMul: 1.4, gain: 8, fin: 1.8, end: 'ST_KNOCKDOWN', stun: 92, color: '#c21f0a', note: '终焉条打满：奥义伤害 +80%；对手充能加快，趁现在终结' },
 ];
 
 /* ---------- 三、状态 ST ---------- */
@@ -524,9 +555,9 @@ const COMMON = {
   SIDE_D: MV('MV_SIDE_D', '侧闪 · 外', 1, 0, 14, 0, 0, 0, 0, 0, 0, 0, 'bdash', { side: 1, dist: CFG.SIDE_DIST, invF: 10 }),
 };
 const MECHS = [
-  { id: 'MECH_SKILL', name: '技能与冷却', desc: '每个角色有三个技能：特技、前 + 特技、后 + 特技——飞行物、贴地冲击波、范围爆发、持续区域、陷阱、落雷、护体、穿身冲刺各不相同。技能有冷却（屏幕上方血条下的三个图标），命中同样能起手或接续连段；远距离命中时连段窗口会变长，方便追上去。两边的飞行物相撞会互相抵消。出招前会结印、头顶亮出术名；终结技改称「奥义」，命中后全屏演出。被连时破链就是「替身术」：原地留下一截木桩，闪到对手身后（背后靠墙就闪到前方）。' },
+  { id: 'MECH_SKILL', name: '技能与冷却', desc: '每个角色有三个技能：特技、前 + 特技、后 + 特技——飞行物、贴地冲击波、范围爆发、持续区域、陷阱、落雷、护体、穿身冲刺各不相同。技能有冷却（屏幕上方血条下的三个图标），命中同样能起手或接续连段；远距离命中时连段窗口会变长，方便追上去。两边的飞行物相撞会互相抵消。出招前会结印、头顶亮出术名；终结技改称「奥义」，命中后全屏演出。被连时只有对手露出破绽才能破链：原地挣断锁链，把对手震开。' },
   { id: 'MECH_WEAPON', name: '兵器与轻击三段', desc: '每个角色有自己的兵器和路数：拳、剑、锤、双刃、铃与符、长刀、长枪。轻击连按打出三段（第二、三段没打中也能接，命中时可以更早接），第三段把对手挑起来；重击是各自兵器的大招。' },
-  { id: 'MECH_PARRY', name: '闪避', desc: '没有防御键：躲攻击靠侧闪、后撤步和替身术。侧闪 / 后撤步开头无敌，在无敌时间里躲开一次攻击（近身招式或飞行物）就是「闪避」，破链能量 +12。' },
+  { id: 'MECH_PARRY', name: '闪避', desc: '没有防御键：躲攻击靠侧闪和后撤步。侧闪 / 后撤步开头无敌，在无敌时间里躲开一次攻击（近身招式或飞行物）就是「闪避」，破链能量 +12。' },
   { id: 'MECH_DASH', name: '冲刺 / 后撤步', desc: '快速双击前 / 后方向。冲刺中可直接出招；后撤步开头无敌，可以用来闪避。' },
   { id: 'MECH_CANCEL', name: '取消', desc: '攻击命中后（或被霸体、铁卫挡下后），可立刻取消收招接下一招。轻击连按是三段，没打中也能接下一段。' },
   { id: 'MECH_BURN', name: '燃链', desc: '没被连时，破链能量达到破链所需就能按破链键「燃链」：消耗这些能量，6 秒内连段势 +25%、连段窗口 +25%、伤害 +10%。能量要留着保命还是拿来进攻，由你决定。' },
@@ -1302,7 +1333,7 @@ class Fighter {
     if (m.teleport && this.mt === m.startup) {
       const op = G.f[1 - this.idx], side = op.x >= this.x ? 1 : -1;
       let nx = op.x + side * 95; if (nx < CFG.WALL_L + 10 || nx > CFG.WALL_R - 10) nx = op.x - side * 95;
-      njLog(this.x, this.y, this.z, this.ch.scale, this.face); njPuff(this.x, this.y - 100 * this.ch.scale, 1.1);
+      njPuff(this.x, this.y - 100 * this.ch.scale, 1.1);
       this.x = clamp(nx, CFG.WALL_L, CFG.WALL_R); setZ(this, op.z); this.face = op.x >= this.x ? 1 : -1;
       njPuff(this.x, this.y - 100 * this.ch.scale, .9);
       emit('EV_MECH', { who: this.idx, text: '影步' });
@@ -1481,7 +1512,7 @@ function commit(a, d, threshold) {
 function finisherHit(a, d, m) {
   const c = a.chain;
   (c.route = c.route || []).push({ id: m.id, rp: false, t: G.frame });
-  const dmg = m.dmg * a.ch.atk * d.ch.def * gearAtk(a) * gearDef(d) * (1 + .2 * (c.lv - CFG.FIN_MIN_LV)) * (a.burnT > 0 ? CFG.BURN_DMG : 1);
+  const dmg = m.dmg * a.ch.atk * d.ch.def * gearAtk(a) * gearDef(d) * DROP_LEVELS[c.lv].fin * (a.burnT > 0 ? CFG.BURN_DMG : 1);
   d.hp = Math.max(0, d.hp - dmg); c.hits++;
   commit(a, d, false);
   a.stats.fins++;
@@ -1524,9 +1555,14 @@ function tryBurn(f) {
   G.hitstop = Math.max(G.hitstop, 6); G.flash = Math.max(G.flash, .2); shake(8);
   pop('燃链', f.x, f.y - 260, '#ffb347', 46, FB); SFX.play('burn'); buzz([20, 30, 60]); emit('EV_BURN', { who: f.idx });
 }
+/* v2.0 破绽断链：被连时不能随时破链，只有连段“松动”时才行——
+   攻方迟疑（连段窗口剩不到一半）、重复招式、或终焉已满（攻方该立刻终结了）。连得紧就断不了，终焉条才打得满。 */
+const chainLoose = c => !!c && (c.win <= c.maxWin * CFG.LOOSE_AT || c.rep >= 2 || c.lv >= DROP_LEVELS.length - 1);
 function tryBreak(d) {
-  if (d.brk >= brkCost(d)) return doBreak(d);
-  if (isHuman(d) && d.denyT < G.frame) { d.denyT = G.frame + 40; pop('破链能量不足', d.x, d.y - 240, MUTE, 20); }
+  if (d.brk < brkCost(d)) { if (isHuman(d) && d.denyT < G.frame) { d.denyT = G.frame + 40; pop('破链能量不足', d.x, d.y - 240, MUTE, 20); } return; }
+  if (chainLoose(d.chainedBy && d.chainedBy.chain)) return doBreak(d);
+  d.brkWant = G.frame + CFG.BRK_HOLD;   // 先按着：这段时间里一出现破绽就断
+  if (isHuman(d) && d.denyT < G.frame) { d.denyT = G.frame + 40; pop('连段很紧 · 等破绽', d.x, d.y - 240, MUTE, 20); }
 }
 function doBreak(d) {
   const a = d.chainedBy; if (!a || !a.chain) return;
@@ -1536,12 +1572,12 @@ function doBreak(d) {
   d.brk -= brkCost(d); d.stats.breaks++;
   endChain(a, 'break');
   d.setState('ST_BREAK'); d.stun = 22; d.inv = CFG.BREAK_INV;
-  const front = njSubstitute(a, d);   // 替身术：原地留木桩，闪到攻方身后（背后靠墙就闪到前方）
-  a.move = null; a.buf = null; a.setState('ST_REPELLED'); a.stun = CFG.BREAK_STAGGER; a.vx = front ? -a.face * CFG.BREAK_PUSH : a.face * 5; a.vy = -5;
+  pop('挣断', d.x, d.y - 270 * d.ch.scale, d.col, 34, FB);   // v2.0：不再留木桩瞬移，原地挣断锁链，把攻方震开
+  a.move = null; a.buf = null; a.setState('ST_REPELLED'); a.stun = CFG.BREAK_STAGGER; a.vx = -a.face * CFG.BREAK_PUSH; a.vy = -5;
   G.hitstop = 8; G.slow = 40; G.flash = .55; shake(22);
   const cx = d.x, cy = d.y - 110 * d.ch.scale;
   ring(cx, cy, BONE, 20, 440, 34); ring(cx, cy, d.col, 10, 300, 26); spark(cx, cy, BONE, 30, 14);
-  banner('替身 · 断链', `未结算的暂存伤害 ${Math.round(refund)} 已返还`, d.col);
+  banner('断链', `抓住破绽 · 未结算的暂存伤害 ${Math.round(refund)} 已返还`, d.col);
   if (d.ch.mech.id === 'MECH_FLOW') { d.flowT = 90; pop('回流 · 就绪', d.x, d.y - 280, d.col, 26, FB); }
   SFX.play('break'); buzz([30, 40, 90]); emit('EV_BREAK', { who: d.idx, text: `在 ${DROP_LEVELS[lv].id} 破链，返还 ${Math.round(refund)}` });
 }
@@ -1668,12 +1704,6 @@ function updEnts() {
 }
 
 /* ---------- AI ---------- */
-function smartBreak(d) {
-  const a = d.chainedBy, c = a && a.chain; if (!c) return false;
-  const next = DROP_LEVELS[c.lv + 1]; if (!next) return true;
-  const maxMom = Math.max(...['L', 'H', 'S', 'FS'].map(k => a.ch.moves[k].mom || (a.ch.moves[k].hit ? a.ch.moves[k].hit.mom : 0)));
-  return next.min - c.mom <= maxMom + 1;
-}
 class AI {
   constructor(level) { this.P = AI_LEVELS[level]; this.cd = 40; this.link = 0; this.guardT = 0; this.seen = -1; this.seenBS = -1; this.plan = null; this.delay = 0; this.walkT = 0; this.walkDir = 1; this.dropAt = -1; }
   think(me, op) {
@@ -1683,8 +1713,9 @@ class AI {
     if (me.chainedBy) {
       const c = me.chainedBy.chain; if (!c) return o;
       if (me.brk >= brkCost(me)) {
-        if (this.plan !== c) { this.plan = c; this.smart = Math.random() < P.smart; this.delay = randi(P.react, P.react * 3 + 20); }
-        if (this.smart ? smartBreak(me) : --this.delay <= 0) o.pressed.brk = true;
+        if (this.plan !== c) { this.plan = c; this.seenLoose = 0; }
+        this.seenLoose = chainLoose(c) ? this.seenLoose + 1 : 0;
+        if (this.seenLoose > P.react * .6 && Math.random() < .25 + P.smart * .5) o.pressed.brk = true;
       }
       return o;
     }
@@ -1697,7 +1728,7 @@ class AI {
       if (this.link > 0) { this.link--; return o; }
       if (Math.random() < P.drop) { this.dropAt = c; return o; }
       let k;
-      if (c.lv >= CFG.FIN_MIN_LV && (c.lv >= DROP_LEVELS.length - 1 || Math.random() < P.fin)) k = 'FIN';
+      if (c.lv >= CFG.FIN_MIN_LV && (c.lv >= DROP_LEVELS.length - 1 || Math.random() < P.fin * (c.lv >= 3 ? 1 : .5))) k = 'FIN';
       else { const opts = ['L', 'H', 'S', 'FS'].filter(x => me.ch.moves[x].id !== c.last && !(me.cd && me.cd[x] > 0)); k = opts.length ? pick(opts) : 'L'; }
       if (k === 'FS') o.held[tw] = true;
       o.pressed[{ L: 'l', H: 'h', S: 's', FS: 's', FIN: 'fin' }[k]] = true;
@@ -1750,7 +1781,7 @@ class AI {
 }
 function dummyInput(me, op) {
   if (G.dummy === 'dodge') { const m = op.move; return op.state === 'ST_ATTACK' && m && m.dmg && op.mt === Math.max(1, m.startup - 3) && Math.abs(op.x - me.x) < 340 ? { held: {}, pressed: {}, dash: me.z < 30 ? 'SIDE_D' : me.z > 70 ? 'SIDE_U' : (G.frame % 2 ? 'SIDE_U' : 'SIDE_D') } : EMPTY; }
-  if (G.dummy === 'break') { me.brk = CFG.BRK_MAX; return { held: {}, pressed: { brk: !!me.chainedBy && smartBreak(me) } }; }
+  if (G.dummy === 'break') { me.brk = CFG.BRK_MAX; return { held: {}, pressed: { brk: !!me.chainedBy && chainLoose(me.chainedBy.chain) } }; }
   if (G.dummy === 'cpu') return G.ai[1].think(me, op);
   return EMPTY;
 }
@@ -1869,6 +1900,7 @@ function simStep(inA, inB) {
   for (const f of G.f) { if (f.astCD > 0 && !f.chainedBy) f.astCD--; if (f.burnT > 0) f.burnT--; }
   if (G.rs !== 'RS_FIGHT') return;
   for (const f of G.f) if (f.chain && --f.chain.win <= 0) endChain(f, 'drop');
+  for (const d of G.f) if (d.chainedBy && d.brkWant >= G.frame && d.brk >= brkCost(d) && chainLoose(d.chainedBy.chain)) doBreak(d);
   for (const a of G.f) { const c = a.chain; if (c) { const d = c.target, gx = a.x + a.face * CFG.CHAIN_DIST * a.ch.scale - d.x; if (Math.abs(gx) < 240) { d.x += gx * .18; setZ(d, d.z + (a.z - d.z) * .22); } } }
   clampAll();
   for (const f of G.f) if (!f.chainedBy) f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.GAIN.passive);
@@ -2722,7 +2754,7 @@ function skUpd(e, f, op) {
    · 出招前结印（双手合在胸前，手上亮起印纹），出手时在头顶亮出术名（「火遁 · 炎龙弹」）；
    · 技能做成大幅度的遁术：火龙、巨浪、岩枪阵、巨型回旋镖、封印阵、雷云……；
    · 终结技改称「奥义」：命中后全屏演出——双方定格、世界压暗、上下黑边、角色专属的奥义画面；
-   · 破链改为「替身术」：原地留下一截木桩和白烟，人闪到对手身后（背后靠墙就闪到前方）。
+   · （v2.0 起破链不再用替身木桩，见 chainLoose / doBreak）
    画面里的随机只用 rand()；奥义定格的帧数、替身落点都是确定的，联机双方一致。 */
 const NJ_EL = {
   CH_JIN: { k: '火', c1: '#ffd36e', c2: '#ff7a2a', glow: 'rgba(255,140,50,' },
@@ -2756,7 +2788,7 @@ const NJ_META = {
   CH_YING: {
     S: ['回月镖', '影遁 · 回月镖', '掷出一枚巨大的回旋镖，飞出去再飞回来，来回各能打一下', { w: 30 }],
     FS: ['影掠', '影分身 · 掠杀', '两道影分身随本体一起疾冲斩过，能穿过对手'],
-    BS: ['替影', '瞬身 · 替影', '原地留下一截木桩，瞬身到对手身后，过程中无敌；连段中也能绕背换边'],
+    BS: ['替影', '瞬身 · 替影', '化作一阵烟，瞬身到对手身后，过程中无敌；连段中也能绕背换边'],
     FIN: ['百影乱舞', '影遁奥义 · 百影乱舞'],
   },
   CH_LING: {
@@ -3181,18 +3213,6 @@ function drawStone(c, f) {
   c.restore();
 }
 
-/* ---------- 替身术：被连时破链 → 原地留木桩，闪到攻方身后 ---------- */
-function njSubstitute(a, d) {
-  const s = d.ch.scale;
-  njLog(d.x, d.y, d.z, s, a.face); njPuff(d.x, d.y - 100 * s, 1.3);
-  let nx = a.x - a.face * 190, front = false;
-  if (nx < CFG.WALL_L + 40 || nx > CFG.WALL_R - 40) { nx = clamp(a.x + a.face * 210, CFG.WALL_L + 40, CFG.WALL_R - 40); front = true; }
-  d.x = nx; d.vx = 0; d.face = a.x >= nx ? 1 : -1;
-  njPuff(nx, d.y - 100 * s, 1);
-  pop('替身术', nx, d.y - 270 * s, d.col, 34, FB);
-  return front;
-}
-
 /* ---------- 奥义：命中后全屏演出（G.cine，定格 NJ_CINE 帧） ---------- */
 const NJ_CINE = 76;
 function njUltStart(a, d, m) {
@@ -3355,7 +3375,7 @@ function njCineScreen(c) {
    烬「朱炎拳套」武术 · 澜「逐浪剑」剑术 · 岳「镇山锤」重兵 · 影「夜刃」双短刃
    铃「镇魂铃 + 符箓」法术 · 霜「寒江刀」刀术（居合）· 雷「惊雷枪」枪术
    轻击连按打出三段：第二、三段接在前一段后面（没打中也能接，命中时可以更早接）；
-   重击也换成各自兵器的招式。没有防御：躲攻击靠侧闪、后撤步和替身术。
+   重击也换成各自兵器的招式。没有防御：躲攻击靠侧闪和后撤步。
    对战数值只在招式表（MV）里；画面上的随机只用 rand()。 */
 Object.assign(POSES, {
   crossW:     P_(-.02, 0, .42, 0, -.36, -.12, 1.2, 2.6, .2, 1.9),
@@ -4190,7 +4210,7 @@ function brkGauge(c, f, x, y, w, side) {
   drawIc(c, burning ? 'MECH_BURN' : 'SK_BRK', lx + side * 14, y - 19, 30);
   txt(c, burning ? '燃链' : '破链', lx + side * 33, y - 10, 24, FB, burning ? '#ffb347' : full ? col : BONE, side > 0 ? 'left' : 'right', 5);
   c.font = `600 15px ${FU}`; c.fillStyle = full ? BONE : MUTE; c.textAlign = side > 0 ? 'left' : 'right';
-  const k = brkKey(f), lab = burning ? `燃链中 · ${Math.ceil(f.burnT / 60)} 秒` : !full ? `${Math.floor(f.brk)} / ${cost}` : f.chainedBy ? (k ? `可破链 · 按 ${k}` : '可破链') : (k ? `已满 · 按 ${k} 可燃链` : '已满');
+  const k = brkKey(f), lab = burning ? `燃链中 · ${Math.ceil(f.burnT / 60)} 秒` : !full ? `${Math.floor(f.brk)} / ${cost}` : f.chainedBy ? (chainLoose(f.chainedBy.chain) ? (k ? `破绽 · 按 ${k}` : '破绽 · 可破链') : '等破绽') : (k ? `已满 · 按 ${k} 可燃链` : '已满');
   otxt(c, lab, lx + side * 88, y - 13);
   c.restore();
 }
@@ -4210,19 +4230,22 @@ function chainHUD(c, a) {
     if (e.rp) { c.font = `700 11px ${FN}`; c.textAlign = 'center'; c.fillStyle = RED; otxt(c, '重复', pos, 358); }
   });
   c.textAlign = al;
-  const bx = 390, bw = 500, by = 102, bh = 12, max = DROP_LEVELS[DROP_LEVELS.length - 1].min * 1.15;
+  const bx = 390, bw = 500, by = 102, bh = 12, max = DROP_LEVELS[DROP_LEVELS.length - 1].min, full = ch.mom >= max;
   c.globalAlpha = hudA('mom', bx - 6, by - 6, bx + bw + 6, by + bh + 30);
   c.fillStyle = 'rgba(13,10,9,.85)'; c.fillRect(bx - 6, by - 6, bw + 12, bh + 36);
   c.fillStyle = '#3a2a26'; c.fillRect(bx, by, bw, bh);
-  c.fillStyle = DL.color; const mw = bw * Math.min(1, ch.mom / max); if (L) c.fillRect(bx, by, mw, bh); else c.fillRect(bx + bw - mw, by, mw, bh);
+  c.fillStyle = DL.color; if (full) { c.save(); c.shadowColor = DL.color; c.shadowBlur = 10 + 8 * Math.sin(G.frame * .25); } const mw = bw * Math.min(1, ch.mom / max); if (L) c.fillRect(bx, by, mw, bh); else c.fillRect(bx + bw - mw, by, mw, bh);
+  if (full) c.restore();
   c.font = `500 12px ${FU}`; c.textAlign = 'center';
   for (const d of DROP_LEVELS.slice(1)) {
     const u = d.min / max, tx = L ? bx + bw * u : bx + bw * (1 - u), passed = ch.mom >= d.min;
     c.fillStyle = passed ? d.color : BONE; c.fillRect(tx - 1, by - 4, 2, bh + 8);
     c.fillStyle = passed ? d.color : MUTE;
-    c.fillText(d.lv === CFG.FIN_MIN_LV ? `${d.name} · 奥义` : d.name, tx, by + bh + 16);
+    c.textAlign = d.lv === DROP_LEVELS.length - 1 ? (L ? 'right' : 'left') : 'center';
+    c.fillText(d.lv === CFG.FIN_MIN_LV ? `${d.name} · 奥义` : d.lv === DROP_LEVELS.length - 1 ? `${d.name} · 奥义 ×${d.fin}` : d.name, tx, by + bh + 16);
   }
-  const wr = clamp(ch.win / ch.maxWin, 0, 1); c.fillStyle = wr < .3 ? RED : BONE; c.fillRect(bx + bw / 2 - bw / 2 * wr, by + bh + 22, bw * wr, 3);
+  const wr = clamp(ch.win / ch.maxWin, 0, 1), loose = chainLoose(ch); c.fillStyle = loose ? RED : BONE; c.fillRect(bx + bw / 2 - bw / 2 * wr, by + bh + 22, bw * wr, 3);
+  c.fillStyle = MUTE; c.fillRect(bx + bw / 2 - bw / 2 * CFG.LOOSE_AT - 1, by + bh + 19, 2, 9); c.fillRect(bx + bw / 2 + bw / 2 * CFG.LOOSE_AT - 1, by + bh + 19, 2, 9);   // 两道刻度以内 = 破绽
   c.restore();
 }
 const HUDA = {};
@@ -4250,7 +4273,7 @@ function drawHUD(c) {
   skillRow(c, A, 40, 1); skillRow(c, B, 1240, -1);
   for (const f of G.f) {
     const [sx, sy] = toScreen(f.x, f.y - 240 * f.ch.scale);
-    if (f.chainedBy && f.brk >= brkCost(f) && isHuman(f)) { const k = .6 + .4 * Math.sin(G.frame * .3); c.globalAlpha = k; drawIc(c, 'SK_BRK', sx, sy - 44, 44 + k * 6); txt(c, `按 ${brkKey(f)} 破链`, sx, sy, 34, FB, f.col); c.globalAlpha = 1; }
+    if (f.chainedBy && f.brk >= brkCost(f) && isHuman(f)) { if (chainLoose(f.chainedBy.chain)) { const k = .6 + .4 * Math.sin(G.frame * .5); c.globalAlpha = k; drawIc(c, 'SK_BRK', sx, sy - 44, 44 + k * 6); txt(c, `破绽！按 ${brkKey(f)} 破链`, sx, sy, 34, FB, f.col); } else { c.globalAlpha = .55; txt(c, '连段很紧 · 等破绽', sx, sy, 24, FB, MUTE); } c.globalAlpha = 1; }
     if (f.chain && f.chain.lv >= CFG.FIN_MIN_LV && isHuman(f)) { drawIc(c, f.ch.moves.FIN.id, sx, sy - 40, 42 + Math.sin(G.frame * .3) * 3); txt(c, `按 ${finKey(f)} 终结`, sx, sy, 28, FB, RED); }
   }
   if (G.mode === 'train') {
@@ -4344,6 +4367,38 @@ function appUpdateCheck() {
   }).catch(() => {});
 }
 setTimeout(appUpdateCheck, 2500);
+/* 热更新下载：安装包里每次启动查网站（国内连不上时换 jsDelivr），有新版就存到本机，提示重启生效 */
+const HOT_SRC = ['https://lianyingxue37-coder.github.io/yingxuelian/index.html',
+  'https://cdn.jsdelivr.net/gh/lianyingxue37-coder/yingxuelian@main/index.html', 'https://fastly.jsdelivr.net/gh/lianyingxue37-coder/yingxuelian@main/index.html'];
+const HOT_SHELL = +(($('meta[name="dl-shell"]') || {}).content || 0);   // 第一个 dl-shell 是安装包自带的
+{ const ms = $$('meta[name="dl-ver"]'), mv = ms.length ? ms[ms.length - 1].content : ''; if ('v' + mv !== APP_VER) console.error(`dl-ver（${mv}）和 .ver（${APP_VER}）不一致`); }
+function hotReady(v) {
+  toast(`新版本 v${v} 已下载，点右上角「重启更新」`, 5000);
+  const old = $('#updBtn'); if (old) old.remove();
+  const b = document.createElement('button'); b.id = 'updBtn'; b.type = 'button'; b.textContent = `重启更新到 v${v}`; b.title = '已下载到本机，重启后生效，不用重新安装';
+  b.onclick = () => { if (LS.on) { toast('对局结束后再更新'); return; } SFX.init(); SFX.play('ui'); location.reload(); };
+  $('#titleTools').prepend(b);
+}
+async function hotUpdate() {
+  if (!window.__HOT || !window.__HOT.native) return;
+  for (const u of HOT_SRC) {
+    try {
+      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 20000);
+      const r = await fetch(u.includes('jsdelivr') ? u : `${u}?t=${Date.now()}`, { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
+      if (!r.ok) continue;
+      const html = await r.text();
+      const v = (html.match(/<meta name="dl-ver" content="([\d.]+)">/) || [])[1], sh = +((html.match(/<meta name="dl-shell" content="(\d+)">/) || [])[1] || 0);
+      if (!v || !html.includes('</html>') || !html.includes('window.DUANLIAN')) continue;
+      if (!verNewer(v, APP_VER) || sh > HOT_SHELL) return;   // 已是最新；或者新版需要新安装包（交给 appUpdateCheck）
+      if (localStorage.getItem('dl-hot-ver') !== v) {
+        localStorage.setItem('dl-hot-html', html); localStorage.setItem('dl-hot-ver', v); localStorage.setItem('dl-hot-shell', String(sh)); localStorage.removeItem('dl-hot-try');
+      }
+      hotReady(v); return;
+    } catch (e) { if (e && e.name === 'QuotaExceededError') return; }
+  }
+}
+setTimeout(hotUpdate, 3000);
+setTimeout(() => { try { localStorage.removeItem('dl-hot-try'); } catch (e) { /* ignore */ } }, 4000);   // 活过 4 秒算启动成功
 let last = performance.now(), acc = 0, nextPaint = 0, lastPaint = 0;
 function advanceClock(now) {
   const dt = Math.min(100, now - last); last = now;
@@ -4437,13 +4492,13 @@ function buildMoves() {
   const D = DROP_LEVELS, max = D[D.length - 1].min * 1.3;
   $('#sysText').innerHTML = `
     <h3>核心规则</h3>
-    <p><b>起手</b>：立回中命中对手就进入连段（没有防御键，躲攻击靠侧闪、后撤步和替身术）。对手被锁定，不能移动或出招。</p>
+    <p><b>起手</b>：立回中命中对手就进入连段（没有防御键，躲攻击靠侧闪和后撤步）。对手被锁定，不能移动或出招。</p>
     <p><b>无限连段</b>：每次命中后，要在连段窗口（约 ${(CFG.CHAIN_WINDOW * CFG.WINDOW_MUL / 60).toFixed(2)} 秒，屏幕上方的白色细条）耗尽前命中下一击，就能一直连下去。命中后可以立刻取消收招接下一招。同一招连用会衰减，连续 ${CFG.REPEAT_LIMIT} 次连段中断。</p>
     <p><b>暂存与掉落</b>：每击 ${Math.round(CFG.IMMEDIATE_RATIO * 100)}% 的伤害立即生效，其余进入<b>暂存</b>（血条上的红白斜纹）。连段势越过下面的阈值时，暂存伤害一次性结算，即<b>掉落</b>。连段因中断或破链结束时，没结算的暂存伤害会消散。</p>
     <div class="dlbar">${D.map((d, i) => `<div style="flex:${((D[i + 1] ? D[i + 1].min : max) - d.min)};background:${d.color}"><b>${d.name}</b>${d.min}</div>`).join('')}</div>
     <div class="tablewrap"><table><tr><th>阶段</th><th class="num">阈值</th><th class="num">伤害倍率</th><th class="num">守方每击充能</th><th>连段结束后</th></tr>
     ${D.map(d => `<tr><td>${d.name} <span style="color:var(--mute)">${d.id}</span></td><td class="num">${d.min}</td><td class="num">${d.dmgMul}×</td><td class="num">+${d.gain}</td><td>${STATES[d.end].name} ${d.stun} 帧</td></tr>`).join('')}</table></div>
-    <p>${icSVG('SK_BRK')}<b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，按破链键斩断连段。没结算的暂存伤害全部返还，攻方被弹开、硬直 ${CFG.BREAK_STAGGER} 帧。最划算的时机是<b>下一个阈值之前</b>。</p>
+    <p>${icSVG('SK_BRK')}<b>破链</b>：被连时破链能量满 ${CFG.BRK_COST}，而且对手露出<b>破绽</b>时，按破链键斩断连段：对手迟疑（连段窗口条过半、两道刻度以内变红）、重复同一招、或终焉条已满。连得紧就断不了。能量满时可以提前按，${CFG.BRK_HOLD} 帧内一出现破绽就自动断。没结算的暂存伤害全部返还，攻方被震开、硬直 ${CFG.BREAK_STAGGER} 帧。</p>
     <p><b>充能方式</b>：被连受击（阶段越高越多）、闪避成功 +${CFG.PARRY_GAIN}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
     <p><b>终结技</b>：连段达到「${D[CFG.FIN_MIN_LV].name}」后可用，结算全部暂存伤害并造成重击，连段结束。到「${D[D.length - 1].name}」后伤害减半、对手充能加快，应尽快终结。</p>
     <p><b>兵器</b>：每个角色用自己的兵器打轻击和重击。轻击连按是三段，第三段会把对手挑起来。${CHARS.map(c => `${c.name}「${c.weapon.name}」${c.weapon.style}`).join('；')}。</p>
@@ -5229,7 +5284,7 @@ document.addEventListener('click', e => {
    ============================================================ */
 const NET = { lobby: null, members: [], status: 'idle', invite: null, invitePoll: 0, readingInvites: false, queue: null, leaving: null };
 const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pulse: 0, joinedAt: 0, spar: false, rounds: 2 };
-const ONLINE_PROTOCOL = 15;
+const ONLINE_PROTOCOL = 16;   // v2.0 能量机制改动，和旧版本不能同场
 // 位 4、5 保留给旧跳跃与防御输入，避免移动剩余按键位。
 const KEYS12 = ['left', 'right', 'up', 'down', null, null, 'l', 'h', 's', 'brk', 'fin', 'ast'];
 const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (!k) return; if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
