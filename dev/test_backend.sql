@@ -320,6 +320,59 @@ begin
 end;
 $$;
 
+-- Both directions of room version mismatch must leave the seat available.
+do $$
+declare
+  a uuid := 'de000000-0000-4000-8000-000000000001';
+  b uuid := 'de000000-0000-4000-8000-000000000002';
+  game uuid := 'de000000-0000-4000-8100-000000000011';
+  setup jsonb := '{"seed":1,"D":8,"spar":false,"sel":{"p1":"CH_JIN","p2":"CH_LAN","stage":"STG_01"},"cfg":{}}';
+  old_room jsonb;
+  new_room jsonb;
+  rm uuid;
+  code text;
+  ticket jsonb;
+begin
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  perform public.mm_leave();
+  old_room := public.room_create(false);
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  perform public.mm_leave();
+  if public.room_enter(old_room->>'code', (old_room->>'id')::uuid, 15)->>'status' is distinct from 'version_mismatch'
+  then raise exception 'new client joined old room'; end if;
+
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  new_room := public.room_create(false, 15);
+  rm := (new_room->>'id')::uuid; code := new_room->>'code';
+  if new_room->>'protocol' is distinct from '15' or not public.room_invite(rm, b)
+  then raise exception 'protocol 15 room could not invite'; end if;
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  if public.room_invites() <> '[]' or public.room_invites(15) #>> '{0,id}' is distinct from rm::text
+    or public.room_enter(code)->>'status' is distinct from 'version_mismatch'
+    or public.can_join_duanlian_room('duanlian-room:' || rm)
+  then raise exception 'old client gained access to new room'; end if;
+  if public.room_enter(code, rm, 15)->>'guest' is distinct from b::text then raise exception 'new guest seat unavailable'; end if;
+
+  perform set_config('request.jwt.claim.sub', a::text, true);
+  begin
+    perform public.room_start(rm, game, setup);
+    raise exception 'missing protocol was accepted';
+  exception when insufficient_privilege then null;
+  end;
+  if public.room_start(rm, game, setup || '{"protocol":15}') is distinct from game then raise exception 'protocol 15 game did not start'; end if;
+  perform public.room_exit(rm);
+  perform public.mm_join(15);
+  perform set_config('request.jwt.claim.sub', b::text, true);
+  perform public.mm_join(14);
+  if public.mm_poll(14)->>'status' is distinct from 'searching' then raise exception 'old queue matched new client'; end if;
+  perform public.mm_join(15);
+  ticket := public.mm_poll(15);
+  if ticket->>'status' is distinct from 'matched'
+    or public.room_touch((ticket->>'pair')::uuid)->>'protocol' is distinct from '15'
+  then raise exception 'protocol 15 queue did not create a compatible room'; end if;
+end;
+$$;
+
 reset role;
 rollback;
-select 'backend, friends and rooms assertions passed' as verification;
+select 'backend, friends, rooms and protocol isolation assertions passed' as verification;
