@@ -1,73 +1,153 @@
-"""两个页面用假 Supabase（dev/mock-supabase.js）完整打一局联机，检查两边是否同步。
-用法（先在仓库根目录 python3 -m http.server 8765）：
-  python3 dev/test_online.py [延迟ms=60] [抖动ms=30] [kill|no] [丢包率=0]
+"""用模拟 Supabase 的两个浏览器页面打完联机对战。
+
+先在仓库根目录启动 python -m http.server 8765，然后运行：
+  python dev/test_online.py [延迟ms=60] [抖动ms=30] [no|kill|reload|quick] [丢包率=0]
 """
-import asyncio, json, sys, os
+import asyncio
+import os
+from pathlib import Path
+import sys
+import time
+
 from playwright.async_api import async_playwright
+
 URL = "http://127.0.0.1:8765/index.html"
 LAT = int(sys.argv[1]) if len(sys.argv) > 1 else 60
 JIT = int(sys.argv[2]) if len(sys.argv) > 2 else 30
-KILL = len(sys.argv) > 3 and sys.argv[3] == 'kill'
+ACTION = sys.argv[3] if len(sys.argv) > 3 else "no"
 DROP = float(sys.argv[4]) if len(sys.argv) > 4 else 0
-PRE = "const D=window.DUANLIAN; const {G,ACC,NET,ROOM,CFG,REC,Input,AI,lsHashOf,accSignUp,go}=D; const LS=D.LS;"
-def ev(pg, expr): return pg.evaluate("()=>{" + PRE + "return (" + expr + ");}")
-def run(pg, body): return pg.evaluate("()=>{" + PRE + body + "}")
+AI_INPUT = """
+(() => {
+  const D = window.DUANLIAN;
+  const { G, AI, Input } = D;
+  const ai = new AI(2), original = Input.read.bind(Input);
+  Input.read = pid => {
+    const ls = D.LS;
+    if (!ls.on) return original(pid);
+    const me = G.f[ls.me], op = G.f[1 - ls.me], input = ai.think(me, op);
+    const pressed = input.pressed || {};
+    if (input.dash === 'SIDE_U') pressed.up = true;
+    if (input.dash === 'DASH') pressed[me.face > 0 ? 'right' : 'left'] = true;
+    return { held: input.held || {}, pressed };
+  };
+})()
+"""
+FINISH = """() => {
+  const { G, ACC, LS } = DUANLIAN;
+  return {
+    page: G.page, final: LS.final, desync: LS.desync, sent: window.__sent ?? 0,
+    input: LS.sentAtEnd, input_per_s: +(LS.sentAtEnd / LS.elapsed).toFixed(2), verdict: LS.verdict, onG: ACC.profile?.stats.onG ?? 0,
+    onW: ACC.profile?.stats.onW ?? 0, rating: ACC.profile?.rating
+  };
+}"""
+
+
+async def local_only(route):
+    if route.request.url.startswith("http://127.0.0.1:8765/"):
+        await route.continue_()
+    else:
+        await route.fulfill(status=200, body="")
+
+
 async def main():
     async with async_playwright() as p:
-        CHROME = os.environ.get("CHROME")  # 可选：指定本机 Chrome 路径
-        b = await p.chromium.launch(**({"executable_path": CHROME} if CHROME else {}), args=["--no-sandbox"])
-        ctx = await b.new_context(viewport={"width":1280,"height":720})
-        await ctx.add_init_script(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "mock-supabase.js"))
+        chrome = os.environ.get("CHROME")
+        browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
+        size = {"width": 844, "height": 390} if ACTION == "quick" else {"width": 1280, "height": 720}
+        ctx = await browser.new_context(viewport=size, service_workers="block")
+        await ctx.route("**/*", local_only)
+        await ctx.add_init_script(path=Path(__file__).with_name("mock-supabase.js"))
         await ctx.add_init_script(f"window.__LAT={LAT}; window.__JIT={JIT}; window.__DROP={DROP};")
-        A = await ctx.new_page(); B = await ctx.new_page()
-        errs = {'A': [], 'B': []}
-        for n, pg in (('A', A), ('B', B)):
-            pg.on("pageerror", lambda e, n=n: errs[n].append(str(e)))
-            pg.on("console", lambda m, n=n: m.type in ('error', 'warning') and errs[n].append(m.text))
-        await A.goto(URL); await B.goto(URL); await A.wait_for_timeout(800)
-        await A.click('#accChip'); await A.wait_for_timeout(300)
-        await A.click('[data-acctab="up"]'); await A.fill('#accForm input[name=u]', 'alice'); await A.fill('#accForm input[name=p]', 'secret1'); await A.fill('#accForm input[name=n]', '阿丽丝')
-        await A.click('#accForm [data-av="CH_SHUANG"]'); await A.click('#accForm [type=submit]'); await A.wait_for_timeout(600)
-        print('A acc', await ev(A, "{s:ACC.state, p:ACC.profile && ACC.profile.nickname, av: ACC.profile && ACC.profile.avatar, chip: document.querySelector('#accChip').innerText}"))
-        await A.screenshot(path='/tmp/duanlian_A_acc.png')
-        await run(B, "return accSignUp('bob', 'secret2', '小波', 'CH_LEI');"); await B.wait_for_timeout(300)
-        print('B acc', await ev(B, "{s:ACC.state, p:ACC.profile && ACC.profile.nickname}"))
-        await run(A, "go('PG_ONLINE')"); await run(B, "go('PG_ONLINE')"); await A.wait_for_timeout(900)
-        print('lobby A', await ev(A, "NET.members.map(m=>m.nick+':'+m.status)"), 'B', await ev(B, "NET.members.map(m=>m.nick)"))
-        await A.screenshot(path='/tmp/duanlian_A_lobby.png')
-        await A.click('#onCreate'); await A.wait_for_timeout(600)
-        code = await ev(A, "ROOM.code"); print('room', code)
-        await B.fill('#onCode', code); await B.click('#onJoin'); await B.wait_for_timeout(1200)
-        print('peers', await ev(A, "ROOM.peer && ROOM.peer.nick"), await ev(B, "ROOM.peer && ROOM.peer.nick"))
-        await A.click('#sideP1 .pc[data-id="CH_YUE"]'); await A.click('#pickStage [data-id="STG_05"]'); await B.click('#sideP2 .pc[data-id="CH_YING"]'); await A.wait_for_timeout(600)
-        print('sel A', await ev(A, "JSON.stringify(G.sel)")); print('sel B', await ev(B, "JSON.stringify(G.sel)"))
-        print('B p1 disabled?', await ev(B, "document.querySelector('#sideP1 .pc').disabled"), 'B stage disabled?', await ev(B, "document.querySelector('#pickStage button').disabled"))
-        await A.screenshot(path='/tmp/duanlian_A_room.png'); await B.screenshot(path='/tmp/duanlian_B_room.png')
-        await run(A, "CFG.ROUND_TIME = 25; CFG.ROUNDS_TO_WIN = 1;")
-        for pg in (A, B):
-            await run(pg, """const ai = new AI(2), orig = Input.read.bind(Input);
-              Input.read = pid => { const LS = D.LS; if (!LS.on) return orig(pid); const me = G.f[LS.me], op = G.f[1 - LS.me]; const o = ai.think(me, op); o.held = o.held || {}; o.pressed = o.pressed || {}; if (o.dash === 'SIDE_U') o.pressed.up = true; if (o.dash === 'DASH') o.pressed[me.face > 0 ? 'right' : 'left'] = true; return { held: o.held, pressed: o.pressed }; };""")
-        await A.click('#btnFight'); await B.click('#btnFight')
-        await A.wait_for_timeout(1500)
-        print('start A', await ev(A, "{on:LS.on, D:LS.D, page:G.page, mode:G.mode, rt: CFG.ROUND_TIME}"), 'B', await ev(B, "{on:LS.on, D:LS.D, page:G.page, rt: CFG.ROUND_TIME, me: LS.me}"))
-        await A.wait_for_timeout(2500); await A.screenshot(path='/tmp/duanlian_A_battle.png'); await B.screenshot(path='/tmp/duanlian_B_battle.png')
-        t = 0
-        while t < 120:
-            await A.wait_for_timeout(3000); t += 3
-            a = await ev(A, "{f:LS.frame, w:LS.wait|0, page:G.page, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp))}"); bb = None if B is None else await ev(B, "{f:LS.frame, w:LS.wait|0, page:G.page, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp))}")
-            print(t, a, bb)
-            if KILL and t == 9: await B.close(); print('B closed'); B = None
-            if B is None:
-                if a['page'] == 'PG_RESULT': break
-                continue
-            if a['page'] == 'PG_RESULT' and bb['page'] == 'PG_RESULT': break
-        fin = "{hp: G.f.map(f=>Math.round(f.hp)), wins: G.f.map(f=>f.wins), x: G.f.map(f=>Math.round(f.x*100)/100), title: document.querySelector('#resTitle').innerText, hash: lsHashOf(), frame: G.frame, desync: LS.desync, onW: REC.stats.onW, onG: REC.stats.onG, sent: window.__sent}"
-        fa = await ev(A, fin); print('A', fa)
-        if B:
-            fb = await ev(B, fin); print('B', fb)
-            print('same', fa['hp'] == fb['hp'] and fa['wins'] == fb['wins'] and fa['x'] == fb['x'] and fa['hash'] == fb['hash'] and not fa['desync'] and not fb['desync'])
-            await B.screenshot(path='/tmp/duanlian_B_result.png')
-        await A.screenshot(path='/tmp/duanlian_A_result.png')
-        print('errs', {k: v[:6] for k, v in errs.items()})
-        await b.close()
-asyncio.run(main())
+        a, b = await ctx.new_page(), await ctx.new_page()
+        errors = {"A": [], "B": []}
+        for name, page in (("A", a), ("B", b)):
+            page.on("pageerror", lambda e, n=name: errors[n].append(str(e)))
+            page.on("console", lambda m, n=name: m.type == "error" and errors[n].append(m.text))
+        await asyncio.gather(a.goto(URL), b.goto(URL))
+
+        await a.click("#accChip")
+        await a.click('[data-acctab="up"]')
+        await a.fill("#accForm input[name=u]", "alice")
+        await a.fill("#accForm input[name=p]", "demo-alice")
+        await a.fill("#accForm input[name=n]", "阿丽丝")
+        await a.click('#accForm [data-av="CH_SHUANG"]')
+        await a.click("#accForm [type=submit]")
+        await a.wait_for_function("DUANLIAN.ACC.profile?.avatar === 'CH_SHUANG'")
+        await b.evaluate("DUANLIAN.accSignUp('bob', 'demo-bob', '小波', 'CH_LEI')")
+        for page in (a, b):
+            await page.evaluate("DUANLIAN.go('PG_ONLINE')")
+        for page in (a, b):
+            await page.wait_for_function("DUANLIAN.NET.members.length === 2")
+
+        if ACTION == "quick":
+            await asyncio.gather(a.click("#onQuick"), b.click("#onQuick"))
+            await a.wait_for_function("DUANLIAN.ROOM.match?.pair")
+            await b.wait_for_function("DUANLIAN.ROOM.match?.pair")
+            if await b.evaluate("DUANLIAN.ROOM.host"):
+                a, b = b, a
+        else:
+            await a.click("#onCreate")
+            await a.wait_for_selector("#PG_SELECT.on")
+            await b.fill("#onCode", await a.evaluate("DUANLIAN.ROOM.code"))
+            await b.click("#onJoin")
+
+        for page in (a, b):
+            await page.wait_for_selector("#PG_SELECT.on")
+            await page.wait_for_function("DUANLIAN.ROOM.peer")
+            await page.evaluate(AI_INPUT)
+        print("room", await a.evaluate("DUANLIAN.ROOM.code"), flush=True)
+        await a.click('#sideP1 .pc[data-id="CH_YUE"]')
+        await a.click('#pickStage [data-id="STG_05"]')
+        await b.click('#sideP2 .pc[data-id="CH_YING"]')
+        await a.evaluate("Object.assign(DUANLIAN.CFG, { ROUND_TIME: 25, ROUNDS_TO_WIN: 1 })")
+        await a.click("#btnFight")
+        await b.click("#btnFight")
+        await asyncio.gather(*(page.wait_for_function("DUANLIAN.LS.on") for page in (a, b)))
+        start = time.monotonic()
+
+        if ACTION in ("reload", "kill"):
+            await b.wait_for_function("DUANLIAN.LS.frame >= 300")
+            if ACTION == "reload":
+                before = await b.evaluate("DUANLIAN.LS.frame")
+                await b.evaluate("window.__DISCONNECT = true")
+                await asyncio.sleep(3)
+                assert await a.evaluate("DUANLIAN.LS.wait > 1000"), "peer did not wait for inputs"
+                await b.reload()
+                await b.wait_for_function(f"DUANLIAN.LS.on && DUANLIAN.LS.frame >= {before + 120}")
+                await b.evaluate(AI_INPUT)
+                print("reloaded and resumed both players", flush=True)
+            else:
+                await b.close()
+                b = None
+
+        pages = [a, b] if b else [a]
+        await asyncio.gather(*(page.wait_for_selector("#PG_RESULT.on", timeout=120000) for page in pages))
+        elapsed = time.monotonic() - start
+        if b:
+            await asyncio.gather(*(page.wait_for_function("DUANLIAN.LS.verdict === 'verified'", timeout=12000) for page in pages))
+        states = await asyncio.gather(*(page.evaluate(FINISH) for page in pages))
+        for name, state in zip(("A", "B"), states):
+            print(name, state, flush=True)
+        if b:
+            same = states[0]["final"] == states[1]["final"] and not any(s["desync"] for s in states)
+            print("same", same, flush=True)
+            assert same
+            assert all(s["onG"] == 1 for s in states), states
+        else:
+            assert states[0]["verdict"] == "unverified" and states[0]["onG"] == 0, states
+        print(f"match duration {elapsed:.2f}s, broadcasts sent per player " + ", ".join(str(s["input"]) for s in states), flush=True)
+        if ACTION == "quick":
+            await a.click("#btnToTitle")
+            await a.click("#onRank")
+            await a.wait_for_selector("#rankBody tbody tr")
+            assert await a.locator("#rankBody tbody tr").count() == 2
+            assert await a.locator("#PG_RANK .panel").evaluate("p => p.scrollWidth <= p.clientWidth + 1")
+            await a.click("#PG_RANK [data-back]")
+            await a.wait_for_selector("#PG_ONLINE.on")
+            print("leaderboard fits 844x390, navigation passed", flush=True)
+        print("errors", errors)
+        assert not any(errors.values()), errors
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

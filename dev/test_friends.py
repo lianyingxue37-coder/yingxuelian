@@ -2,6 +2,10 @@
 用法（先在仓库根目录 python3 -m http.server 8765）：python3 dev/test_friends.py
 """
 import asyncio, os
+
+async def local_only(route):
+    if route.request.url.startswith("http://127.0.0.1:8765/"): await route.continue_()
+    else: await route.fulfill(status=200, body="")
 from playwright.async_api import async_playwright
 URL = "http://127.0.0.1:8765/index.html"
 PRE = "const D=window.DUANLIAN; const {G,ACC,NET,ROOM,CFG,REC,Input,AI,accSignUp,go}=D; const LS=D.LS;"
@@ -12,7 +16,8 @@ async def main():
     async with async_playwright() as p:
         CHROME = os.environ.get("CHROME")
         b = await p.chromium.launch(**({"executable_path": CHROME} if CHROME else {}), args=["--no-sandbox"])
-        ctx = await b.new_context(viewport={"width": 1280, "height": 720})
+        ctx = await b.new_context(viewport={"width": 1280, "height": 720}, service_workers="block")
+        await ctx.route("**/*", local_only)
         await ctx.add_init_script(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "mock-supabase.js"))
         await ctx.add_init_script("window.__LAT=40; window.__JIT=20;")
         A = await ctx.new_page(); B = await ctx.new_page(); errs = {'A': [], 'B': []}
@@ -41,7 +46,7 @@ async def main():
         await A.click('[data-rounds="1"]'); await A.wait_for_timeout(600)
         print('rounds B', await ev(B, "ROOM.rounds"), await ev(B, "document.querySelector('#selMode').textContent"))
         await A.screenshot(path=f'{OUT}/fr_A_room.png')
-        onG0 = await ev(A, "REC.stats.onG")
+        onG0 = await ev(A, "ACC.profile?.stats.onG ?? 0")
         await run(A, "CFG.ROUND_TIME = 20;")
         for pg in (A, B):
             await run(pg, """const ai = new AI(2), orig = Input.read.bind(Input);
@@ -53,9 +58,9 @@ async def main():
             await A.wait_for_timeout(3000); t += 3
             pa = await ev(A, "G.page"); pb = await ev(B, "G.page")
             if pa == 'PG_RESULT' and pb == 'PG_RESULT': break
-        fa = await ev(A, "{page:G.page, sub:document.querySelector('#resSub').textContent, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp)), onG:REC.stats.onG}")
-        fb = await ev(B, "{page:G.page, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp))}")
-        print('result A', fa, '| B', fb, '| 不计战绩', fa['onG'] == onG0)
+        fa = await ev(A, "{page:G.page, verify:document.querySelector('#resVerify').textContent, verdict:LS.verdict, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp)), onG:ACC.profile?.stats.onG ?? 0, reports:JSON.parse(localStorage.getItem('duanlian.report.' + ACC.user.id) || '[]').length}")
+        fb = await ev(B, "{page:G.page, verdict:LS.verdict, desync:LS.desync, hp:G.f.map(f=>Math.round(f.hp))}")
+        print('result A', fa, '| B', fb, '| 不计战绩', fa['onG'] == onG0 and fa['verdict'] == 'spar' and fb['verdict'] == 'spar' and fa['reports'] == 0)
         await A.screenshot(path=f'{OUT}/fr_A_result.png')
         # B 开切磋房间，A 在好友列表里直接「加入」
         await run(A, "document.querySelector('#btnToTitle').click()"); await run(B, "document.querySelector('#btnToTitle').click()"); await A.wait_for_timeout(800)
