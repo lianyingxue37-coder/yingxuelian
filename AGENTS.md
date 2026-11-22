@@ -5,20 +5,22 @@
 
 - 网页：https://lianyingxue37-coder.github.io/yingxuelian/
 - 安装包：https://github.com/lianyingxue37-coder/yingxuelian/releases/latest/download/duanlian.apk
-- 这一轮交给你的任务在 **CODEX_TASK.md**（后端优化 v2）。
+- 后端设计、部署和流量估算见 **docs/BACKEND.md**；上一轮任务记录在 CODEX_TASK.md（后端 v2，已在 v1.2 合并）。
 
 ## 仓库结构
 
 | 文件 | 作用 |
 |---|---|
-| `index.html` | **整个游戏**（约 4300 行，HTML + CSS + JS 都在里面，没有构建步骤） |
+| `index.html` | **整个游戏**（约 4900 行，HTML + CSS + JS 都在里面，没有构建步骤） |
 | `sw.js` / `manifest.webmanifest` / `icon-*.png` | PWA |
 | `download.html` | 安装包下载页（二维码） |
-| `supabase_setup.sql` | 当前的 Supabase 建表脚本（profiles、matches、注册触发器、RLS） |
+| `supabase_setup.sql` | 完整建库 / 升级脚本（可重复运行）：资料、战绩、服务器结算与 Elo、匹配、限流、私有对局频道、好友。和 `supabase/migrations/20261121000000_backend_v2.sql` 内容一致，改一个就同步另一个 |
+| `docs/BACKEND.md` | 后端说明：表与权限、结算规则、重连、流量估算、已知限制 |
 | `.github/workflows/android.yml` | push 到 main 后自动打 APK 并发布到 Releases（版本号取自 `<div class="ver">vX.Y`） |
 | `dev/mock-supabase.js` | 本地测试用的假 supabase-js（BroadcastChannel 模拟 Realtime，可调延迟、抖动、丢包） |
 | `dev/test_online.py` | Playwright：两个页面注册、进大厅、开房间、打完一整局，检查两边是否同步 |
 | `dev/test_friends.py` | Playwright：加好友 → 同意 → 邀请切磋 → 打一局（不计战绩）→ 加入好友房间 → 删除好友 |
+| `dev/test_backend.sql` | 数据库断言（在测试项目或本地 Postgres 跑，结束时回滚）：权限、双边结算、争议、过期、Elo、匹配、限流、好友、切磋不计分 |
 
 ## index.html 分区（按出现顺序，搜索注释标题即可定位）
 
@@ -30,8 +32,8 @@
 - 绘制：场景、`角色专属技能表现 SK`、`技能化：每人三个技能`（`KIT` 技能表、冷却、技能实体 `G.ents` 里 `id: 'SK'`）、角色、粒子、HUD
 - 界面与事件、全屏、虚拟摇杆
 - **`账户 · 战绩 · 成就 · 联机（Supabase）`**：`SUPA` / `ACC` / `REC` / `ACH` / `NET` / `ROOM` / `LS`
-  - `战绩与成就：本地缓存 + 云端同步`
-  - `房间`、`帧同步（lockstep）`、`联机大厅界面`、`好友`（`friendships` 表、`fr*` 函数、好友切磋 `ROOM.spar`）
+  - 战绩：本机记录 + 服务器结算（`onlineResult` → `submit_online_result`，待提交的报告存本机重试）
+  - `房间`（Presence 会合，`online_open` 开局）、`帧同步（lockstep）`（私有频道、批量发包、输入日志与 20 秒重连）、匹配（`mm_*`）、排行榜、`好友`（`friendships`、`fr*`、好友切磋 `ROOM.spar` → 开局参数 `setup.spar`，服务器返回 `unrated`）
 - 最后是 `window.DUANLIAN = {...}`（调试 / 测试接口，**不要删**）
 
 ## 硬性规则
@@ -44,6 +46,7 @@
 6. 界面文字用中文，语气和现有文案一致；手机横屏（844×390）也要能用。
 7. 版本号在 `<div class="ver">v…` 里，改动发布时顺手加一位；安卓打包会自动按它打 tag。
 8. **在分支上工作并开 PR，不要直接推 main**——作者那边同时在改玩法和画面（主要在 `index.html` 前半部分），你的改动尽量集中在「账户 · 战绩 · 成就 · 联机」那一段，避免冲突。
+9. 联机战绩只能由数据库认定：客户端不写 `profiles.stats / achievements / rating`，也不直接插 `matches`（权限已收紧）。
 
 ## 本地运行与测试
 
@@ -53,6 +56,9 @@ python3 -m http.server 8765          # 在仓库根目录
 pip install playwright && playwright install chromium
 python3 dev/test_online.py 60 30          # 延迟 60ms、抖动 30ms
 python3 dev/test_online.py 50 40 no 0.15  # 再加 15% 丢包
+python3 dev/test_online.py 50 40 reload 0.15  # 对局中断线、刷新后恢复
+python3 dev/test_online.py 50 40 quick 0.15   # 快速匹配 + 844×390 排行榜
+python3 dev/test_friends.py
 ```
 
 `dev/test_online.py` 会用 `dev/mock-supabase.js` 替换真实的 supabase-js，不需要联网，也不需要 Supabase 项目。

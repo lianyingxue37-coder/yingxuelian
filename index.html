@@ -232,7 +232,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v1.1 · 背景为电脑自动对战演示</div>
+  <div class="ver">v1.2 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -260,6 +260,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   <h2 id="resTitle"></h2><p id="resSub"></p>
   <div class="tablewrap"><table id="resTable"></table></div>
   <div class="best" id="resBest"></div>
+  <p class="hint" id="resVerify" role="status" hidden></p>
   <div id="resAch"></div>
   <div class="actions"><button class="btn" id="btnToTitle">返回标题</button><button class="btn" id="btnReselect">重选角色</button><button class="btn primary" id="btnRematch">再战</button></div>
 </div></section>
@@ -273,7 +274,13 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 <section class="page" id="PG_ONLINE"><div class="panel">
   <h2>联机对战 <small id="onSub"></small></h2>
   <div id="onBody"></div>
-  <div class="actions"><button class="btn" data-go="PG_ACCOUNT">我的账户</button><button class="btn" id="onBack">返回</button></div>
+  <div class="actions"><button class="btn" data-go="PG_ACCOUNT">我的账户</button><button class="btn" id="onRank" data-go="PG_RANK" hidden>排行榜</button><button class="btn" id="onBack">返回</button></div>
+</div></section>
+
+<section class="page" id="PG_RANK"><div class="panel">
+  <h2>排行榜</h2>
+  <div id="rankBody"></div>
+  <div class="actions"><button class="btn" data-back>返回</button></div>
 </div></section>
 
 <section class="page" id="PG_MOVES"><div class="panel">
@@ -1830,7 +1837,7 @@ function updateFX() {
 
 /* ---------- 回合流程 ---------- */
 function startMatch(o) {
-  G.spar = false; G.lastOpts = o; G.mode = o.mode; G.demo = false; G.rng = mulberry32((Math.random() * 2 ** 31) | 0); G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
+  G.spar = false; G.lastOpts = o; G.mode = o.mode; G.demo = false; G.rng = mulberry32(o.seed ?? ((Math.random() * 2 ** 31) | 0)); G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
   G.f = [new Fighter(0, CHAR[o.p1], false, o.g1 || 'GR_NONE', o.a1 || 'AS_ARCHER'), new Fighter(1, CHAR[o.p2], o.p1 === o.p2, o.g2 || 'GR_NONE', o.a2 || 'AS_HOUND')];
   G.ai = [new AI(CFG.AI_LEVEL), new AI(o.mode === 'train' ? 1 : CFG.AI_LEVEL)];
   G.round = 1; G.log = []; G.lastMove = null; startRound(); go('PG_BATTLE'); SFX.init();
@@ -1865,11 +1872,20 @@ function endMatch() {
   $('#resBest').innerHTML = [A, B].map(f => { const b = f.stats.best; return `<div><b>${who(f)} · 最佳连段</b>${b ? `<small>${b.hits} 连 · ${DROP_LEVELS[b.lv].name}</small>${b.route.map(e => icSVG(icFor(e.id) || '')).join('')}` : '<small>没有打出连段</small>'}</div>`; }).join('');
   if (w) { w.move = null; w.setState('ST_WIN'); }
   const rec = recMatch(), onl = G.mode === 'online';
-  if (onl) { lsStop(); $('#resTitle').textContent = w ? (w.idx === LS.me ? '胜利' : '败北') : '平局'; if (G.spar) $('#resSub').textContent += '　· 好友切磋，不计战绩'; }
-  $('#resAch').innerHTML = rec && rec.fresh.length ? `<h3>解锁成就</h3><div class="achgrid">${rec.fresh.map(a => `<div class="ach on">${icSVG(a.ic)}<b>${a.name}</b><small>${a.desc}</small></div>`).join('')}</div>` : '';
-  if (rec && rec.fresh.length) toast('解锁成就：' + rec.fresh.map(a => a.name).join('、'));
+  if (onl) onlineResult(w);
+  else $('#resVerify').hidden = true;
+  if (onl) { lsStop(); $('#resTitle').textContent = w ? (w.idx === LS.me ? '胜利' : '败北') : '平局'; }
+  showResultAchievements(rec?.fresh || []);
   $('#btnReselect').hidden = onl; $('#btnToTitle').textContent = onl ? '离开房间' : '返回标题'; $('#btnRematch').textContent = onl ? '再来一局' : '再战';
   go('PG_RESULT');
+}
+function showResultAchievements(fresh, append = false) {
+  const el = $('#resAch');
+  if (!append) el.replaceChildren();
+  if (!fresh.length) return;
+  if (!el.firstChild) el.innerHTML = '<h3>解锁成就</h3><div class="achgrid"></div>';
+  el.querySelector('.achgrid').insertAdjacentHTML('beforeend', fresh.map(a => `<div class="ach on">${icSVG(a.ic)}<b>${a.name}</b><small>${a.desc}</small></div>`).join(''));
+  toast('解锁成就：' + fresh.map(a => a.name).join('、'));
 }
 
 /* ---------- 主循环 ---------- */
@@ -3459,20 +3475,21 @@ function loop(now) {
   const dt = Math.min(100, now - last); last = now;
   if (G.slow > 0) G.slow -= dt / 16.67;
   acc += dt / 16.667 * (G.slow > 0 ? .33 : 1);
-  if (LS.on) lsTick(dt);
-  else { let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0; }
+  if (LS.on) lsTick(now);
+  else { lsTail(now); let n = 0; while (acc >= 1 && n < 5) { step(); acc -= 1; n++; } if (n >= 5) acc = 0; }
   render();
 }
 
 /* ============================================================
    页面
    ============================================================ */
-const SUB = ['PG_MOVES', 'PG_CODEX', 'PG_SETTINGS'];
+const SUB = ['PG_MOVES', 'PG_CODEX', 'PG_SETTINGS', 'PG_RANK'];
 function go(id) {
+  if (G.page === 'PG_ONLINE' && id !== 'PG_ONLINE') queueStop();
   if (SUB.includes(id) && !SUB.includes(G.page)) G.prev = G.page;
   G.page = id;
   $$('.page').forEach(p => p.classList.toggle('on', p.id === id));
-  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings, PG_ACCOUNT: buildAccount, PG_ONLINE: buildOnline })[id]?.();
+  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings, PG_ACCOUNT: buildAccount, PG_ONLINE: buildOnline, PG_RANK: buildRank })[id]?.();
   Input.clear();
   $('#wrap').classList.toggle('battle', id === 'PG_BATTLE' && TOUCH);
   if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); calcLift(); } catch (e) {} });
@@ -3637,7 +3654,7 @@ $('#btnRestart').onclick = () => startMatch(G.lastOpts);
 $('#btnQuit').onclick = () => { G.running = false; startDemo(); go('PG_TITLE'); };
 $('#btnToTitle').onclick = () => { if (G.mode === 'online') { roomLeave(); startDemo(); go('PG_ONLINE'); return; } startDemo(); go('PG_TITLE'); };
 $('#btnReselect').onclick = () => { startDemo(); go('PG_SELECT'); };
-$('#btnRematch').onclick = () => { if (G.mode === 'online') { if (!ROOM.peer) { toast('对手已经离开房间'); return; } roomSend('again'); startDemo(); G.mode = 'online'; go('PG_SELECT'); return; } startMatch(G.lastOpts); };
+$('#btnRematch').onclick = () => { if (G.mode === 'online') { if (ROOM.ch) roomPresence(); if (!ROOM.peer) { toast('对手已经离开房间'); return; } ROOM.launch = null; roomSend('again'); startDemo(); G.mode = 'online'; go('PG_SELECT'); return; } startMatch(G.lastOpts); };
 $('#tPause').onclick = () => pause(true);
 $('#setReset').onclick = () => { Object.assign(CFG, DEFAULTS); saveSettings(); buildSettings(); };
 $('#setList').addEventListener('change', e => { const s = SETTINGS.find(x => x.key === e.target.dataset.key); if (s) { CFG[s.key] = s.opts[+e.target.value][0]; saveSettings(); } });
@@ -3773,27 +3790,28 @@ async function accInit() {
     ACC.sb = lib.createClient(SUPA.URL, SUPA.KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'duanlian.auth' }, realtime: { params: { eventsPerSecond: 50 } } });
     const { data } = await ACC.sb.auth.getSession();
     await accSetUser(data && data.session ? data.session.user : null);
-    ACC.sb.auth.onAuthStateChange((ev, session) => {
-      if (ev === 'SIGNED_OUT') accSetUser(null);
-      else if (session && session.user && (!ACC.user || ACC.user.id !== session.user.id)) accSetUser(session.user);
-    });
+    // Supabase Auth can hold its lock during this callback. Defer calls to its Data API.
+    ACC.sb.auth.onAuthStateChange((ev, session) => setTimeout(() => {
+      if (ev === 'SIGNED_OUT' && ACC.user) accSetUser(null);
+      else if (session?.user && ACC.user?.id !== session.user.id) accSetUser(session.user);
+    }, 0));
+    if (ACC.user && G.page === 'PG_TITLE') lsRecover();
   } catch (e) { ACC.state = 'err'; ACC.err = '连不上账户服务器，请检查网络后重试'; accUI(); }
 }
 async function accSetUser(user) {
-  ACC.user = user; ACC.profile = null; ACC.recent = null;
+  ACC.user = user; ACC.profile = null; ACC.recent = null; ACC.edit = false;
   if (!user) { ACC.state = ACC.sb ? 'out' : ACC.state; recLoad(); accUI(); netLeaveAll(); return; }
   recLoad();
   try {
-    let { data, error } = await ACC.sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    const { data, error } = await ACC.sb.from('profiles').select('*').eq('id', user.id).single();
+    if (ACC.user?.id !== user.id) return;
     if (error) throw error;
-    if (!data) {   // 没有触发器时自己补一条资料
-      const m = user.user_metadata || {};
-      const row = { id: user.id, username: m.username || user.email.split('@')[0], nickname: m.nickname || m.username || '无名', avatar: m.avatar || 'CH_JIN' };
-      const r = await ACC.sb.from('profiles').insert(row).select().single(); if (r.error) throw r.error; data = r.data;
-    }
-    ACC.profile = data; recMerge(data.stats, data.achievements); achCheck(); recSave(); ACC.state = 'in';
-    if (JSON.stringify(data.stats || {}) !== JSON.stringify(REC.stats) || JSON.stringify(data.achievements || {}) !== JSON.stringify(REC.ach)) recPush();
-  } catch (e) { ACC.state = 'in'; ACC.profile = ACC.profile || { id: user.id, username: (user.user_metadata || {}).username || '?', nickname: (user.user_metadata || {}).nickname || '玩家', avatar: 'CH_JIN' }; toast('资料读取失败：' + errCN(e)); }
+    ACC.profile = data; ACC.state = 'in';
+    reportSchedule(0);
+  } catch (e) {
+    if (ACC.user?.id !== user.id) return;
+    ACC.state = 'err'; ACC.err = '资料读取失败：' + errCN(e);
+  }
   accUI(); if (ACC.state === 'in') { lobbyJoin(); frLoad(); }
 }
 async function accSignIn(u, p) {
@@ -3809,31 +3827,32 @@ async function accSignUp(u, p, nick, avatar) {
 }
 async function accSignOut() { try { await ACC.sb.auth.signOut(); } catch (e) {} await accSetUser(null); }
 async function accSaveProfile(patch) {
-  const { data, error } = await ACC.sb.from('profiles').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', ACC.user.id).select().single();
-  if (error) throw error; ACC.profile = data; accUI();
+  const uid = ACC.user.id;
+  const { error } = await ACC.sb.from('profiles').update(patch).eq('id', uid);
+  if (error) throw error;
+  if (ACC.user?.id === uid) { Object.assign(ACC.profile, patch); accUI(); }
 }
 
-/* ---------- 战绩与成就：本地缓存 + 云端同步（取较大值合并） ---------- */
+/* ---------- 战绩与成就：联机由服务器结算，离线记录保存在设备上 ---------- */
 const STAT0 = () => ({ games: 0, wins: 0, losses: 0, draws: 0, chars: {}, maxHits: 0, maxLv: 0, fins: 0, breaks: 0, parries: 0, burns: 0, chases: 0, bounces: 0, sides: 0, throws: 0, perfects: 0, onG: 0, onW: 0, cpu2: 0 });
 const REC = { stats: STAT0(), ach: {} };
 const recKey = () => 'duanlian.rec.' + (ACC.user ? ACC.user.id : 'guest');
-function recLoad() { try { const o = JSON.parse(localStorage.getItem(recKey()) || 'null'); REC.stats = Object.assign(STAT0(), o && o.stats); REC.ach = (o && o.ach) || {}; } catch (e) { REC.stats = STAT0(); REC.ach = {}; } }
-function recSave() { try { localStorage.setItem(recKey(), JSON.stringify({ stats: REC.stats, ach: REC.ach })); } catch (e) {} }
-function recMerge(cs, ca) {
-  const s = REC.stats;
-  for (const k in cs || {}) {
-    if (k === 'chars') for (const c in cs.chars || {}) { const a = s.chars[c] || { g: 0, w: 0 }, b = cs.chars[c] || {}; s.chars[c] = { g: Math.max(a.g, b.g || 0), w: Math.max(a.w, b.w || 0) }; }
-    else if (typeof cs[k] === 'number') s[k] = Math.max(s[k] || 0, cs[k]);
-  }
-  for (const k in ca || {}) if (!REC.ach[k]) REC.ach[k] = ca[k];
+function storeRead(storage, key, fallback) {
+  try { return JSON.parse(storage.getItem(key)) ?? fallback; } catch (e) { return fallback; }
 }
-let pushT = 0;
-function recPush() {
-  if (ACC.state !== 'in' || !ACC.sb || !ACC.user) return;
-  clearTimeout(pushT);
-  pushT = setTimeout(() => ACC.sb.from('profiles').update({ stats: REC.stats, achievements: REC.ach, updated_at: new Date().toISOString() }).eq('id', ACC.user.id)
-    .then(({ error }) => { if (error) console.warn('同步战绩失败', error); }), 300);
+function storeWrite(storage, key, value) {
+  try { if (value == null) storage.removeItem(key); else storage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
 }
+function recLoad() { const o = storeRead(localStorage, recKey(), {}); REC.stats = Object.assign(STAT0(), o.stats); REC.ach = o.ach || {}; }
+function recSave() { storeWrite(localStorage, recKey(), { stats: REC.stats, ach: REC.ach }); }
+const cloudStats = () => Object.assign(STAT0(), ACC.profile?.stats);
+const cloudAch = () => ACC.profile?.achievements || {};
+async function backendCall(name, args) {
+  const { data, error } = await ACC.sb.rpc(name, args);
+  if (error) throw error;
+  return data;
+}
+
 const ACH = [
   { id: 'ACH_FIRST', name: '初出茅庐', desc: '完成第一场对战', ic: 'MV_DASH', ok: s => s.games >= 1 },
   { id: 'ACH_WIN1', name: '首胜', desc: '赢下第一场', ic: 'MV_JIN_L', ok: s => s.wins >= 1 },
@@ -3858,31 +3877,115 @@ const ACH = [
   { id: 'ACH_ON10', name: '擂主', desc: '联机累计赢 10 场', ic: 'MECH_THUNDER', ok: s => s.onW >= 10 },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));
-function achCheck() { const fresh = []; for (const a of ACH) if (!REC.ach[a.id] && a.ok(REC.stats)) { REC.ach[a.id] = Date.now(); fresh.push(a); } return fresh; }
+const CLOUD_ACH = new Set(['ACH_FIRST', 'ACH_WIN1', 'ACH_WIN10', 'ACH_WIN50', 'ACH_G100',
+  'ACH_HIT10', 'ACH_HIT25', 'ACH_LV3', 'ACH_LV4', 'ACH_ALL', 'ACH_ON1', 'ACH_ON10']);
+function achCheck(online) {
+  const fresh = [];
+  for (const a of ACH) if ((!online || !CLOUD_ACH.has(a.id)) && !REC.ach[a.id] && a.ok(REC.stats)) {
+    REC.ach[a.id] = Date.now(); fresh.push(a);
+  }
+  return fresh;
+}
 on('EV_AIRCHASE', d => { const f = G.f[d.who]; if (f) f.stats.chases = (f.stats.chases || 0) + 1; });
 on('EV_BOUNCE', d => { const f = G.f[d.who]; if (f) f.stats.bounces = (f.stats.bounces || 0) + 1; });
 on('EV_THROW', d => { const f = G.f[d.who]; if (f) f.stats.throws = (f.stats.throws || 0) + 1; });
-/* 一场打完：记战绩（对战电脑、联机计入；双人同机和训练不计） */
+/* 一场打完：电脑战绩和只在设备上解锁的成就。 */
 function recMatch() {
   if (G.demo || G.spar || (G.mode !== 'cpu' && G.mode !== 'online')) return null;
   const me = G.f[G.mode === 'online' ? LS.me : 0], op = G.f[1 - me.idx], st = me.stats, s = REC.stats;
   const res = me.wins > op.wins ? 'win' : me.wins < op.wins ? 'lose' : 'draw';
-  s.games++; s[{ win: 'wins', lose: 'losses', draw: 'draws' }[res]]++;
-  const c = s.chars[me.ch.id] = s.chars[me.ch.id] || { g: 0, w: 0 }; c.g++; if (res === 'win') c.w++;
-  s.maxHits = Math.max(s.maxHits, st.maxHits || 0); s.maxLv = Math.max(s.maxLv, st.maxLv || 0);
+  const online = G.mode === 'online';
+  if (online && (LS.unverified || LS.replaying)) return null;
+  if (!online) {
+    s.games++; s[{ win: 'wins', lose: 'losses', draw: 'draws' }[res]]++;
+    const c = s.chars[me.ch.id] = s.chars[me.ch.id] || { g: 0, w: 0 }; c.g++; if (res === 'win') c.w++;
+    s.maxHits = Math.max(s.maxHits, st.maxHits || 0); s.maxLv = Math.max(s.maxLv, st.maxLv || 0);
+  }
   for (const k of ['fins', 'breaks', 'parries', 'burns', 'chases', 'bounces', 'sides', 'throws', 'perfects']) s[k] += st[k] || 0;
-  if (G.mode === 'online') { s.onG++; if (res === 'win') s.onW++; }
   if (G.mode === 'cpu' && res === 'win' && CFG.AI_LEVEL >= 2) s.cpu2++;
-  const fresh = achCheck(); recSave();
-  if (ACC.state === 'in') {
-    recPush();
-    const peer = G.mode === 'online' ? (LS.peer || ROOM.peer) : null;
-    ACC.sb.from('matches').insert({ mode: G.mode, my_char: me.ch.id, opp_char: op.ch.id, opp_id: peer ? peer.uid : null, opp_name: peer ? peer.nick : ('电脑 · ' + (AI_LEVELS[CFG.AI_LEVEL] || {}).name),
-      result: res, rounds: `${me.wins}:${op.wins}`, max_hits: st.maxHits || 0, max_lv: st.maxLv || 0, stage: G.stage }).then(({ error }) => { if (error) console.warn('写入对战记录失败', error); });
-    ACC.recent = null;
+  const fresh = achCheck(online); recSave();
+  if (G.mode === 'cpu' && ACC.state === 'in') {
+    const uid = ACC.user.id;
+    backendCall('record_cpu_match', {
+      p_my_char: me.ch.id, p_opp_char: op.ch.id, p_result: res, p_rounds: `${me.wins}:${op.wins}`,
+      p_hits: st.maxHits || 0, p_level: st.maxLv || 0, p_stage: G.stage, p_ai: AI_LEVELS[CFG.AI_LEVEL].name
+    }).then(() => { if (ACC.user?.id === uid) { ACC.recent = null; accUI(); } }).catch(() => {});
   }
   return { res, fresh };
 }
+
+const reportKey = uid => 'duanlian.report.' + uid;
+const reportMemory = new Map();
+const reportsFor = uid => {
+  if (!reportMemory.has(uid)) reportMemory.set(uid, storeRead(localStorage, reportKey(uid), []));
+  return reportMemory.get(uid);
+};
+let reportTimer = 0, reporting = false;
+function reportSchedule(delay = 2500) {
+  if (reportTimer || reporting || ACC.state !== 'in' || !reportsFor(ACC.user.id).length) return;
+  reportTimer = setTimeout(reportFlush, delay);
+}
+async function reportFlush() {
+  reportTimer = 0;
+  if (ACC.state !== 'in') return;
+  const uid = ACC.user.id, reports = reportsFor(uid), item = reports[0];
+  if (!item) return;
+  reporting = true;
+  let retry = false;
+  try {
+    const data = await backendCall('submit_online_result', item.args);
+    retry = data.status === 'pending';
+    if (ACC.user?.id === uid && ACC.profile) {
+      const fresh = ACH.filter(a => data.achievements[a.id] && !cloudAch()[a.id]);
+      Object.assign(ACC.profile, { stats: data.stats, achievements: data.achievements, rating: data.rating });
+      if (data.status === 'verified') ACC.recent = null;
+      if (LS.id === item.args.p_game && G.page === 'PG_RESULT') {
+        LS.verdict = data.status; resultVerify(); showResultAchievements(fresh, true);
+      }
+      accUI();
+    }
+  } catch (e) {
+    retry = !['22023', '42501'].includes(e.code) && Date.now() - item.at < 7200000;
+    if (LS.id === item.args.p_game && G.page === 'PG_RESULT') {
+      LS.verdict = retry ? 'retry' : 'expired'; resultVerify();
+    }
+  } finally {
+    reports.shift();
+    if (retry) reports.push(item);
+    storeWrite(localStorage, reportKey(uid), reports);
+    reporting = false; reportSchedule();
+  }
+}
+function resultVerify() {
+  const el = $('#resVerify');
+  el.hidden = false;
+  el.textContent = {
+    pending: '等待双方确认战绩…', retry: '暂时无法提交战绩，联网后会重试。',
+    disputed: '双方结果不一致，本场未计入战绩。',
+    expired: '确认已超时，本场未计入战绩。',
+    unverified: '本场未计入联机战绩。',
+    spar: '好友切磋，不计战绩。', unrated: '好友切磋，不计战绩。',
+    verified: `服务器已确认 · 段位分 ${ACC.profile?.rating ?? '—'}`
+  }[LS.verdict || 'pending'];
+}
+function onlineResult(winner) {
+  LS.final = { hash: lsHashOf(), frame: G.frame, wins: G.f.map(f => f.wins) };
+  LS.sentAtEnd = LS.sent; LS.elapsed = (performance.now() - LS.startedAt) / 1000;
+  if (G.spar) { LS.verdict = 'spar'; resultVerify(); return; }
+  if (LS.unverified || LS.desync || ACC.state !== 'in' || !LS.id) {
+    LS.verdict = 'unverified'; resultVerify(); return;
+  }
+  const args = {
+    p_game: LS.id, p_frames: LS.final.frame, p_final_hash: LS.final.hash,
+    p_winner_slot: winner ? winner.idx : -1,
+    p_summary: G.f.map(f => ({ rounds: f.wins, hits: f.stats.maxHits, level: f.stats.maxLv }))
+  };
+  const uid = ACC.user.id, reports = reportsFor(uid);
+  if (!reports.some(item => item.args.p_game === args.p_game)) reports.push({ args, at: Date.now() });
+  storeWrite(localStorage, reportKey(uid), reports);
+  resultVerify(); reportSchedule(0);
+}
+
 
 /* ---------- 界面：标题页账户入口 · 账户页 ---------- */
 const avHTML = (id, cls = '') => { const ch = CHAR[id] || CHARS[0]; return `<span class="av ${cls}" style="--c:${ch.color}">${esc(ch.name[0])}</span>`; };
@@ -3897,11 +4000,11 @@ function accUI() {
 }
 function buildAccount() {
   const B = $('#accBody'), sub = $('#accSub'); if (!B) return;
-  if (ACC.state === 'off') { sub.textContent = ''; B.innerHTML = `<p>账户服务还没开通：作者还没把 Supabase 项目信息填进游戏。</p><p class="hint">没开通时战绩和成就也会记在这台设备上，开通并登录后会一起同步到云端。</p>${statsHTML()}`; return; }
+  if (ACC.state === 'off') { sub.textContent = ''; B.innerHTML = `<p>账户服务还没开通：作者还没把 Supabase 项目信息填进游戏。</p><p class="hint">没开通时战绩和成就也会记在这台设备上，联机战绩由服务器确认。</p>${statsHTML()}`; return; }
   if (ACC.state === 'loading') { sub.textContent = ''; B.innerHTML = '<p>正在连接账户服务器…</p>'; return; }
   if (ACC.state === 'err') { sub.textContent = ''; B.innerHTML = `<p class="err">${esc(ACC.err)}</p><div class="actions" style="justify-content:flex-start"><button class="btn primary" id="accRetry">重试</button></div>`; return; }
   if (ACC.state === 'out') {
-    sub.textContent = '登录后战绩、成就跨设备同步，还能联机对战';
+    sub.textContent = '登录后可参加联机对战并同步已确认战绩';
     const up = ACC.tab === 'up';
     B.innerHTML = `<div class="tabs" role="tablist"><button data-acctab="in" aria-selected="${!up}">登录</button><button data-acctab="up" aria-selected="${up}">注册</button></div>
     <form id="accForm" class="form" autocomplete="on">
@@ -3912,14 +4015,14 @@ function buildAccount() {
       <p class="err" id="accErr" role="alert"></p>
       <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">${up ? '注册并登录' : '登录'}</button></div>
       <p class="hint">${up ? '账号名用来登录，注册后不能改；昵称、头像以后可以随时改。' : '还没有账号？点上面的「注册」。'}</p>
-    </form>`;
+    </form>${statsHTML()}`;
     return;
   }
   const p = ACC.profile || {}, t = titleOf(p);
   sub.textContent = '';
-  const unlocked = ACH.filter(a => REC.ach[a.id]);
+  const unlocked = ACH.filter(a => REC.ach[a.id] || cloudAch()[a.id]);
   B.innerHTML = `<div class="prof">${avHTML(p.avatar, 'lg')}<div class="pinfo"><b class="pnick">${esc(p.nickname)}</b>${t ? `<span class="ptitle">${esc(t)}</span>` : ''}<small>账号 ${esc(p.username)}${p.created_at ? ' · ' + new Date(p.created_at).toLocaleDateString('zh-CN') + ' 加入' : ''}</small></div>
-    <div class="pbtn"><button class="btn" id="accEditBtn">${ACC.edit ? '收起' : '编辑资料'}</button><button class="btn" id="accOut">退出登录</button></div></div>
+    <div class="pbtn"><button class="btn" data-go="PG_RANK">排行榜</button><button class="btn" id="accEditBtn">${ACC.edit ? '收起' : '编辑资料'}</button><button class="btn" id="accOut">退出登录</button></div></div>
   ${ACC.edit ? `<form id="accEditForm" class="form">
     <label><span>昵称</span><input name="n" maxlength="12" value="${esc(p.nickname)}" required></label>
     <div class="chips"><span class="lab">头像</span>${CHARS.map(c => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${c.id === p.avatar}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>
@@ -3927,28 +4030,49 @@ function buildAccount() {
     <p class="hint">${unlocked.length ? '称号来自已解锁的成就。' : '解锁成就后可以把成就名设成称号。'}</p>
     <p class="err" id="accErr" role="alert"></p>
     <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">保存</button></div></form>` : ''}
-  ${statsHTML()}
+  ${statsHTML(true)}
   <h3>最近对战</h3><div id="accRecent">${recentHTML()}</div>`;
   if (!ACC.recent && ACC.sb) {
     ACC.recent = 'loading';
-    ACC.sb.from('matches').select('*').eq('user_id', ACC.user.id).order('created_at', { ascending: false }).limit(12)
-      .then(({ data, error }) => { ACC.recent = error ? [] : data || []; const el = $('#accRecent'); if (el) el.innerHTML = recentHTML(); });
+    const uid = ACC.user.id;
+    ACC.sb.from('matches').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(12)
+      .then(({ data, error }) => {
+        if (ACC.user?.id !== uid || ACC.recent !== 'loading') return;
+        ACC.recent = error ? [] : data || [];
+        const el = $('#accRecent'); if (el) el.innerHTML = recentHTML();
+      });
   }
 }
-function statsHTML() {
-  const s = REC.stats, rate = s.games ? Math.round(s.wins / s.games * 100) + '%' : '—';
-  const tiles = [['场次', s.games], ['胜', s.wins], ['负', s.losses], ['胜率', rate], ['最高连段', s.maxHits], ['最高掉落', DROP_LEVELS[s.maxLv].name], ['终结技', s.fins], ['破链', s.breaks], ['弹反', s.parries], ['联机胜 / 场', `${s.onW} / ${s.onG}`]];
+function statsHTML(cloud = false) {
+  const s = cloud ? cloudStats() : REC.stats, rate = s.games ? Math.round(s.wins / s.games * 100) + '%' : '—';
+  const tiles = [['场次', s.games], ['胜', s.wins], ['负', s.losses], ['胜率', rate], ['最高连段', s.maxHits], ['最高掉落', (DROP_LEVELS[s.maxLv] || DROP_LEVELS[0]).name], ...(cloud ? [['段位分', ACC.profile?.rating ?? '—']] : [['终结技', s.fins], ['破链', s.breaks], ['弹反', s.parries]]), ['联机胜 / 场', `${s.onW} / ${s.onG}`]];
   const rows = CHARS.map(c => { const r = s.chars[c.id] || { g: 0, w: 0 }; return `<tr><td>${avHTML(c.id, 'sm')}${c.name}<small> · ${c.title}</small></td><td class="num">${r.g}</td><td class="num">${r.w}</td><td class="num">${r.g ? Math.round(r.w / r.g * 100) + '%' : '—'}</td></tr>`; }).join('');
-  const n = ACH.filter(a => REC.ach[a.id]).length;
-  return `<h3>战绩 <small class="mute">对战电脑和联机计入</small></h3><div class="statgrid">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
+  const earned = cloud ? { ...REC.ach, ...cloudAch() } : REC.ach;
+  const n = ACH.filter(a => earned[a.id]).length;
+  const description = cloud ? '服务器已确认的联机对战' : '本机记录';
+  return `<h3>战绩 <small class="mute">${description}</small></h3><div class="statgrid">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
   <div class="cols2"><div><h3>角色战绩</h3><div class="tablewrap"><table class="ctab"><tr><th>角色</th><th class="num">场次</th><th class="num">胜</th><th class="num">胜率</th></tr>${rows}</table></div></div>
-  <div><h3>成就 <small class="mute">${n} / ${ACH.length}</small></h3><div class="achgrid">${ACH.map(a => { const t = REC.ach[a.id]; return `<div class="ach${t ? ' on' : ''}" title="${esc(a.desc)}">${icSVG(a.ic, { grey: !t })}<b>${a.name}</b><small>${a.desc}</small></div>`; }).join('')}</div></div></div>`;
+  <div><h3>成就 <small class="mute">${n} / ${ACH.length}</small></h3><div class="achgrid">${ACH.map(a => { const t = earned[a.id]; return `<div class="ach${t ? ' on' : ''}" title="${esc(a.desc)}">${icSVG(a.ic, { grey: !t })}<b>${a.name}</b><small>${a.desc}${cloud && t ? (cloudAch()[a.id] ? ' · 已验证' : ' · 本机') : ''}</small></div>`; }).join('')}</div></div></div>`;
 }
 function recentHTML() {
   if (ACC.recent === 'loading' || ACC.recent == null) return '<p class="hint">读取中…</p>';
   if (!ACC.recent.length) return '<p class="hint">还没有对战记录。</p>';
   const R = { win: ['胜', 'w'], lose: ['负', 'l'], draw: ['平', 'd'] };
-  return `<div class="tablewrap"><table class="rtab">${ACC.recent.map(m => `<tr><td><span class="res ${R[m.result][1]}">${R[m.result][0]}</span></td><td>${m.mode === 'online' ? '联机' : '电脑'}</td><td>${avHTML(m.my_char, 'sm')}${esc((CHAR[m.my_char] || {}).name || '')}</td><td>对 ${esc(m.opp_name || '')} · ${esc((CHAR[m.opp_char] || {}).name || '')}</td><td class="num">${esc(m.rounds || '')}</td><td class="num">${m.max_hits} 连</td><td class="mute">${new Date(m.created_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td></tr>`).join('')}</table></div>`;
+  return `<div class="tablewrap"><table class="rtab">${ACC.recent.map(m => `<tr><td><span class="res ${R[m.result][1]}">${R[m.result][0]}</span></td><td>${m.mode === 'online' ? '联机' : '电脑'}${m.verified ? ' · 已验证' : ' · 未验证'}</td><td>${avHTML(m.my_char, 'sm')}${esc((CHAR[m.my_char] || {}).name || '')}</td><td>对 ${esc(m.opp_name || '')} · ${esc((CHAR[m.opp_char] || {}).name || '')}</td><td class="num">${esc(m.rounds || '')}</td><td class="num">${m.max_hits} 连</td><td class="mute">${new Date(m.created_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td></tr>`).join('')}</table></div>`;
+}
+
+async function buildRank() {
+  const body = $('#rankBody');
+  if (!ACC.sb) { body.textContent = '排行榜服务还没开通。'; return; }
+  body.textContent = '读取排行榜…';
+  const { data, error } = await ACC.sb.from('duanlian_leaderboard').select('*').order('rank').limit(100);
+  if (G.page !== 'PG_RANK') return;
+  if (error) { body.innerHTML = '<p>排行榜读取失败。</p><button class="btn" id="rankRetry">重试</button>'; return; }
+  if (!data.length) { body.textContent = '还没有已确认的联机战绩。'; return; }
+  body.innerHTML = `<div class="tablewrap"><table class="ctab"><thead><tr><th>名次</th><th>玩家</th>
+    <th class="num">段位分</th><th class="num">胜 / 场</th><th class="num">胜率</th></tr></thead>
+    <tbody>${data.map(r => `<tr><td>${r.rank}</td><td>${avHTML(r.avatar, 'sm')}${esc(r.nickname)}</td>
+    <td class="num">${r.rating}</td><td class="num">${r.wins} / ${r.games}</td><td class="num">${r.win_rate}%</td></tr>`).join('')}</tbody></table></div>`;
 }
 function accFormSubmit(form) {
   const err = $('#accErr'), btn = form.querySelector('[type=submit]'), fd = new FormData(form);
@@ -3980,46 +4104,101 @@ document.addEventListener('click', e => {
   }
   if (b.id === 'accOut') { accSignOut().then(() => toast('已退出登录')); return; }
   if (b.id === 'accEditBtn') { ACC.edit = !ACC.edit; buildAccount(); return; }
+  if (b.id === 'rankRetry') { buildRank(); return; }
   if (b.id === 'accRetry') { accInit(); return; }
 });
 
 /* ============================================================
    联机：大厅（在线玩家、快速匹配、邀请）· 房间 · 帧同步对战
    ============================================================ */
-const NET = { lobby: null, members: [], status: 'idle', q: 0, invite: null, pending: null };
-const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pingT: 0, joinedAt: 0, spar: false, rounds: 2 };
+const NET = { lobby: null, members: [], status: 'idle', invite: null, pending: null, queue: null, leaving: null };
+const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pulse: 0, joinedAt: 0, spar: false, rounds: 2 };
 const KEYS12 = ['left', 'right', 'up', 'down', 'jump', 'guard', 'l', 'h', 's', 'brk', 'fin', 'ast'];
 const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
 const decIn = b => { const r = { held: {}, pressed: {} }; KEYS12.forEach((k, i) => { r.held[k] = !!(b & (1 << i)); r.pressed[k] = !!(b & (1 << (i + 12))); }); return r; };
+const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'TOUCH_LIFT', 'AI_LEVEL']);
+const LS_REJOIN_MS = 20000, LS_SEND_MS = 1000 / 15, LS_BATCH = 32, LS_CHUNK = 256, LS_MAX_FRAME = 432000;
+const GAME_UUID = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 let LS = { on: false, me: 0 };
-const myInfo = () => { const p = ACC.profile || {}; return { uid: ACC.user.id, nick: p.nickname || '玩家', avatar: p.avatar || 'CH_JIN', title: titleOf(p), wins: REC.stats.onW, games: REC.stats.onG }; };
+const myInfo = () => { const p = ACC.profile || {}, s = cloudStats(); return { uid: ACC.user.id, nick: p.nickname || '玩家', avatar: p.avatar || 'CH_JIN', title: titleOf(p), wins: s.onW, games: s.onG, rating: p.rating ?? 1000 }; };
 const median = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[s.length >> 1] : 0; };
 
 function lobbyJoin() {
   if (NET.lobby || ACC.state !== 'in') return;
   const uid = ACC.user.id;
-  NET.lobby = ACC.sb.channel('duanlian-lobby', { config: { presence: { key: uid }, broadcast: { self: false } } })
-    .on('presence', { event: 'sync' }, () => { NET.members = Object.values(NET.lobby.presenceState()).map(a => a[a.length - 1]).filter(m => m && m.uid); lobbyMatch(); if (G.page === 'PG_ONLINE') (NET.tab === 'friends' ? buildOnline() : renderPlayers()); else if (G.page === 'PG_SELECT' && G.mode === 'online' && !ROOM.peer && $('#frInvList')) $('#frInvList').innerHTML = frRoomInviteHTML(); })
-    .on('broadcast', { event: 'invite' }, ({ payload: p }) => { if (p.to !== uid) return; if (NET.status !== 'idle' && NET.status !== 'queue') { lobbySend('reply', { to: p.from.uid, ok: false, why: 'busy' }); return; } NET.invite = p; showInvite(); })
-    .on('broadcast', { event: 'reply' }, ({ payload: p }) => { if (p.to !== uid) return; if (!p.ok && NET.pending && ROOM.host && !ROOM.peer) { toast(p.why === 'busy' ? '对方正忙，稍后再邀请吧' : '对方拒绝了邀请'); roomLeave(); go('PG_ONLINE'); } })
-    .on('broadcast', { event: 'match' }, ({ payload: p }) => { if (p.to !== uid || NET.status !== 'queue') return; roomJoin(p.room, false); })
-    .on('broadcast', { event: 'fr' }, ({ payload: p }) => { if (p.to !== uid) return; toast(`${p.from.nick} 想加你为好友`); SFX.play('ui'); frLoad(); })
-    .on('broadcast', { event: 'fra' }, ({ payload: p }) => { if (p.to !== uid) return; toast(`${p.from.nick} 同意了你的好友请求`); SFX.play('ui'); frLoad(); })
-    .on('broadcast', { event: 'frd' }, ({ payload: p }) => { if (p.to === uid) frLoad(); })
-    .subscribe(st => { if (st === 'SUBSCRIBED') lobbyTrack(); else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { $('#onState') && ($('#onState').textContent = '连接大厅失败，请检查网络'); } });
+  const ch = ACC.sb.channel('duanlian-lobby', { config: { presence: { key: uid }, broadcast: { self: false } } });
+  NET.lobby = ch;
+  ch.on('presence', { event: 'sync' }, () => {
+    if (NET.lobby !== ch) return;
+    NET.members = Object.values(ch.presenceState()).map(a => a[a.length - 1]).filter(m => m?.uid);
+    if (G.page === 'PG_ONLINE') (NET.tab === 'friends' ? buildOnline() : renderPlayers());
+    else if (G.page === 'PG_SELECT' && G.mode === 'online' && !ROOM.peer && $('#frInvList')) $('#frInvList').innerHTML = frRoomInviteHTML();
+  }).on('broadcast', { event: 'invite' }, ({ payload: p }) => {
+    if (p?.to !== uid || !p.from?.uid || !/^\d{4}$/.test(p.room)) return;
+    if (NET.status === 'room') { lobbySend('reply', { to: p.from.uid, ok: false, why: 'busy' }); return; }
+    NET.invite = p; showInvite();
+  }).on('broadcast', { event: 'reply' }, ({ payload: p }) => {
+    if (p?.to !== uid || p.from !== NET.pending || p.ok || !ROOM.host || ROOM.peer) return;
+    toast(p.why === 'busy' ? '对方正忙，稍后再邀请吧' : '对方拒绝了邀请'); roomLeave(); go('PG_ONLINE');
+  }).on('broadcast', { event: 'fr' }, ({ payload: p }) => {
+    if (p?.to === uid) frNotify(p.from, 'fr');
+  }).on('broadcast', { event: 'fra' }, ({ payload: p }) => {
+    if (p?.to === uid) frNotify(p.from, 'fra');
+  }).on('broadcast', { event: 'frd' }, ({ payload: p }) => {
+    if (p?.to === uid) frLoad();
+  }).subscribe(st => {
+    if (NET.lobby !== ch) return;
+    if (st === 'SUBSCRIBED') lobbyTrack();
+    else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { const el = $('#onState'); if (el) el.textContent = '连接大厅失败，请检查网络'; }
+  });
 }
-function lobbyTrack() { if (NET.lobby) NET.lobby.track({ ...myInfo(), status: NET.status, q: NET.q, room: NET.status === 'room' ? ROOM.code : '', open: !!(ROOM.host && ROOM.ch && !ROOM.peer), spar: !!ROOM.spar }).catch(() => {}); }
-function lobbySend(event, payload) { if (NET.lobby) NET.lobby.send({ type: 'broadcast', event, payload }).catch(() => {}); }
-function lobbySetStatus(s) { NET.status = s; NET.q = s === 'queue' ? Date.now() : 0; lobbyTrack(); if (G.page === 'PG_ONLINE') buildOnline(); }
-function lobbyLeave() { if (NET.lobby) { try { ACC.sb.removeChannel(NET.lobby); } catch (e) {} } NET.lobby = null; NET.members = []; NET.status = 'idle'; }
-/* 快速匹配：排队的人按排队时间两两配对，前一位做房主开房间并通知后一位 */
-function lobbyMatch() {
-  if (NET.status !== 'queue' || ROOM.ch || NET.matching) return;
-  const q = NET.members.filter(m => m.status === 'queue' && m.q).sort((a, b) => a.q - b.q || (a.uid < b.uid ? -1 : 1));
-  const i = q.findIndex(m => m.uid === ACC.user.id);
-  if (i < 0 || i % 2 || !q[i + 1]) return;
-  const code = String(1000 + Math.floor(Math.random() * 9000)); NET.matching = true;
-  roomJoin(code, true).then(ok => { NET.matching = false; if (ok) lobbySend('match', { to: q[i + 1].uid, room: code }); });
+function lobbyTrack() {
+  if (!NET.lobby || !ACC.user) return;
+  const open = !!(ROOM.ch && ROOM.host && !ROOM.peer && !ROOM.match?.pair);
+  NET.lobby.track({ ...myInfo(), status: NET.status, room: open ? ROOM.code : '', open, spar: open && ROOM.spar }).catch(() => {});
+}
+function lobbySend(event, payload) { if (NET.lobby) NET.lobby.send({ type: 'broadcast', event, payload: { ...payload, from: event === 'invite' ? payload.from : ACC.user?.id } }).catch(() => {}); }
+function lobbySetStatus(status) {
+  if (NET.status === status) return;
+  NET.status = status; lobbyTrack();
+  if (G.page === 'PG_ONLINE') buildOnline();
+}
+function lobbyLeave() {
+  queueStop();
+  const ch = NET.lobby; NET.lobby = null; NET.members = []; NET.status = 'idle';
+  if (ch) ACC.sb.removeChannel(ch);
+}
+function queueStart() {
+  if (NET.leaving || NET.queue || ACC.state !== 'in') return;
+  const q = { uid: ACC.user.id, timer: 0, request: backendCall('mm_join') };
+  NET.queue = q; lobbySetStatus('queue');
+  q.request.then(() => queuePoll(q)).catch(e => queueError(q, e));
+}
+function queueStop() {
+  const q = NET.queue;
+  if (!q) return;
+  NET.queue = null; clearTimeout(q.timer); lobbySetStatus('idle');
+  NET.leaving = q.request.catch(() => {}).then(() => {
+    if (ACC.user?.id === q.uid) return backendCall('mm_leave');
+  }).catch(() => {}).finally(() => { NET.leaving = null; });
+}
+function queueError(q, e) {
+  if (NET.queue !== q) return;
+  queueStop(); toast('匹配已结束：' + errCN(e));
+}
+async function queuePoll(q) {
+  if (NET.queue !== q) return;
+  try {
+    q.request = backendCall('mm_poll');
+    const data = await q.request;
+    if (NET.queue !== q) return;
+    if (data.status === 'matched') {
+      queueStop();
+      roomJoin(data.code, data.host, { pair: data.pair, peer: data.peer }); return;
+    }
+    if (data.status === 'idle') throw new Error('排队已超时，请重新匹配');
+    q.timer = setTimeout(() => queuePoll(q), 1600);
+  } catch (e) { queueError(q, e); }
 }
 function modal(html) { const el = $('#modal'); if (!el) return; el.innerHTML = `<div class="ibox">${html}</div>`; el.hidden = false; const b = el.querySelector('.primary'); b && b.focus({ preventScroll: true }); }
 function modalClose() { const el = $('#modal'); if (el) el.hidden = true; }
@@ -4031,158 +4210,392 @@ function showInvite() {
 }
 function hideInvite() { if (NET.invite) modalClose(); NET.invite = null; }
 function lsAskQuit() {
-  modal(`<div><b>离开这场联机对战？</b><p>现在离开算你认输。</p></div><div class="ibtn"><button class="btn" id="quitNo">继续对战</button><button class="btn primary" id="quitYes">认输离开</button></div>`);
+  modal('<div><b>离开这场联机对战？</b><p>现在离开会结束本场。</p></div><div class="ibtn"><button class="btn" id="quitNo">继续对战</button><button class="btn primary" id="quitYes">认输离开</button></div>');
 }
 function lsQuit() {
-  if (!LS.on) return; roomSend('quit');
-  const me = G.f[LS.me], op = G.f[1 - LS.me]; op.wins = Math.max(op.wins, me.wins + 1); G.rs = 'RS_KO'; endMatch();
+  if (!LS.on) return;
+  LS.quit = true;
+  lsForfeit(1 - LS.me);
 }
 
 /* ---------- 房间 ---------- */
-function roomJoin(code, host, spar) {
+function roomJoin(code, host, match = null, recovering = false) {
   if (ACC.state !== 'in') { go('PG_ACCOUNT'); return Promise.resolve(false); }
-  roomLeave(true);
+  if (!recovering) {
+    const saved = lsSaved();
+    if (saved?.code === code) return lsRecover(saved);
+  }
+  queueStop();
+  roomLeave(true, recovering);
   lobbyJoin();
-  Object.assign(ROOM, { code, host, peer: null, ready: [false, false], rtt: [], joinedAt: Date.now(), spar: !!spar, rounds: CFG.ROUNDS_TO_WIN });
+  Object.assign(ROOM, { code, host, match, joinedAt: Date.now(), spar: !!match?.spar, rounds: Math.min(3, Math.max(1, CFG.ROUNDS_TO_WIN | 0)) });
   const uid = ACC.user.id;
+  const topic = match?.pair ? 'duanlian-rated-' + match.pair : 'duanlian-room-' + code;
   return new Promise(resolve => {
-    let done = false; const finish = ok => { if (!done) { done = true; resolve(ok); } };
-    const ch = ACC.sb.channel('duanlian-room-' + code, { config: { presence: { key: uid }, broadcast: { self: false, ack: false } } });
+    let joined = false;
+    const ch = ACC.sb.channel(topic, { config: { presence: { key: uid }, broadcast: { self: false } } });
     ROOM.ch = ch;
-    ch.on('presence', { event: 'sync' }, () => roomPresence())
-      .on('broadcast', { event: 'm' }, ({ payload }) => roomMsg(payload))
-      .on('broadcast', { event: 'in' }, ({ payload }) => lsRecv(payload))
+    const giveUp = () => {
+      if (ROOM.ch === ch && !joined) { toast('连接房间失败，请检查网络'); roomLeave(true, recovering); }
+      resolve(false);
+    };
+    const timer = setTimeout(giveUp, 7500);
+    ch.on('presence', { event: 'sync' }, () => { if (ROOM.ch === ch) roomPresence(); })
+      .on('broadcast', { event: 'm' }, ({ payload }) => { if (ROOM.ch === ch) roomMsg(payload); })
       .subscribe(async st => {
+        if (ROOM.ch !== ch) { clearTimeout(timer); resolve(false); return; }
         if (st === 'SUBSCRIBED') {
-          await ch.track({ ...myInfo(), host, t: ROOM.joinedAt });
-          lobbySetStatus('room'); G.mode = 'online';
-          if (host) { G.sel.p1 = G.sel.p1 || 'CH_JIN'; } else { G.sel.p2 = G.sel.p2 || 'CH_LAN'; }
-          go('PG_SELECT'); finish(true);
-          if (!host) setTimeout(() => { if (ROOM.ch === ch && !ROOM.peer) { toast(`没找到房间 ${code}，请确认房间号`); roomLeave(); go('PG_ONLINE'); } }, 6000);
-        } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { toast('连接房间失败，请检查网络'); roomLeave(); finish(false); }
+          await ch.track({ ...myInfo(), host, t: ROOM.joinedAt }).catch(() => {});
+          if (ROOM.ch !== ch || joined) return;
+          joined = true; clearTimeout(timer); lobbySetStatus('room');
+          G.mode = 'online'; go('PG_SELECT'); resolve(true);
+          if ((!host || match?.pair) && !recovering) setTimeout(() => {
+            if (ROOM.ch === ch && !ROOM.peer && !LS.on) { toast(`没找到房间 ${code}，请确认房间号`); roomLeave(); go('PG_ONLINE'); }
+          }, 6500);
+        } else if (!joined && (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT')) { clearTimeout(timer); giveUp(); }
       });
-    clearInterval(ROOM.pingT);
-    ROOM.pingT = setInterval(() => { if (ROOM.peer && !LS.on) roomSend('ping', { t: performance.now() }); }, 2000);
+    ROOM.pulse = setInterval(roomPulse, 500);
   });
 }
-function roomSend(k, d = {}) { if (ROOM.ch) ROOM.ch.send({ type: 'broadcast', event: 'm', payload: { k, ...d } }).catch(() => {}); }
+function roomSend(k, d = {}) {
+  const room = ROOM.host && (k === 'sel' || k === 'ready') ? { room: { spar: ROOM.spar, rounds: ROOM.rounds } } : null;
+  if (ROOM.ch) ROOM.ch.send({ type: 'broadcast', event: 'm', payload: { k, ...d, ...room, uid: ACC.user?.id } }).catch(() => {});
+}
 function roomPresence() {
-  if (!ROOM.ch) return;
-  const uid = ACC.user.id, list = Object.values(ROOM.ch.presenceState()).map(a => a[a.length - 1]).filter(m => m && m.uid);
-  const hostM = list.find(m => m.host && m.uid !== uid), guests = list.filter(m => !m.host).sort((a, b) => a.t - b.t || (a.uid < b.uid ? -1 : 1));
-  let peer = null;
-  if (ROOM.host) peer = guests[0] || null;
-  else {
-    if (guests.length > 1 && guests[0].uid !== uid && guests.some(g => g.uid === uid)) { toast('房间已满'); roomLeave(); go('PG_ONLINE'); return; }
-    peer = hostM || null;
-  }
-  if (peer && (!ROOM.peer || ROOM.peer.uid !== peer.uid)) {
+  const uid = ACC.user.id;
+  const others = Object.entries(ROOM.ch.presenceState()).filter(([key]) => key !== uid)
+    .map(([, list]) => list[list.length - 1]).filter(m => m?.uid && m.host !== ROOM.host);
+  const expected = LS.on ? LS.peer.uid : ROOM.match?.peer;
+  const peer = others.filter(m => !expected || m.uid === expected).sort((a, b) => a.t - b.t || a.uid.localeCompare(b.uid))[0];
+  if (LS.on) return; // The private input channel, rather than selection presence, controls the reconnect window.
+  if (peer && ROOM.peer?.uid !== peer.uid) {
     ROOM.peer = peer; ROOM.ready = [false, false]; NET.pending = null;
-    if (ROOM.host) roomSend('sel', { sel: { p1: G.sel.p1, g1: G.sel.g1, a1: G.sel.a1, stage: G.sel.stage }, spar: ROOM.spar, rounds: ROOM.rounds });
-    else roomSend('sel', { sel: { p2: G.sel.p2, g2: G.sel.g2, a2: G.sel.a2 } });
+    roomSend('sel', { sel: mySelection() });
     SFX.play('ui'); if (G.page === 'PG_SELECT') buildSelect(); lobbyTrack();
   } else if (!peer && ROOM.peer) { roomPeerLeft(); lobbyTrack(); }
 }
 function roomPeerLeft() {
-  const name = ROOM.peer ? ROOM.peer.nick : '对手'; ROOM.peer = null; ROOM.ready = [false, false];
-  if (LS.on) { toast(`${name} 断线了，本场判你获胜`); lsForfeit(); return; }
-  if (G.mode !== 'online') return;
-  if (G.page === 'PG_SELECT') { toast(`${name} 离开了房间`); if (!ROOM.host) { roomLeave(); go('PG_ONLINE'); } else buildSelect(); }
-  else if (G.page === 'PG_RESULT') toast(`${name} 离开了房间`);
+  if (LS.on || !ROOM.peer) return;
+  const name = ROOM.peer.nick; ROOM.peer = null; ROOM.ready = [false, false];
+  if (G.page === 'PG_SELECT') {
+    toast(`${name} 离开了房间`);
+    if (!ROOM.host || ROOM.match?.pair) { roomLeave(); go('PG_ONLINE'); } else buildSelect();
+  } else if (G.page === 'PG_RESULT') toast(`${name} 离开了房间`);
 }
-function roomLeave(silent) {
-  clearInterval(ROOM.pingT);
-  if (ROOM.ch) { if (!silent) roomSend('bye'); const ch = ROOM.ch; ROOM.ch = null; try { ACC.sb.removeChannel(ch); } catch (e) {} }
-  Object.assign(ROOM, { code: '', host: false, peer: null, ready: [false, false], rtt: [] });
-  if (LS.on) lsStop();
-  if (NET.lobby) lobbySetStatus('idle');
+function roomLeave(silent, keepJournal = false) {
+  clearInterval(ROOM.pulse);
+  if (ROOM.ch) {
+    if (!silent) roomSend('bye');
+    const ch = ROOM.ch; ROOM.ch = null; ACC.sb.removeChannel(ch);
+  }
+  lsDispose(keepJournal);
+  Object.assign(ROOM, { code: '', host: false, match: null, peer: null, ready: [false, false], rtt: [], launch: null, accepting: null, pingAt: 0, spar: false, rounds: 2 });
+  NET.pending = null;
+  if (NET.status === 'room') lobbySetStatus('idle');
 }
 const mySlots = () => ROOM.host ? ['p1', 'g1', 'a1', 'stage'] : ['p2', 'g2', 'a2'];
+const mySelection = () => Object.fromEntries(mySlots().map(k => [k, G.sel[k]]));
+const PICK_OPTIONS = { p1: CHAR, p2: CHAR, g1: GEAR_BY, g2: GEAR_BY, a1: AS_BY, a2: AS_BY, stage: Object.fromEntries(STAGES.map(s => [s.id, true])) };
 function roomMsg(m) {
-  if (!m || !m.k) return;
-  if (m.k === 'sel') { const ok = ROOM.host ? ['p2', 'g2', 'a2'] : ['p1', 'g1', 'a1', 'stage']; for (const k of ok) if (m.sel[k]) G.sel[k] = m.sel[k]; if (!ROOM.host && 'spar' in m) { ROOM.spar = !!m.spar; ROOM.rounds = m.rounds || ROOM.rounds; } ROOM.ready[ROOM.host ? 1 : 0] = false; if (G.page === 'PG_SELECT' && G.mode === 'online') buildSelect(); }
-  else if (m.k === 'ready') { ROOM.ready[ROOM.host ? 1 : 0] = !!m.v; if (G.page === 'PG_SELECT') buildSelect(); roomMaybeStart(); }
-  else if (m.k === 'ping') roomSend('pong', { t: m.t });
-  else if (m.k === 'pong') { ROOM.rtt.push(performance.now() - m.t); if (ROOM.rtt.length > 7) ROOM.rtt.shift(); if (G.page === 'PG_SELECT' && G.mode === 'online') { const s = $('#selMode'); if (s) s.textContent = roomTitle(); } }
-  else if (m.k === 'start' && !ROOM.host) lsStart(m);
-  else if (m.k === 'bye') { roomPeerLeft(); }
-  else if (m.k === 'again') { if (G.page === 'PG_RESULT') toast(`${ROOM.peer ? ROOM.peer.nick : '对手'} 想再来一局`); }
-  else if (m.k === 'quit' && LS.on) { toast(`${ROOM.peer ? ROOM.peer.nick : '对手'} 认输离开了`); lsForfeit(); }
-  else if (m.k === 'timeout' && LS.on) { const me = G.f[LS.me], op = G.f[1 - LS.me]; op.wins = Math.max(op.wins, me.wins + 1); G.rs = 'RS_KO'; toast('你断开太久，本场判负'); endMatch(); }
-  else if (m.k === 'hash') lsHashCheck(m.f, m.h, true);
+  if (!m?.uid || m.uid !== ROOM.peer?.uid) return;
+  if (m.k === 'sel' || m.k === 'ready') {
+    if (G.page !== 'PG_SELECT') return;
+    let changed = false;
+    for (const k of Object.keys(PICK_OPTIONS)) {
+      const v = m.sel?.[k];
+      if (!mySlots().includes(k) && Object.hasOwn(PICK_OPTIONS[k], v) && G.sel[k] !== v) { G.sel[k] = v; changed = true; }
+    }
+    if (!ROOM.host && m.room && typeof m.room === 'object') {   // 房主定的切磋设置
+      const spar = m.room.spar === true, rounds = [1, 2, 3].includes(m.room.rounds) ? m.room.rounds : ROOM.rounds;
+      if (spar !== ROOM.spar || rounds !== ROOM.rounds) { ROOM.spar = spar; ROOM.rounds = rounds; ROOM.ready[1] = false; changed = true; }
+    }
+    const i = ROOM.host ? 1 : 0, ready = m.k === 'ready' && m.v === true;
+    if (ROOM.ready[i] !== ready || changed) { ROOM.ready[i] = ready; buildSelect(); }
+    roomMaybeStart();
+  } else if (m.k === 'ping') roomSend('pong', { t: m.t });
+  else if (m.k === 'pong' && Number.isFinite(m.t)) {
+    ROOM.rtt.push(Math.max(0, performance.now() - m.t)); if (ROOM.rtt.length > 7) ROOM.rtt.shift();
+    if (G.page === 'PG_SELECT') $('#selMode').textContent = roomTitle();
+  } else if (m.k === 'start') roomAcceptStart(m.id);
+  else if (m.k === 'bye') roomPeerLeft();
+  else if (m.k === 'again' && G.page === 'PG_RESULT') toast(`${ROOM.peer.nick} 想再来一局`);
+}
+function roomPulse() {
+  if (!ROOM.peer) return;
+  if (LS.on) {
+    if (ROOM.host && ROOM.launch?.id === LS.id && !LS.peerHeard) roomSend('start', { id: LS.id });
+    return;
+  }
+  if (G.page !== 'PG_SELECT') return;
+  if (ROOM.ready[ROOM.host ? 0 : 1]) roomSend('ready', { v: true, sel: mySelection() });
+  if (performance.now() >= ROOM.pingAt) {
+    ROOM.pingAt = performance.now() + 2000; roomSend('ping', { t: performance.now() });
+    if (!ROOM.ready[ROOM.host ? 0 : 1]) roomSend('sel', { sel: mySelection() });   // 补发选择，防止刚进房时的消息被对方丢掉
+  }
 }
 const roomTitle = () => `${ROOM.spar ? `好友切磋 · ${['', '一局定胜负', '三局两胜', '五局三胜'][ROOM.rounds] || ''}` : '联机'} · 房间 ${ROOM.code}${ROOM.rtt.length ? ` · 延迟 ${Math.round(median(ROOM.rtt))} ms` : ''}`;
 function roomToggleReady() {
   if (!ROOM.peer) { toast('对手还没进房间'); return; }
-  const i = ROOM.host ? 0 : 1; ROOM.ready[i] = !ROOM.ready[i]; roomSend('ready', { v: ROOM.ready[i] }); buildSelect(); roomMaybeStart();
+  const i = ROOM.host ? 0 : 1; ROOM.ready[i] = !ROOM.ready[i];
+  roomSend('ready', { v: ROOM.ready[i], sel: mySelection() }); buildSelect(); roomMaybeStart();
 }
-const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'TOUCH_LIFT', 'AI_LEVEL']);
-function roomMaybeStart() {
-  if (!ROOM.host || !ROOM.ready[0] || !ROOM.ready[1] || LS.on) return;
+async function roomMaybeStart() {
+  if (!ROOM.host || !ROOM.peer || !ROOM.ready.every(Boolean) || ROOM.launch || LS.on) return;
+  const { ch, code, peer } = ROOM, id = crypto.randomUUID();
   const rtt = ROOM.rtt.length ? median(ROOM.rtt) : 150;
-  const D = Math.max(3, Math.min(14, Math.ceil(rtt / 2 / 16.67) + 2));
-  const cfg = {}; for (const k in CFG) if (!NET_CFG_SKIP.has(k) && (typeof CFG[k] !== 'object' || CFG[k] === null)) cfg[k] = CFG[k];
+  const D = Math.max(7, Math.min(20, Math.ceil(rtt / 33.334) + 5));
+  const cfg = Object.fromEntries(Object.entries(CFG).filter(([k, v]) => !NET_CFG_SKIP.has(k) && typeof v !== 'object'));
   if (ROOM.spar) cfg.ROUNDS_TO_WIN = ROOM.rounds;
-  const msg = { seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg, spar: !!ROOM.spar };
-  roomSend('start', msg); lsStart(msg);
+  const setup = { seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg, spar: !!ROOM.spar };
+  const launch = { id }; ROOM.launch = launch;
+  try {
+    await backendCall('online_open', { p_game: id, p_code: code, p_guest: peer.uid, p_setup: setup });
+    if (ROOM.ch !== ch || ROOM.peer?.uid !== peer.uid || !ROOM.ready.every(Boolean)) return;
+    roomSend('start', { id }); lsStart(id, setup);
+  } catch (e) {
+    if (ROOM.ch === ch) { ROOM.ready[0] = false; buildSelect(); toast('开战失败：' + errCN(e)); }
+  } finally {
+    if (ROOM.launch === launch && LS.id !== id) ROOM.launch = null;
+  }
+}
+function validSetup(m) {
+  return m && Number.isInteger(m.seed) && Number.isInteger(m.D) && m.D >= 7 && m.D <= 20
+    && Object.entries(PICK_OPTIONS).every(([k, options]) => Object.hasOwn(options, m.sel?.[k]))
+    && m.cfg && typeof m.cfg === 'object' && (m.spar === undefined || typeof m.spar === 'boolean');
+}
+async function roomAcceptStart(id) {
+  if (ROOM.host || !ROOM.ready[1] || G.page !== 'PG_SELECT' || LS.on || ROOM.accepting || LS.id === id || !GAME_UUID.test(id)) return;
+  const { ch, peer } = ROOM;
+  ROOM.accepting = id;
+  try {
+    const game = await backendCall('online_game', { p_game: id });
+    if (ROOM.ch === ch && ROOM.ready[1] && game?.guest === ACC.user?.id && game.host === peer.uid
+        && game.code === ROOM.code && validSetup(game.setup) && !!game.setup.spar === ROOM.spar) lsStart(id, game.setup);
+  } catch (e) { /* The host repeats the announcement until the guest joins. */ }
+  finally { if (ROOM.accepting === id) ROOM.accepting = null; }
 }
 
-/* ---------- 帧同步（lockstep）：双方只交换按键，各自用同样的种子和输入推演，结果完全一致 ---------- */
+/* ---------- 帧同步：固定节拍批量发送，按连续帧确认，回放从同一种子开始 ---------- */
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function lsStart(m) {
-  ROOM.ready = [false, false]; modalClose(); SERIAL = 0;
-  LS = { on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc: new Map(), rem: new Map(), remTop: m.D - 1, ack: -1, tick: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: false, cfgBak: { ...CFG } };
-  for (let f = 0; f < m.D; f++) { LS.loc.set(f, 0); LS.rem.set(f, 0); }
-  Object.assign(CFG, m.cfg); G.sel = { ...G.sel, ...m.sel }; G.rngSeed = m.seed;
-  const s = m.sel; G.frame = 0;
-  startMatch({ mode: 'online', p1: s.p1, p2: s.p2, g1: s.g1, g2: s.g2, a1: s.a1, a2: s.a2, stage: s.stage });
-  G.rng = mulberry32(m.seed); acc = 0; G.spar = !!m.spar;
+function lsPack(inputs, start, end) {
+  let bytes = '';
+  for (let f = start; f < end; f++) {
+    const v = inputs[f];
+    bytes += String.fromCharCode(v & 255, (v >>> 8) & 255, v >>> 16);
+  }
+  return btoa(bytes);
 }
-function lsStop() { if (!LS.on) return; LS.on = false; if (LS.cfgBak) { const keep = {}; for (const k of NET_CFG_SKIP) keep[k] = CFG[k]; Object.assign(CFG, LS.cfgBak, keep); } }
-function lsForfeit() {
-  if (!LS.on) return; const me = G.f[LS.me], op = G.f[1 - LS.me];
-  me.wins = Math.max(me.wins, op.wins + 1); G.rs = 'RS_KO'; endMatch();
+function lsUnpack(b64, max) {
+  if (typeof b64 !== 'string' || b64.length > max * 4 || b64.length % 4) return null;
+  try {
+    const bytes = atob(b64), inputs = [];
+    if (bytes.length % 3) return null;
+    for (let i = 0; i < bytes.length; i += 3) inputs.push(bytes.charCodeAt(i) | bytes.charCodeAt(i + 1) << 8 | bytes.charCodeAt(i + 2) << 16);
+    return inputs;
+  } catch (e) { return null; }
+}
+const lsJournalKey = uid => 'duanlian.play.' + uid;
+const lsChunkKey = (saved, side, chunk) => `${lsJournalKey(saved.uid)}.${saved.id}.${side}.${chunk}`;
+function lsJournalDrop(saved) {
+  if (!saved) return;
+  for (const side of [0, 1]) {
+    for (let chunk = 0; chunk < Math.ceil(saved.counts[side] / LS_CHUNK); chunk++) storeWrite(localStorage, lsChunkKey(saved, side, chunk), null);
+  }
+  storeWrite(localStorage, lsJournalKey(saved.uid), null);
+  if (storeRead(sessionStorage, 'duanlian.active', null) === saved.id) storeWrite(sessionStorage, 'duanlian.active', null);
+}
+function lsSaved() {
+  const uid = ACC.user?.id;
+  if (!uid) return null;
+  const saved = storeRead(localStorage, lsJournalKey(uid), null);
+  if (!saved || !GAME_UUID.test(saved.id) || saved.uid !== uid || !Array.isArray(saved.counts)) return null;
+  if (Date.now() - saved.at <= LS_REJOIN_MS) return saved;
+  lsJournalDrop(saved); return null;
+}
+function lsJournalSave() {
+  const journal = LS.journal;
+  if (!journal || LS.replaying) return;
+  const inputs = [LS.loc, LS.rem], counts = [LS.loc.length, LS.remTop + 1];
+  // Acknowledged remote inputs and transmitted local inputs must survive a reload.
+  for (const side of [0, 1]) {
+    if (counts[side] === journal.counts[side]) continue;
+    for (let start = Math.floor(journal.counts[side] / LS_CHUNK) * LS_CHUNK; start < counts[side]; start += LS_CHUNK) {
+      const chunk = lsPack(inputs[side], start, Math.min(start + LS_CHUNK, counts[side]));
+      if (!storeWrite(localStorage, lsChunkKey(journal, side, start / LS_CHUNK), chunk)) return;
+    }
+  }
+  const saved = { ...journal, counts, frame: LS.frame, at: Date.now(), desync: LS.desync };
+  if (storeWrite(localStorage, lsJournalKey(journal.uid), saved)) {
+    LS.journal = saved;
+    storeWrite(sessionStorage, 'duanlian.active', saved.id);
+  }
+}
+function lsLoadInputs(saved, side) {
+  const n = saved.counts[side], out = [];
+  if (!Number.isInteger(n) || n < saved.frame || n > LS_MAX_FRAME + 32) return null;
+  for (let i = 0; i < n; i += LS_CHUNK) {
+    const row = lsUnpack(storeRead(localStorage, lsChunkKey(saved, side, i / LS_CHUNK), null), LS_CHUNK);
+    if (!row || row.length < Math.min(LS_CHUNK, n - i)) return null;
+    out.push(...row.slice(0, Math.min(LS_CHUNK, n - i)));
+  }
+  return out;
+}
+async function lsRecover(saved = lsSaved()) {
+  if (!saved || LS.on) return false;
+  if (G.page === 'PG_TITLE' && storeRead(sessionStorage, 'duanlian.active', null) !== saved.id) return false;
+  const uid = ACC.user.id;
+  try {
+    const game = await backendCall('online_game', { p_game: saved.id });
+    if (!game || !validSetup(game.setup) || game.code !== saved.code || ACC.user?.id !== uid) return false;
+    const host = game.host === uid, peerId = host ? game.guest : game.host;
+    if (saved.peer.uid !== peerId || (!host && game.guest !== uid)
+        || !Number.isInteger(saved.frame) || saved.frame < 0 || saved.frame > LS_MAX_FRAME) return false;
+    const inputs = [lsLoadInputs(saved, 0), lsLoadInputs(saved, 1)];
+    if (inputs.some(x => !x) || Date.now() - saved.at > LS_REJOIN_MS) return false;
+    if (!await roomJoin(saved.code, host, saved.match, true) || Date.now() - saved.at > LS_REJOIN_MS) return false;
+    ROOM.peer = saved.peer;
+    lsStart(saved.id, game.setup, saved, inputs);
+    toast('正在恢复对战…'); return true;
+  } catch (e) { toast('暂时无法恢复，请重新加入房间'); return false; }
+}
+function lsStart(id, m, saved = null, inputs = null) {
+  lsDispose(!!saved);
+  ROOM.ready = [false, false]; modalClose(); SERIAL = 0;
+  const loc = inputs ? inputs[0] : Array(m.D).fill(0), rem = inputs ? inputs[1] : Array(m.D).fill(0);
+  LS = {
+    id, on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc, rem, remTop: rem.length - 1, ack: -1,
+    startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
+    cfgBak: { ...CFG }, journal: saved || { uid: ACC.user.id, id, code: ROOM.code, match: ROOM.match, peer: ROOM.peer, counts: [0, 0] },
+    replaying: !!saved, sent: 0
+  };
+  for (const [k, v] of Object.entries(m.cfg)) {
+    if (Object.hasOwn(CFG, k) && !NET_CFG_SKIP.has(k) && typeof v === typeof CFG[k]
+        && (typeof v === 'boolean' || (Number.isFinite(v) && Math.abs(v) <= 1000000))) CFG[k] = v;
+  }
+  const s = m.sel; G.sel = { ...G.sel, ...s }; G.rngSeed = m.seed; G.frame = 0;
+  if (saved) { CFG.SOUND = false; CFG.VIBRATE = false; }
+  startMatch({ mode: 'online', p1: s.p1, p2: s.p2, g1: s.g1, g2: s.g2, a1: s.a1, a2: s.a2, stage: s.stage, seed: m.seed });
+  G.spar = !!m.spar;
+  if (saved) {
+    while (LS.on && LS.frame < saved.frame) lsAdvance();
+    LS.replaying = false;
+    LS.lastProgress = performance.now();
+    CFG.SOUND = LS.cfgBak.SOUND; CFG.VIBRATE = LS.cfgBak.VIBRATE;
+  }
+  acc = 0;
+  lsJournalSave(); lsConnect(LS);
+}
+async function lsConnect(state) {
+  try { await ACC.sb.realtime.setAuth(); } catch (e) { /* The client also supplies the current JWT on join. */ }
+  if (LS !== state || (!state.on && !state.endedAt) || state.ch) return;
+  const ch = ACC.sb.channel('duanlian-game:' + state.id, { config: { private: true, broadcast: { self: false, ack: false } } });
+  state.ch = ch;
+  ch.on('broadcast', { event: 'in' }, ({ payload }) => { if (LS === state && state.ch === ch) lsRecv(payload); })
+    .subscribe(status => {
+      if (LS !== state || state.ch !== ch) return;
+      state.subscribed = status === 'SUBSCRIBED';
+      if (status === 'CLOSED' && state.on) {
+        state.ch = null;
+        setTimeout(() => lsConnect(state), 700);
+      }
+    });
+}
+function lsStop() {
+  if (!LS.on) return;
+  LS.on = false; LS.endedAt = performance.now();
+  const keep = Object.fromEntries([...NET_CFG_SKIP].map(k => [k, CFG[k]]));
+  Object.assign(CFG, LS.cfgBak, keep);
+  if (LS.unverified) { lsJournalDrop(LS.journal); LS.journal = null; }
+  else lsJournalSave();
+}
+function lsDispose(keepJournal = false) {
+  if (LS.on) lsStop();
+  const ch = LS.ch; LS.ch = null;
+  if (ch) ACC.sb.removeChannel(ch);
+  if (LS.journal && !keepJournal) { lsJournalDrop(LS.journal); LS.journal = null; }
+  LS.endedAt = 0;
+}
+function lsForfeit(winner) {
+  if (!LS.on) return;
+  LS.unverified = true;
+  if (winner !== null) {
+    const me = G.f[winner], op = G.f[1 - winner];
+    me.wins = Math.max(me.wins, op.wins + 1);
+  } else {
+    const rounds = Math.max(...G.f.map(f => f.wins));
+    for (const f of G.f) f.wins = rounds;
+  }
+  G.rs = 'RS_KO'; endMatch();
 }
 function lsRecv(p) {
-  if (!LS.on || !p) return;
-  for (let i = 0; i < p.b.length; i++) if (!LS.rem.has(p.f + i)) LS.rem.set(p.f + i, p.b[i]);
-  while (LS.rem.has(LS.remTop + 1)) LS.remTop++;
-  if (p.a > LS.ack) LS.ack = p.a;
+  if ((!LS.on && !LS.endedAt) || !p || !Number.isInteger(p.f) || p.f < 0
+      || p.f > Math.min(LS.remTop + 1, LS_MAX_FRAME + 20)) return;
+  const inputs = lsUnpack(p.b, LS_BATCH);
+  if (!inputs) return;
+  LS.peerHeard = true;
+  if (p.done === true) LS.peerDone = true;
+  if (p.quit === true && LS.on) { toast('对手认输离开了'); lsForfeit(LS.me); return; }
+  for (let i = 0; i < inputs.length; i++) LS.rem[p.f + i] ??= inputs[i];
+  while (LS.rem[LS.remTop + 1] !== undefined) LS.remTop++;
+  if (Number.isInteger(p.a) && p.a >= LS.ack && p.a < LS.loc.length) LS.ack = p.a;
+  if (Array.isArray(p.h) && p.h.length <= 4) for (const pair of p.h) {
+    if (!Array.isArray(pair)) continue;
+    const [f, h] = pair;
+    if (Number.isInteger(f) && f > 0 && f % 60 === 0 && Math.abs(f - LS.frame) <= 240 && Number.isInteger(h) && h >= 0 && h <= 0xffffffff) {
+      LS.remHash.set(f, h); lsHashCheck(f);
+    }
+  }
 }
-function lsSend(force) {
-  if (!ROOM.ch) return;
-  if (!force && ++LS.tick < 2) return; LS.tick = 0;
-  let top = LS.frame + LS.D; while (!LS.loc.has(top) && top > 0) top--;
-  const from = Math.max(LS.ack + 1, 0), to = Math.min(top, from + 59); if (from > to) return;   // 没确认收到的帧一直重发
-  const b = []; for (let f = from; f <= to; f++) b.push(LS.loc.get(f) || 0);
-  ROOM.ch.send({ type: 'broadcast', event: 'in', payload: { f: from, b, a: LS.remTop } }).catch(() => {});
+function lsSend(now) {
+  if (!LS.subscribed || now < LS.nextSend) return;
+  LS.nextSend = Math.max(LS.nextSend + LS_SEND_MS, now);
+  if (LS.nextSend === now) LS.nextSend += LS_SEND_MS;
+  lsJournalSave();
+  const from = LS.ack + 1, end = Math.min(from + LS_BATCH, LS.loc.length), hashes = [];
+  for (let f = Math.floor(LS.frame / 60) * 60; f > 0 && hashes.length < 4; f -= 60) if (LS.hash.has(f)) hashes.push([f, LS.hash.get(f)]);
+  LS.sent++;
+  LS.ch.send({ type: 'broadcast', event: 'in', payload: { f: from, a: LS.remTop, b: lsPack(LS.loc, from, end), h: hashes,
+    done: !LS.on, quit: !!LS.quit } }).catch(() => {});
 }
 const lsHashOf = () => { let h = 2166136261; const mix = v => { h ^= Math.round(v * 16) | 0; h = Math.imul(h, 16777619); };
   for (const f of G.f) { mix(f.x); mix(f.y); mix(f.z); mix(f.hp); mix(f.grd); mix(f.brk); mix(f.wins); mix(f.state.length); mix(f.chain ? f.chain.hits * 1000 + f.chain.mom : -1); }
   mix(G.timer); mix(G.round); return h >>> 0; };
-function lsHashCheck(f, h, remote) {
-  if (remote) LS.remHash.set(f, h); else LS.hash.set(f, h);
-  const a = LS.hash.get(f), b = LS.remHash.get(f);
-  if (a != null && b != null) { LS.hash.delete(f); LS.remHash.delete(f); if (a !== b && !LS.desync) { LS.desync = true; console.warn('联机画面不同步 @', f); toast('联机同步出现偏差，本场结束后请重开一局'); } }
+function lsHashCheck(f) {
+  if (LS.hash.has(f) && LS.remHash.has(f) && LS.hash.get(f) !== LS.remHash.get(f) && !LS.desync) {
+    LS.desync = true; console.warn('联机画面不同步 @', f); toast('联机同步出现偏差，本场结束后请重开一局');
+  }
 }
-/* 每个渲染帧调用：凑齐双方输入才推进一帧 */
-function lsTick(dt) {
+function lsAdvance() {
+  const a = LS.loc[LS.frame], b = LS.rem[LS.frame], ins = LS.me === 0 ? [a, b] : [b, a];
+  G.frame = ++LS.frame; simStep(decIn(ins[0]), decIn(ins[1]));
+  if (LS.frame % 60 === 0 && LS.on) {
+    LS.hash.set(LS.frame, lsHashOf()); lsHashCheck(LS.frame);
+    LS.hash.delete(LS.frame - 300); LS.remHash.delete(LS.frame - 300);
+  }
+}
+function lsTick(now) {
   let n = 0;
   while (acc >= 1 && n < 6) {
     const tf = LS.frame + LS.D;
-    if (!LS.loc.has(tf)) { LS.loc.set(tf, encIn(Input.read('P1'))); Input.endFrame(); }
-    if (!LS.rem.has(LS.frame)) break;
-    const a = LS.loc.get(LS.frame), r = LS.rem.get(LS.frame);
-    const ins = LS.me === 0 ? [a, r] : [r, a];
-    G.frame++; simStep(decIn(ins[0]), decIn(ins[1]));
+    if (LS.loc[tf] === undefined) { LS.loc[tf] = encIn(Input.read('P1')); Input.endFrame(); }
+    if (LS.rem[LS.frame] === undefined) break;
+    lsAdvance();
     if (!LS.on) return;
-    if (LS.frame % 60 === 0) { const h = lsHashOf(); lsHashCheck(LS.frame, h, false); roomSend('hash', { f: LS.frame, h }); }
-    if (LS.frame - 90 < LS.ack) LS.loc.delete(LS.frame - 90); LS.rem.delete(LS.frame - 90);
-    LS.frame++; acc -= 1; n++; LS.wait = 0;
+    acc -= 1; n++;
   }
-  if (n === 0 && acc >= 1) { LS.wait += dt; if (LS.wait > 20000) { roomSend('timeout'); toast('对手长时间没有响应，本场判你获胜'); lsForfeit(); return; } }
+  if (n) LS.lastProgress = now;
+  LS.wait = now - LS.lastProgress;
+  if (LS.wait >= LS_REJOIN_MS || LS.frame >= LS_MAX_FRAME) {
+    toast('同步已超时，本场结束'); lsForfeit(null); return;
+  }
   if (acc > 6) acc = 6;
-  lsSend(false);
+  lsSend(now);
+}
+function lsTail(now) {
+  if (!LS.endedAt) return;
+  const elapsed = now - LS.endedAt;
+  if (elapsed >= (LS.peerDone ? 2000 : LS_REJOIN_MS)) lsDispose();
+  else lsSend(now);
 }
 /* 对战画面：标出自己、显示等待和延迟 */
 function lsHUD(c) {
@@ -4190,12 +4603,13 @@ function lsHUD(c) {
   const f = G.f[LS.me], t = G.camT, x = (f.x - t.cx) * t.z + W / 2, y = (f.y - 250 * f.ch.scale - t.fy) * t.z + t.fy - t.ly;
   c.save(); c.fillStyle = f.col; c.beginPath(); c.moveTo(x - 9, y - 12); c.lineTo(x + 9, y - 12); c.lineTo(x, y); c.closePath(); c.fill();
   c.font = `700 18px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; otxt(c, '你', x, y - 20); c.restore();
-  if (LS.wait > 400) { c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80); c.font = `700 26px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; c.fillText(`等待对手… ${Math.ceil(LS.wait / 1000)} 秒`, W / 2, H / 2 + 9); c.restore(); }
+  if (LS.wait > 450) { c.save(); c.fillStyle = 'rgba(10,8,7,.55)'; c.fillRect(0, H / 2 - 40, W, 80); c.font = `700 26px ${FU}`; c.textAlign = 'center'; c.fillStyle = BONE; c.fillText(`等待同步… ${Math.max(0, Math.ceil((LS_REJOIN_MS - LS.wait) / 1000))} 秒`, W / 2, H / 2 + 9); c.restore(); }
 }
 
 /* ---------- 联机大厅界面 ---------- */
 function buildOnline() {
   const B = $('#onBody'), sub = $('#onSub'); if (!B) return;
+  $('#onRank').hidden = !ACC.sb;
   if (ACC.state !== 'in') {
     sub.textContent = '';
     B.innerHTML = ACC.state === 'off' ? '<p>联机需要账户服务，作者还没开通。</p>' : `<p>联机对战需要先登录账户，对手会看到你的昵称、头像和称号。</p><div class="actions" style="justify-content:flex-start"><button class="btn primary" data-go="PG_ACCOUNT">去登录 / 注册</button></div>`;
@@ -4211,21 +4625,21 @@ function buildOnline() {
     <button class="btn" id="onCreate"${q ? ' disabled' : ''}>创建房间</button>
     <span class="join"><input id="onCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 位房间号"><button class="btn" id="onJoin"${q ? ' disabled' : ''}>加入房间</button></span>
   </div>
-  <p class="hint" id="onState">${q ? '正在找对手…有其他人点「快速匹配」就会自动配对' : '创建房间后把房间号发给好友，或者直接邀请下面的在线玩家。'}</p>
+  <p class="hint" id="onState">${q ? '正在按段位分找对手…等待越久，匹配范围越大' : '创建房间后把房间号发给好友，或者直接邀请下面的在线玩家。'}</p>
   <h3>在线玩家 <small class="mute" id="onCount"></small></h3><div class="plist" id="onList"></div>`;
   renderPlayers();
 }
 function renderPlayers() {
   const L = $('#onList'); if (!L) return;
-  const me = ACC.user.id, ms = NET.members.slice().sort((a, b) => (a.uid === me ? -1 : b.uid === me ? 1 : (b.wins || 0) - (a.wins || 0)));
+  const me = ACC.user.id, ms = NET.members.slice().sort((a, b) => (a.uid === me ? -1 : b.uid === me ? 1 : (b.rating || 0) - (a.rating || 0)));
   $('#onCount') && ($('#onCount').textContent = ms.length ? `${ms.length} 人` : '');
   const ST = { idle: '空闲', queue: '匹配中', room: '对战中' };
-  L.innerHTML = ms.length ? ms.map(m => `<div class="prow">${avHTML(m.avatar)}<div><b>${esc(m.nick)}</b>${m.title ? `<span class="ptitle">${esc(m.title)}</span>` : ''}<small>联机 ${m.wins || 0} 胜 / ${m.games || 0} 场 · ${ST[m.status] || ''}</small></div>
+  L.innerHTML = ms.length ? ms.map(m => `<div class="prow">${avHTML(m.avatar)}<div><b>${esc(m.nick)}</b>${m.title ? `<span class="ptitle">${esc(m.title)}</span>` : ''}<small>段位分 ${Number(m.rating) || 1000} · 联机 ${Number(m.wins) || 0} 胜 / ${Number(m.games) || 0} 场 · ${ST[m.status] || ''}</small></div>
     ${m.uid === me ? '<span class="mute">你</span>' : `<button class="btn" data-inv="${esc(m.uid)}"${m.status === 'room' ? ' disabled' : ''}>邀请</button>`}</div>`).join('') : '<p class="hint">正在连接大厅…</p>';
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.id === 'onQuick') { lobbySetStatus(NET.status === 'queue' ? 'idle' : 'queue'); return; }
+  if (b.id === 'onQuick') { if (NET.queue) queueStop(); else queueStart(); return; }
   if (b.id === 'onCreate') { roomJoin(String(1000 + Math.floor(Math.random() * 9000)), true); return; }
   if (b.id === 'onJoin') { const c = ($('#onCode').value || '').trim(); if (!/^\d{4}$/.test(c)) { toast('请输入 4 位数字房间号'); return; } roomJoin(c, false); return; }
   if (b.dataset.inv) {
@@ -4234,7 +4648,7 @@ document.addEventListener('click', e => {
     roomJoin(code, true).then(ok => { if (ok) { NET.pending = to.uid; lobbySend('invite', { to: to.uid, from: myInfo(), room: code }); toast(`已邀请 ${to.nick}，等待对方接受`); } });
     return;
   }
-  if (b.id === 'invYes') { const p = NET.invite; hideInvite(); if (p) { if (NET.status === 'queue') NET.status = 'idle'; lobbySend('reply', { to: p.from.uid, ok: true }); roomJoin(p.room, false, !!p.spar); } return; }
+  if (b.id === 'invYes') { const p = NET.invite; hideInvite(); if (p) { queueStop(); lobbySend('reply', { to: p.from.uid, ok: true }); roomJoin(p.room, false, { peer: p.from.uid, spar: p.spar === true }); } return; }
   if (b.id === 'invNo') { const p = NET.invite; hideInvite(); if (p) lobbySend('reply', { to: p.from.uid, ok: false }); return; }
   if (b.id === 'onBack') { go('PG_TITLE'); return; }
   if (b.id === 'quitNo') { modalClose(); return; }
@@ -4258,6 +4672,15 @@ async function frLoad() {
   frBadge(); if (G.page === 'PG_ONLINE') buildOnline();
 }
 const frOther = r => r.requester === ACC.user.id ? r.addressee : r.requester;
+/* 收到好友请求 / 同意的广播：重新读好友表，名字取自数据库（广播里的内容不可信） */
+async function frNotify(from, kind) {
+  if (typeof from !== 'string') return;
+  await frLoad();
+  const me = ACC.user?.id, r = NET.fr.rows.find(x => frOther(x) === from && (kind === 'fr' ? x.status === 'pending' && x.addressee === me : x.status === 'accepted'));
+  if (!r) return;
+  const p = NET.fr.prof[from]; SFX.play('ui');
+  toast(kind === 'fr' ? `${p ? p.nickname : '有人'} 想加你为好友` : `${p ? p.nickname : '对方'} 同意了你的好友请求`);
+}
 const frFriends = () => NET.fr.rows.filter(r => r.status === 'accepted');
 const frIncoming = () => NET.fr.rows.filter(r => r.status === 'pending' && r.addressee === ACC.user.id);
 const frOutgoing = () => NET.fr.rows.filter(r => r.status === 'pending' && r.requester === ACC.user.id);
@@ -4277,12 +4700,12 @@ async function frAdd(name) {
     if (ex && ex.addressee === ACC.user.id) { await frAccept(ex.id); return; }
     if (ex) { toast('已经发过请求了，等对方同意'); return; }
     const r = await ACC.sb.from('friendships').insert({ requester: ACC.user.id, addressee: p.id }).select().single(); if (r.error) throw r.error;
-    lobbySend('fr', { to: p.id, from: myInfo() }); toast(`已向 ${p.nickname} 发送好友请求`); const i = $('#frName'); if (i) i.value = ''; await frLoad();
+    lobbySend('fr', { to: p.id }); toast(`已向 ${p.nickname} 发送好友请求`); const i = $('#frName'); if (i) i.value = ''; await frLoad();
   } catch (e) { toast('加好友失败：' + errCN(e)); } finally { NET.fr.busy = false; }
 }
 async function frAccept(id) {
   const r = NET.fr.rows.find(x => x.id === id); if (!r) return;
-  try { const { error } = await ACC.sb.from('friendships').update({ status: 'accepted' }).eq('id', id); if (error) throw error; lobbySend('fra', { to: r.requester, from: myInfo() }); const p = NET.fr.prof[r.requester]; toast(`已和 ${p ? p.nickname : '对方'} 成为好友`); await frLoad(); }
+  try { const { error } = await ACC.sb.from('friendships').update({ status: 'accepted' }).eq('id', id); if (error) throw error; lobbySend('fra', { to: r.requester }); const p = NET.fr.prof[r.requester]; toast(`已和 ${p ? p.nickname : '对方'} 成为好友`); await frLoad(); }
   catch (e) { toast('操作失败：' + errCN(e)); }
 }
 async function frRemove(id, quiet) {
@@ -4301,7 +4724,7 @@ function frInvite(uid) {
   const send = code => { NET.pending = uid; lobbySend('invite', { to: uid, from: myInfo(), room: code, spar: true }); toast(`已邀请 ${to.nick} 切磋，等待对方接受`); };
   if (ROOM.ch && ROOM.host && !ROOM.peer) { send(ROOM.code); return; }
   const code = String(1000 + Math.floor(Math.random() * 9000));
-  roomJoin(code, true, true).then(ok => { if (ok) send(code); });
+  roomJoin(code, true, { spar: true }).then(ok => { if (ok) send(code); });
 }
 function frHTML() {
   if (!NET.fr.loaded) { frLoad(); return '<p class="hint">正在读取好友…</p>'; }
@@ -4316,7 +4739,7 @@ function frHTML() {
     ${inc.length ? `<h3>好友请求</h3><div class="plist fr">${inc.map(r => row(r.requester, `<button class="btn" data-frno="${r.id}">拒绝</button><button class="btn primary" data-frok="${r.id}">同意</button>`, '想加你为好友')).join('')}</div>` : ''}
     <h3>我的好友 <small class="mute">${fr.length ? `${fr.filter(x => x.s.on).length} / ${fr.length} 在线` : ''}</small></h3>
     <div class="plist fr">${fr.length ? fr.map(({ r, id, s }) => row(id,
-      (s.join ? `<button class="btn primary" data-frjoin="${esc(s.join)}"${busyMe ? ' disabled' : ''}>加入</button>` : s.on && s.m.status !== 'room' ? `<button class="btn primary" data-frinv="${esc(id)}"${busyMe ? ' disabled' : ''}>邀请切磋</button>` : '') + `<button class="btn ghost" data-frdel="${r.id}" title="删除好友">删除</button>`,
+      (s.join ? `<button class="btn primary" data-frjoin="${esc(s.join)}" data-frhost="${esc(id)}" data-frspar="${s.m.spar ? 1 : ''}"${busyMe ? ' disabled' : ''}>加入</button>` : s.on && s.m.status !== 'room' ? `<button class="btn primary" data-frinv="${esc(id)}"${busyMe ? ' disabled' : ''}>邀请切磋</button>` : '') + `<button class="btn ghost" data-frdel="${r.id}" title="删除好友">删除</button>`,
       `<i class="dot${s.on ? ' on' : ''}"></i>${s.t}`)).join('') : '<p class="hint">还没有好友。输入对方的账号名就能加。</p>'}</div>
     ${out.length ? `<h3>等待对方同意</h3><div class="plist">${out.map(r => row(r.addressee, `<button class="btn ghost" data-frdel="${r.id}">撤回</button>`, '已发送请求')).join('')}</div>` : ''}`;
 }
@@ -4338,9 +4761,9 @@ document.addEventListener('click', e => {
   if (b.dataset.frno) { frRemove(+b.dataset.frno, true); return; }
   if (b.dataset.frdel) { const r = NET.fr.rows.find(x => x.id === +b.dataset.frdel); const p = r && NET.fr.prof[frOther(r)]; if (r && r.status === 'accepted' && !confirm(`删除好友 ${p ? p.nickname : ''}？`)) return; frRemove(+b.dataset.frdel); return; }
   if (b.dataset.frinv) { frInvite(b.dataset.frinv); return; }
-  if (b.dataset.frjoin) { roomJoin(b.dataset.frjoin, false, true); return; }
-  if (b.id === 'frRoom') { if (ROOM.ch && ROOM.host && ROOM.spar) { go('PG_SELECT'); return; } roomJoin(String(1000 + Math.floor(Math.random() * 9000)), true, true); return; }
-  if (b.dataset.rounds && ROOM.host) { ROOM.rounds = +b.dataset.rounds; ROOM.ready = [false, false]; roomSend('sel', { sel: {}, spar: ROOM.spar, rounds: ROOM.rounds }); buildSelect(); return; }
+  if (b.dataset.frjoin) { if (/^\d{4}$/.test(b.dataset.frjoin)) roomJoin(b.dataset.frjoin, false, { peer: b.dataset.frhost, spar: !!b.dataset.frspar }); return; }
+  if (b.id === 'frRoom') { if (ROOM.ch && ROOM.host && ROOM.spar) { go('PG_SELECT'); return; } roomJoin(String(1000 + Math.floor(Math.random() * 9000)), true, { spar: true }); return; }
+  if (b.dataset.rounds && ROOM.host) { ROOM.rounds = +b.dataset.rounds; ROOM.ready = [false, false]; roomSend('sel', { sel: mySelection() }); buildSelect(); return; }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'frName') { e.preventDefault(); frAdd(e.target.value); } });
 function netLeaveAll() { roomLeave(true); lobbyLeave(); hideInvite(); NET.fr = { rows: [], prof: {}, loaded: false, busy: false }; frBadge(); }
