@@ -2,6 +2,8 @@
 
 ## Supabase 部署
 
+> 生产项目：`gldzmkdvbiloitgkzqsy`，区域 **Northeast Asia (Tokyo)**。2026-11-22（v1.9）从爱尔兰项目 `wrybcmfmxugsjfmphmmd` 迁来：先在新项目执行 `supabase_setup.sql`，再把 `auth.users / auth.identities / profiles / games / reports / matches / friendships` 原样复制，认证设置（关闭 Confirm email）和 Realtime 设置与旧项目一致。旧项目暂时保留给尚未更新的客户端。
+
 1. 在测试项目验证后，备份生产项目。新库在 Supabase **SQL Editor** 执行 [supabase_setup.sql](../supabase_setup.sql)。已有后端 v2 的项目从尚未应用的 [房间迁移](../supabase/migrations/20261122000000_online_rooms.sql) 或 [v1.7 协议迁移](../supabase/migrations/20261123000000_ground_protocol.sql) 开始。使用 CLI 时按时间戳依序应用。
 2. 在 **Authentication → Sign In / Providers → Email** 开启 Email 登录和注册。继续使用账号名注册时保留 **Confirm email** 关闭。要启用真实邮箱验证码注册与找回密码，按下节配置邮件。
 3. 在 **Realtime → Settings** 保持 Realtime 和 **Allow public access** 开启。大厅使用公共频道，v1.5 的选人房间和正式对局各使用私有频道，迁移已设置参赛者策略。
