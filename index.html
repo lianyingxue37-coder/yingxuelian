@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="dl-ver" content="3.1">
+<meta name="dl-ver" content="3.2">
 <meta name="dl-shell" content="1">
 <script>
 /* 安装包热更新（v2.0 起）：安装包里的 index.html 只是保底版本。联网时后台把网站上的新版 index.html 下载到本机（见 hotUpdate），
@@ -284,7 +284,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v3.1 · 背景为电脑自动对战演示</div>
+  <div class="ver">v3.2 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -461,7 +461,7 @@ const CFG_DESC = {
 const DROP_LEVELS = [
   { id: 'DL0', lv: 0, name: '起势', min: 0,   dmgMul: 1.0, gain: 4, fin: 1.0, end: 'ST_STAGGER',   stun: 16, color: '#efe9df', note: '连段刚开始，暂存伤害尚未结算' },
   { id: 'DL1', lv: 1, name: '压制', min: 60,  dmgMul: 1.1, gain: 4, fin: 1.0, end: 'ST_STAGGER',   stun: 28, color: '#f2b09a', note: '势推过 60：伤害 +10%' },
-  { id: 'DL2', lv: 2, name: '崩势', min: 130, dmgMul: 1.2, gain: 5, fin: 1.0, end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '势推过 130：伤害 +20%，可以放奥义' },
+  { id: 'DL2', lv: 2, name: '崩势', min: 130, dmgMul: 1.2, gain: 5, fin: 1.0, end: 'ST_KNOCKDOWN', stun: 48, color: '#f0805f', note: '势推过 130：伤害 +20%，可以放奥义（放了势归零）' },
   { id: 'DL3', lv: 3, name: '坠落', min: 210, dmgMul: 1.3, gain: 6, fin: 1.3, end: 'ST_KNOCKDOWN', stun: 70, color: '#e8432b', note: '势推过 210：伤害 +30%，奥义 ×1.3' },
   { id: 'DL4', lv: 4, name: '终焉', min: 300, dmgMul: 1.4, gain: 8, fin: 1.8, end: 'ST_KNOCKDOWN', stun: 92, color: '#c21f0a', note: '势推到底：8 秒终焉状态，伤害 +40%，奥义 ×1.8' },
 ];
@@ -1553,6 +1553,7 @@ function finisherHit(a, d, m) {
   G.hitstop = 20; G.slow = 46; G.flash = .6; shake(28); njUltStart(a, d, m);
   ring(d.x, d.y - 110, RED, 10, 420, 34); spark(d.x, d.y - 110, BONE, 34, 15); hitFx(a, d.x - a.face * 22, d.y - 110 * d.ch.scale, 14);
   d.vy = -15; SFX.play('finish'); buzz([60, 30, 140]); emit('EV_FINISH', { who: a.idx, text: `${m.id} ${Math.round(dmg)}` });
+  spendTug(a);   // v3.2：奥义耗尽自己这边的势（终焉中放会结束终焉），不能连着放
   if (checkKO(d, a)) return;
   endChain(a, 'finish');
 }
@@ -1652,6 +1653,11 @@ function enterZY(f) {
   banner('终焉', `${f.ch.name} · ${Math.round(CFG.ZY_TIME / 60)} 秒内伤害 ×${DL.dmgMul}、奥义 ×${DL.fin}`, f.col);
   ring(f.x, cy, DL.color, 10, 420, 34); ring(f.x, cy, f.col, 20, 260, 26); G.flash = Math.max(G.flash, .45); G.slow = Math.max(G.slow, 24); shake(16);
   SFX.play('commit', 4); buzz([40, 30, 80]); emit('EV_MECH', { who: f.idx, text: '终焉' });
+}
+function spendTug(f) {
+  const had = Math.max(0, tsd(f) * (G.tug || 0));
+  if (f.zyT > 0) f.zyT = 0;
+  if (had > 0) { G.tug = 0; pop(`势 -${Math.round(had)}`, f.x, f.y - 300 * f.ch.scale, MUTE, 24, FB, 60); }
 }
 function tugTick() {
   const z = G.f.find(f => f.zyT > 0);
@@ -4716,7 +4722,7 @@ function buildMoves() {
     ${D.map(d => `<tr><td>${d.name} <span style="color:var(--mute)">${d.id}</span></td><td class="num">${d.min}</td><td class="num">${d.dmgMul}×</td><td class="num">+${d.gain}</td><td class="num">${d.fin}×</td></tr>`).join('')}</table></div>
     <p>${icSVG('SK_BRK')}<b>拆招</b>：被连时看准对手下一招<b>出手的瞬间</b>按破链键（头顶出现「拆！」时最准）：拆掉这一招，把对手震开、硬直 ${CFG.BREAK_STAGGER} 帧，连段结束、暂存伤害作废，势往自己这边推 ${CFG.TUG_CHAI}。消耗 ${Math.round(CFG.BRK_COST * CFG.CHAI_COST)} 能量；按早、按空扣 ${CFG.CHAI_MISS_COST} 能量，${(CFG.CHAI_MISS_LOCK / 60).toFixed(2)} 秒内不能再拆。对手也可能故意慢半拍骗你拆空。</p>
     <p><b>充能方式</b>：被连受击（阶段越高越多）、闪避成功 +${CFG.PARRY_GAIN}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
-    <p><b>奥义</b>：势达到「${D[CFG.FIN_MIN_LV].name}」后，连段中可用，结算全部暂存伤害并造成重击，连段结束。坠落 ×${D[3].fin}、终焉 ×${D[D.length - 1].fin}。</p>
+    <p><b>奥义</b>：势达到「${D[CFG.FIN_MIN_LV].name}」后，连段中可用，结算全部暂存伤害并造成重击，连段结束。坠落 ×${D[3].fin}、终焉 ×${D[D.length - 1].fin}。<b>放奥义会耗尽你这边的势</b>（势条回到中间，终焉中放会结束终焉），所以要想清楚：现在兑现，还是再推高一点打更痛的。</p>
     <p><b>兵器</b>：每个角色用自己的兵器打轻击和重击。轻击连按是三段，第三段会把对手挑起来。${CHARS.map(c => `${c.name}「${c.weapon.name}」${c.weapon.style}`).join('；')}。</p>
     <h3>进阶</h3>
     ${MECHS.map(m => `<p>${icSVG(m.id)}<b>${m.name}</b>：${m.desc}</p>`).join('')}
@@ -5501,7 +5507,7 @@ document.addEventListener('click', e => {
    ============================================================ */
 const NET = { lobby: null, members: [], status: 'idle', invite: null, invitePoll: 0, readingInvites: false, queue: null, leaving: null };
 const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pulse: 0, joinedAt: 0, spar: false, rounds: 2 };
-const ONLINE_PROTOCOL = 17;   // v3.0 角力系统（真实硬直 / 拆招 / 势拉锯），和旧版本不能同场
+const ONLINE_PROTOCOL = 18;   // v3.2 奥义耗尽势，和旧版本不能同场
 // 位 4、5 保留给旧跳跃与防御输入，避免移动剩余按键位。
 const KEYS12 = ['left', 'right', 'up', 'down', null, null, 'l', 'h', 's', 'brk', 'fin', 'ast'];
 const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (!k) return; if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
