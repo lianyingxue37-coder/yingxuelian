@@ -47,7 +47,7 @@
 4. **不要提交任何密钥**：客户端只用 anon / publishable key。`service_role`、数据库密码、签名证书一律不进仓库（用 Supabase 后台或 GitHub Secrets）。
 5. 保留 `window.DUANLIAN` 现有字段（测试依赖它）。
    奥义演出 `G.cine` 期间 `simStep` 只推进演出帧（双方同一帧开始、同样长度）；改演出长度或替身落点时，两边必须仍然一致。
-   防御键、主动跳跃和空中追击已移除。闪避依赖侧闪和后撤步（`evade()` 的统计仍记在 `stats.parries`）。受击飞起和倒地保留，角色落地后恢复操作。联机输入中原跳跃和防御的位置保持为零。
+   防御键、主动跳跃和空中追击已移除。闪避依赖侧闪和后撤步（`evade()` 的统计仍记在 `stats.parries`）。被连时没有锁定，只有受击硬直，见「角力系统」。受击飞起和倒地保留，角色落地后恢复操作。联机输入中原跳跃和防御的位置保持为零。
 6. 界面文字用中文，语气和现有文案一致；手机横屏（844×390）也要能用。
 7. 版本号在 `<div class="ver">v…` 里，改动发布时顺手加一位；安卓打包会自动按它打 tag。**`<head>` 开头的 `<meta name="dl-ver">` 必须同步改**（安装包热更新靠它比较版本，不一致时控制台报错、测试会失败）。
 8. **在分支上验证并通过 PR 发布，不要直接推 main**。以最新主线为基线，避免覆盖作者同时进行的玩法和画面改动。通过验收后直接发布正式版，作者指定保留草稿时再停在草稿。
@@ -63,12 +63,17 @@
 - 发出的每个输入都要先写进日志（`lsJournalSave()`），直连和中转都一样，否则刷新重连会对不上。
 - 测试：`RTC=off python3 dev/test_online.py …` 模拟打不通直连；默认时直连延迟取中转的一半（`__RTC_LAT / __RTC_JIT / __RTC_DROP`）。结果里的 `direct dc_sent delay_range stall_ms hitch_ms` 用来对比效果。
 
-## 破绽断链与掉落阶段（v2.0）
+## 角力系统（v3.0，取代 v2.0 的破绽断链）
 
-- 被连时不能随时破链：只有 `chainLoose(c)` 为真才行——攻方迟疑（`c.win` ≤ `maxWin × CFG.LOOSE_AT`，默认一半）、重复同一招（`c.rep ≥ 2`）、或已到终焉。没有破绽时按破链键会记下 `d.brkWant`，`CFG.BRK_HOLD` 帧内一出现破绽就自动断。
-- 破链不再留木桩、不再瞬移到身后：原地挣断，把攻方震开（`doBreak`）。影的「替影」也不留木桩了。
-- `DROP_LEVELS` 门槛 0 / 40 / 100 / 170 / 250，守方每击充能 4 / 4 / 5 / 6 / 8，`GAIN.commit` 6。终焉由“伤害减半”改为奖励：奥义伤害 ×`DROP_LEVELS[lv].fin`（坠落 1.3、终焉 1.8）。HUD 势条在终焉正好打满。
-- 平衡检查：AI 对 AI 约 200 段连段里约 10% 打到终焉、破链约 30%（v1.9 是 0% 和 45%）。
+v3.0 把底层从“轮流挨打”改成实时攻防，三处一起改：
+
+- **受击硬直代替锁定**：被打中进入 `ST_CHAINED`，但只有 `d.stun` 帧硬直（`(CFG.HS_BASE + m.hitstop) × 角色 chainWin × 装备 / 燃链 × 重复 0.75 × max(HS_FLOOR, 1 − HS_DECAY × (连击数 − 1))`）。硬直归零就 `endChain(a, 'recover')`，守方马上回到 `ST_IDLE`，可以闪避或反打（硬直中按的键会进缓冲）。原来的连段窗口 `c.win / c.maxWin` 已删除。连击越多硬直越短，所以没有无限连（轻击循环约 20 击到头，慢招更早接不上）。
+- **拆招代替破链**：被连时按破链键调用 `tryBreak`。`chaiLive(a)` 为真（攻方招式或技能施放在出手前 `CHAI_WIN` 帧到命中前，还没打中）才算拆中 → `doBreak`：震开攻方、暂存作废、势 +`TUG_CHAI`，消耗 `chaiCost`（= 破链消耗 × `CHAI_COST`）。拆空扣 `CHAI_MISS_COST`，`CHAI_MISS_LOCK` 帧内不能再拆（`d.chaiLock`）。被挣脱（recover / repeat / drop / time）时暂存照常结算，只有拆招让暂存作废。
+- **整局的势 `G.tug` 代替单次连段势条**：正数偏 1P、负数偏 2P，范围 ±`TUG_MAX()`（= 终焉门槛 300）。`chainHit` 里把这一击新增的 `c.mom` 通过 `tugPush` 推上去；闪避 +`TUG_EVADE`，拆招 +`TUG_CHAI`。没人连段时每帧回中 `TUG_DECAY`。阶段 `tugLv(f)` 按自己那边的势算（压制 60 / 崩势 130 / 坠落 210），连段起手时 `c.lv` 从当前阶段开始，连段中每升一级结算一次暂存（掉落）。推到头 → `enterZY`：`f.zyT = ZY_TIME`（8 秒）终焉状态，伤害 ×1.4、奥义 ×1.8，期间势条锁死，结束回中。每回合 `startRound` 把 `G.tug` 清零。
+- HUD：`tugHUD` 一直画在上方中间；`chainHUD` 下方的白条是对手挣脱倒计时；守方头顶在 `chaiLive` 时提示「拆！按 X」。
+- AI：攻方只挑来得及在对手挣脱前打中的招；守方看到对方出新招时按难度决定拆不拆、拆得准不准，快挣脱时预输入反打或闪避。
+- 平衡检查：`python3 dev/sim_balance.py http://127.0.0.1:8765/index.html 12`（AI 对 AI）。v3.0 基线：约 365 段连段，中位 3 击、P90 9 击、最长 17 击，攻守互换 200 次，拆招 88 次 / 拆空 28 次，终焉 17 次。
+- 联机协议 17（数据库已接受 14–30，不用改库）。
 
 ## 安卓安装包热更新（v2.0）
 
@@ -79,7 +84,7 @@
 
 ## 待办（给 Codex）
 
-- **联机协议**：v2.0 使用协议 16。数据库从 `20261124000000_protocol_range.sql` 起接受 14–30，修改确定性对战规则时只需把客户端 `ONLINE_PROTOCOL` 加一（大厅频道名、房间、匹配都会跟着隔开）；超过 30 再加迁移。
+- **联机协议**：v3.0 使用协议 17。数据库从 `20261124000000_protocol_range.sql` 起接受 14–30，修改确定性对战规则时只需把客户端 `ONLINE_PROTOCOL` 加一（大厅频道名、房间、匹配都会跟着隔开）；超过 30 再加迁移。
 
 ## 正式发布与 Claude 交接
 
@@ -101,6 +106,7 @@ RTC=off python3 dev/test_online.py 100 40 no 0.1  # 直连打不通，只走服�
 python3 dev/test_friends.py
 python3 dev/test_accounts_rooms.py
 python3 dev/test_hot_update.py           # 安装包热更新：新版接管、坏版本退回、旧缓存清理
+python3 dev/sim_balance.py http://127.0.0.1:8765/index.html 12   # AI 对 AI 平衡统计（连段长度、拆招、终焉次数）
 ```
 
 `dev/test_online.py` 会用 `dev/mock-supabase.js` 替换真实的 supabase-js，不需要联网，也不需要 Supabase 项目。
