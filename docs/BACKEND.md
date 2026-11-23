@@ -1,5 +1,7 @@
 # 《断链》后端与联机
 
+管理玩家账户、联机房间和服务状态，请见[运营后台](ADMIN.md)。
+
 ## Supabase 部署
 
 > 生产项目：`gldzmkdvbiloitgkzqsy`，区域 **Northeast Asia (Tokyo)**。2026-11-22（v1.9）从爱尔兰项目 `wrybcmfmxugsjfmphmmd` 迁来：先在新项目执行 `supabase_setup.sql`，再把 `auth.users / auth.identities / profiles / games / reports / matches / friendships` 原样复制，认证设置（关闭 Confirm email）和 Realtime 设置与旧项目一致。旧项目暂时保留给尚未更新的客户端。
