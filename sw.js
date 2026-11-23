@@ -1,5 +1,5 @@
 // 断链 · 离线缓存：本地文件“网络优先、断网用缓存”；字体首次联网后缓存
-const CACHE = 'duanlian-v3';
+const CACHE = 'duanlian-v3.6';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

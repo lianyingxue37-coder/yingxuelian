@@ -16,6 +16,15 @@ LAT = int(sys.argv[1]) if len(sys.argv) > 1 else 60
 JIT = int(sys.argv[2]) if len(sys.argv) > 2 else 30
 ACTION = sys.argv[3] if len(sys.argv) > 3 else "no"
 DROP = float(sys.argv[4]) if len(sys.argv) > 4 else 0
+TEST_RULES = """
+Object.defineProperty(window, 'DUANLIAN', {
+  configurable: true,
+  set(debug) {
+    Object.defineProperty(window, 'DUANLIAN', {value: debug, writable: true, configurable: true});
+    Object.assign(debug.CFG, {ROUND_TIME: 25, ROUNDS_TO_WIN: 1});
+  }
+});
+"""
 AI_INPUT = """
 (() => {
   const D = window.DUANLIAN;
@@ -73,6 +82,7 @@ async def main():
         ctx = await browser.new_context(viewport=size, service_workers="block")
         await ctx.route("**/*", local_only)
         await ctx.add_init_script(path=Path(__file__).with_name("mock-supabase.js"))
+        await ctx.add_init_script(TEST_RULES)
         await ctx.add_init_script(f"window.__LAT={LAT}; window.__JIT={JIT}; window.__DROP={DROP};")
         # 直连（WebRTC）：RTC=off 模拟打不通，只走服务器；否则直连的延迟按服务器中转的一半模拟
         if os.environ.get('RTC') == 'off':
@@ -132,7 +142,6 @@ async def main():
         await a.click('#sideP1 .pc[data-id="CH_YUE"]')
         await a.click('#pickStage [data-id="STG_05"]')
         await b.click('#sideP2 .pc[data-id="CH_YING"]')
-        await a.evaluate("Object.assign(DUANLIAN.CFG, { ROUND_TIME: 25, ROUNDS_TO_WIN: 1 })")
         await a.click("#btnFight")
         await b.click("#btnFight")
         await asyncio.gather(*(page.wait_for_function("DUANLIAN.LS.on") for page in (a, b)))
