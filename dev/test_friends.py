@@ -4,10 +4,10 @@
 import asyncio, os
 
 async def local_only(route):
-    if route.request.url.startswith("http://127.0.0.1:8765/"): await route.continue_()
+    if route.request.url.startswith(URL.rsplit("/", 1)[0] + "/"): await route.continue_()
     else: await route.fulfill(status=200, body="")
 from playwright.async_api import async_playwright
-URL = "http://127.0.0.1:8765/index.html"
+URL = os.environ.get("URL", "http://127.0.0.1:8765/index.html")
 PRE = "const D=window.DUANLIAN; const {G,ACC,NET,ROOM,CFG,REC,Input,AI,accSignUp,go}=D; const LS=D.LS;"
 def ev(pg, expr): return pg.evaluate("()=>{" + PRE + "return (" + expr + ");}")
 def run(pg, body): return pg.evaluate("()=>{" + PRE + body + "}")
@@ -47,12 +47,13 @@ async def main():
         print('rounds B', await ev(B, "ROOM.rounds"), await ev(B, "document.querySelector('#selMode').textContent"))
         await A.screenshot(path=f'{OUT}/fr_A_room.png')
         onG0 = await ev(A, "ACC.profile?.stats.onG ?? 0")
-        await run(A, "CFG.ROUND_TIME = 20;")
         for pg in (A, B):
-            await run(pg, """const ai = new AI(2), orig = Input.read.bind(Input);
+            await run(pg, """CFG.ROUND_TIME = 20; const ai = new AI(2), orig = Input.read.bind(Input);
               Input.read = pid => { const LS = D.LS; if (!LS.on) return orig(pid); const me = G.f[LS.me], op = G.f[1 - LS.me]; const o = ai.think(me, op); o.held = o.held || {}; o.pressed = o.pressed || {}; if (o.dash === 'SIDE_U') o.pressed.up = true; if (o.dash === 'DASH') o.pressed[me.face > 0 ? 'right' : 'left'] = true; return { held: o.held, pressed: o.pressed }; };""")
         await A.click('#btnFight'); await B.click('#btnFight'); await A.wait_for_timeout(1500)
-        print('started', await ev(A, "{on:LS.on, spar:G.spar, rtw:CFG.ROUNDS_TO_WIN}"), await ev(B, "{on:LS.on, spar:G.spar, rtw:CFG.ROUNDS_TO_WIN}"))
+        starts = [await ev(pg, "{on:LS.on, spar:G.spar, rtw:G.roundsToWin}") for pg in (A, B)]
+        print('started', *starts)
+        assert all(s == {'on': True, 'spar': True, 'rtw': 1} for s in starts), starts
         t = 0
         while t < 90:
             await A.wait_for_timeout(3000); t += 3

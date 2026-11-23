@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="dl-ver" content="3.5">
+<meta name="dl-ver" content="3.6">
 <meta name="dl-shell" content="1">
 <script>
 /* 安装包热更新（v2.0 起）：安装包里的 index.html 只是保底版本。联网时后台把网站上的新版 index.html 下载到本机（见 hotUpdate），
@@ -128,9 +128,6 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .set .slider{display:flex;gap:.65em;align-items:center}
 .set input[type=range]{width:min(22cqw,12em);accent-color:var(--red)}
 .set output{min-width:3.5em;text-align:right;font-variant-numeric:tabular-nums}
-.settings-body details{margin-top:1em;border-top:1px solid var(--line);padding-top:.65em}
-.settings-body summary{cursor:pointer}
-.settings-body details .set{margin-top:.7em}
 .set-account{display:flex;gap:.75em 1.5em;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .set-account[hidden]{display:none}
 .set-account p{overflow-wrap:anywhere}
@@ -283,7 +280,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_SHOP">商城<small>断链币 · 称号</small></button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v3.5 · 背景为电脑自动对战演示</div>
+  <div class="ver">v3.6 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -384,7 +381,6 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
    ============================================================ */
 const W = 1280, H = 720;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const grand = (a, b) => a + (G.rng ? G.rng() : Math.random()) * (b - a);   // 影响胜负的随机数（联机双方同种子）
 const rand = (a, b) => a + Math.random() * (b - a), randi = (a, b) => Math.floor(rand(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t;
 const FB = '"Ma Shan Zheng","Noto Sans SC",serif', FN = '"Oswald","Noto Sans SC",sans-serif', FU = '"Noto Sans SC",system-ui,sans-serif';
@@ -403,13 +399,12 @@ const CFG = {
   IMMEDIATE_RATIO: 0.3, FIN_MIN_LV: 2, COUNTER_MOM: 20,
   END_PROTECT: 10, FIN_DOWN: 100,
   GRD_REGEN: 0.35, GRD_CRUSH_STUN: 46,
-  SHARDS: true, SHARD_INTERVAL: 540, SHARD_VALUE: 25, SHARD_LIFE: 600,
   BREAK_STAGGER: 50, BREAK_INV: 30, BREAK_PUSH: 16,
   HS_BASE: 22, HS_DECAY: 0.04, HS_FLOOR: 0.2, RECOVER_INV: 6,
   CHAI_COST: 0.6, CHAI_WIN: 8, CHAI_MISS_LOCK: 45, CHAI_MISS_COST: 15,
   TUG_DECAY: 0.1, TUG_EVADE: 20, TUG_CHAI: 40, ZY_TIME: 480,
   PARRY_WINDOW: 6, PARRY_STUN: 26, PARRY_GAIN: 12, DOUBLE_TAP: 12,
-  EMBER_DMG: 12, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80, ELIXIR: 60,
+  EMBER_DMG: 12, ASSIST_CD: 720, ASSIST_START: 300, HEAL: 80,
   BURN_TIME: 360, BURN_MOM: 1.25, BURN_WIN: 1.25, BURN_DMG: 1.1, WALL_MOM: 25, THROW_RANGE: 112,
   FROST_MAX: 5, FROST_BRK: 0.12, FROST_SPD: 0.06, FREEZE_MOM: 40, ARMOR_DMG: 0.8, CHARGE_TIME: 75, CHARGE_MAX: 3, ZAP_DMG: 1.5, ZAP_MOM: 30, MONK_FREEZE: 50,
   AI_LEVEL: 1, SHAKE: !REDUCED, SOUND: true, SFX_VOLUME: 100, VIBRATE: true, STICK_MODE: 'float', CAMERA: true, TOUCH_LIFT: 96, SKETCH: true,
@@ -421,7 +416,7 @@ const CFG_DESC = {
   GROUND: '地面高度（像素）', STAGE_W: '场地宽度（像素）；大于 1280 时镜头横向跟随', WALL_L: '左墙', WALL_R: '右墙（自动 = 场地宽度 − 左墙）', PARALLAX: '远景视差（0 = 远景不动，1 = 和地面一起动）', MAX_SEP: '两人最远距离（保证两人都在画面里）', MOVE_MUL: '移动速度倍率（走路、纵深移动和冲刺）', GRAVITY: '重力', BUFFER: '按键预输入缓存（帧）',
   BRK_MAX: '破链能量上限', BRK_COST: '破链一次消耗的能量', BRK_START: '每回合开局的破链能量',
   GAIN: '其他充能：命中对手 / 每次掉落结算（守方）/ 每帧自然增长',
-  CHAIN_WINDOW: '（v3.0 起不用，改为受击硬直 HS_BASE）', WINDOW_MUL: '受击硬直倍率（设置页）', CHAIN_DIST: '连段中守方被锁定在攻方前方的距离',
+  CHAIN_WINDOW: '（v3.0 起不用，改为受击硬直 HS_BASE）', WINDOW_MUL: '受击硬直倍率', CHAIN_DIST: '连段中守方被锁定在攻方前方的距离',
   BURN_TIME: '燃链持续帧数', BURN_MOM: '燃链期间连段势倍率', BURN_WIN: '燃链期间对手受击硬直倍率', BURN_DMG: '燃链期间伤害倍率',
   WALL_MOM: '撞墙时额外连段势（每次连段最多 2 次）', THROW_RANGE: '投技距离',
   FROST_MAX: '霜·寒气层数上限', FROST_BRK: '每层寒气降低的破链充能比例', FROST_SPD: '每层寒气降低的移速比例', FREEZE_MOM: '冰封额外连段势', ARMOR_DMG: '岳·霸体吃下攻击时承受的伤害比例',
@@ -429,7 +424,6 @@ const CFG_DESC = {
   REPEAT_LIMIT: '同一招连续命中达到此次数，连段中断', REPEAT_MOM_MUL: '重复招式的连段势倍率', REPEAT_DMG_MUL: '重复招式的伤害倍率',
   IMMEDIATE_RATIO: '每击立即生效的伤害比例，其余进入暂存', FIN_MIN_LV: '可用终结技的最低掉落阶段', COUNTER_MOM: '反击起手（打断对手出招）额外的连段势',
   END_PROTECT: '连段结束后守方额外的无敌帧（防止立刻再起手）', FIN_DOWN: '吃到终结技后的倒地帧数',
-  SHARDS: '是否刷新链晶', SHARD_INTERVAL: '链晶刷新间隔（帧）', SHARD_VALUE: '链晶提供的破链能量', SHARD_LIFE: '链晶存在时间（帧）',
   HS_BASE: '受击硬直基础帧数（再加上招式的 hitstop）；硬直结束守方立刻能动', HS_DECAY: '连段每多一击硬直减少的比例', HS_FLOOR: '硬直最低比例（连段越长越难接，没有无限连）', RECOVER_INV: '挣脱硬直后的无敌帧',
   CHAI_COST: '拆招消耗 = 破链能量上限消耗 × 这个比例', CHAI_WIN: '拆招判定：对方招式出手前这么多帧到命中前都算拆中', CHAI_MISS_LOCK: '拆空后多少帧不能再拆', CHAI_MISS_COST: '拆空扣的能量',
   TUG_DECAY: '没人在连段时，势条每帧回中多少', TUG_EVADE: '闪避推势', TUG_CHAI: '拆招推势', ZY_TIME: '终焉状态持续帧数',
@@ -440,7 +434,7 @@ const CFG_DESC = {
   Z_SPEED: '纵深移动速度', Z_HIT: '招式默认的纵深判定宽度（Z 差超过就打不中）', Z_BODY: '身体碰撞的纵深厚度（Z 差小于它两人才会互相挡住；比判定窄，不会“撞得到却打不到”）', Z_TRACK: '出手时朝对手纵深自动修正的最大距离（转向）', SIDE_DIST: '侧闪移动的纵深距离',
   PARRY_GAIN: '闪避成功获得的破链能量（侧闪 / 后撤步的无敌时间里躲开一次攻击）',
   DOUBLE_TAP: '双击方向触发冲刺 / 后撤步的间隔（帧）', EMBER_DMG: '烬「余烬」每层伤害', ASSIST_CD: '外援冷却（帧）', ASSIST_START: '每回合开局外援剩余冷却（帧）',
-  HEAL: '药师外援的回复量', ELIXIR: '回春丹的回复量', CAMERA: '动态镜头（连段时推近）',
+  HEAL: '药师外援的回复量', CAMERA: '动态镜头（连段时推近）',
 };
 
 /* ---------- 二、掉落阶段（连段阈值）DL ----------
@@ -599,7 +593,7 @@ function canThrow(f) {
   return Math.abs(op.x - f.x) < CFG.THROW_RANGE * f.ch.scale && Math.abs(op.z - f.z) < 24 && !['ST_KNOCKDOWN', 'ST_WAKEUP', 'ST_KO', 'ST_BREAK'].includes(op.state) && op.inv <= 0;
 }
 
-/* ---------- 五、场景 STG / 道具 IT / 页面 PG / 事件 EV ---------- */
+/* ---------- 五、场景 STG / 页面 PG / 事件 EV ---------- */
 const STAGES = [
   { id: 'STG_01', name: '断桥', desc: '暮色里断成两截的石桥，铁链悬在缺口上' },
   { id: 'STG_02', name: '雨庭', desc: '雨夜庭院，朱红灯笼映在湿亮的石板上' },
@@ -607,11 +601,6 @@ const STAGES = [
   { id: 'STG_04', name: '雪寺', desc: '月下山寺，窗里亮着灯，雪一直在下' },
   { id: 'STG_05', name: '灯市', desc: '上元夜的长街，红灯笼一路排到远处，烟花时不时炸开' },
   { id: 'STG_06', name: '荒原', desc: '正午的荒原古道，热浪蒸腾，风沙一阵阵卷过断墙' },
-];
-const ITEMS = [
-  { id: 'IT_SHARD', name: '链晶', desc: '场上定时出现，未被锁定的一方触碰即可获得破链能量' },
-  { id: 'IT_ELIXIR', name: '回春丹', desc: '场上随机出现，触碰回复生命' },
-  { id: 'IT_SCROLL', name: '秘卷', desc: '场上随机出现，触碰后外援冷却立即清零' },
 ];
 const GEAR = [
   { id: 'GR_NONE', name: '不带', desc: '不携带道具' },
@@ -645,7 +634,6 @@ const IC_PAL = {
   AS:      { c: '#d6a44a', d: '#1d1814', e: '#efe9df' },
   GR:      { c: '#cdb27a', d: '#1d1814', e: '#7fe0a8' },
   SYS:     { c: '#e8432b', d: '#1d1814', e: '#bfe9ff' },
-  IT:      { c: '#9fd3d0', d: '#13201f', e: '#7fe0a8' },
 };
 const IC_TOK = { b: '#efe9df', k: '#0d0a09', r: '#e8432b', w: '#ffffff', g: '#7fe0a8', y: '#f0cf63', p: '#e9d8a6' };
 const IC_FRAME = {
@@ -657,7 +645,6 @@ const IC_FRAME = {
   AS: 'M24 3.5L42 9.5V24C42 34 34.5 41 24 45C13.5 41 6 34 6 24V9.5Z',
   GR: 'M11 4.5H37Q43.5 4.5 43.5 11V37Q43.5 43.5 37 43.5H11Q4.5 43.5 4.5 37V11Q4.5 4.5 11 4.5Z',
   SYS: 'M24 3.5C35.3 3.5 44.5 12.7 44.5 24S35.3 44.5 24 44.5 3.5 35.3 3.5 24 12.7 3.5 24 3.5Z',
-  IT: 'M24 3.5L38.5 9.5L44.5 24L38.5 38.5L24 44.5L9.5 38.5L3.5 24L9.5 9.5Z',
 };
 
 /* 母题：以原点为中心，只用 M L C Q Z，可平移 / 缩放 / 旋转 */
@@ -858,12 +845,6 @@ const ICONS = {
     ['M15.5 6.5H32.5V39.5L24 43.5L15.5 39.5Z', 'p'],
     ['M19.5 11.5H28.5M24 11.5V19M19 19H29M20.6 25.4C22.6 23.4 25.4 23.4 27.4 25.4M19.5 31H28.5M24 31V37', null, 'r', 2.3]] },
 
-  /* —— 场上道具 —— */
-  IT_SHARD: { fam: 'IT', l: [
-    ['M24 5L35 18.5L24 43L13 18.5Z', 'c'], ['M24 5L28.5 18.5L24 43L19.5 18.5Z', 'w', null, 0, .55], ['M13 18.5H35', null, 'k', 1.4, .5]] },
-  IT_ELIXIR: { fam: 'IT', l: [
-    [icC(24, 27, 13), '#3a9a6a'], ['M13.2 25H34.8', null, 'r', 3.2], [icC(19.4, 21, 2.6), 'w', null, 0, .6],
-    ['M24 14C26 8.6 31.6 7 35.4 9.2C32.4 12.6 27.6 14.2 24 14Z', 'g']] },
 };
 ICONS.MECH_DASH = ICONS.MV_DASH;
 ICONS.MV_YING_BS = ICONS.MECH_SHADOW;
@@ -875,7 +856,6 @@ Object.assign(IC_PAL, {
 Object.assign(IC_FRAME, {
   CH_SHUANG: 'M17 3.5H31L44.5 17V31L31 44.5H17L3.5 31V17Z',
   CH_LEI: 'M24 3L45 18.5L37 44H11L3 18.5Z',
-  IT: IC_FRAME.SYS,
 });
 Object.assign(MOTIF, {
   ICE: 'M0 -16L4 -7L3.4 9L0 16L-3.4 9L-4 -7Z',
@@ -948,11 +928,6 @@ Object.assign(ICONS, {
     [icC(24, 22, 15), '#c9a15a'], [icC(24, 22, 11), '#e8e3d4'], [icC(24, 22, 2.8), 'c'],
     [icT(MOTIF.STAR4, 18.5, 16.5, .38), 'w'], ['M24 37V44.5', null, 'r', 2.6], [icC(24, 22, 13), null, 'k', 1, .3]] },
 
-  /* —— 新场上道具 —— */
-  IT_SCROLL: { fam: 'IT', l: [
-    ['M12.5 13.5H35.5V36.5H12.5Z', 'p'], ['M10 13H38M10 37H38', null, '#8d6238', 3.6],
-    ['M17 20H31M17 25H31M17 30H26', null, 'k', 1.5, .65], [icC(31.5, 31, 2.8), 'r']] },
-
   /* —— 新外援 —— */
   AS_FALCON: { fam: 'AS', col: '#9db4c8', l: [
     ['M23 20C17 13.5 10 11.5 3.5 13.5C9.5 16.5 15 21 21 25.5Z', 'b'], ['M25 20C31 13.5 38 11.5 44.5 13.5C38.5 16.5 33 21 27 25.5Z', 'b'],
@@ -1015,13 +990,13 @@ const PAGES = [
   { id: 'PG_RESULT', name: '结算', desc: '胜负与本场数据' },
   { id: 'PG_MOVES', name: '招式与系统', desc: '规则说明、掉落阶段图、招式表、按键表' },
   { id: 'PG_CODEX', name: '设定 ID 表', desc: '所有数据表 ID 汇总（本页）' },
-  { id: 'PG_SETTINGS', name: '设置', desc: '账户、画面、声音、操作和对战选项' },
+  { id: 'PG_SETTINGS', name: '设置', desc: '账户、画面、声音和操作' },
 ];
 const EVENTS = {
   EV_ROUND_START: '回合开始', EV_CHAIN_START: '起手命中，连段开始', EV_CHAIN_HIT: '连段中每次命中',
   EV_DROP_COMMIT: '越过阶段阈值，暂存伤害结算（掉落）', EV_CHAIN_DROP: '对手挣脱硬直，连段中断', EV_CHAIN_REPEAT: '同招重复过多，连段中断',
   EV_CHAIN_END: '连段以其他方式结束（破链 / 终结 / 时间到 / 击倒）', EV_BREAK: '守方破链', EV_FINISH: '终结技命中',
-  EV_PARRY: '闪避成功（侧闪 / 后撤步的无敌时间里躲开攻击）', EV_ASSIST: '呼叫外援', EV_MECH: '角色特性触发', EV_BURN: '燃链', EV_WALL: '撞墙', EV_THROW: '投技命中', EV_SHARD_SPAWN: '链晶出现', EV_SHARD_PICK: '拾取链晶', EV_KO: '击倒', EV_TIMEUP: '时间到',
+  EV_PARRY: '闪避成功（侧闪 / 后撤步的无敌时间里躲开攻击）', EV_ASSIST: '呼叫外援', EV_MECH: '角色特性触发', EV_BURN: '燃链', EV_WALL: '撞墙', EV_THROW: '投技命中', EV_KO: '击倒', EV_TIMEUP: '时间到',
 };
 const DUMMY = [
   { id: 'DM_STAND', key: 'stand', name: '站立', desc: '不动，不破链' },
@@ -1057,15 +1032,6 @@ const SETTINGS = [
   { group: 'audio', id: 'SET_VOLUME', label: '音效音量', key: 'SFX_VOLUME', range: true },
   { group: 'controls', id: 'SET_STICK', label: '触屏摇杆', key: 'STICK_MODE', opts: [['float', '跟随手指'], ['fixed', '固定位置']] },
   { group: 'controls', id: 'SET_VIBRATE', label: '手机振动', key: 'VIBRATE', note: '适用于支持振动的设备', opts: [[true, '开'], [false, '关']] },
-  { group: 'battle', id: 'SET_ROUNDS', label: '获胜所需回合', key: 'ROUNDS_TO_WIN', opts: [[1, '1 回合'], [2, '2 回合'], [3, '3 回合']] },
-  { group: 'battle', id: 'SET_TIME', label: '每回合时间', key: 'ROUND_TIME', opts: [[60, '60 秒'], [99, '99 秒'], [0, '不限时']] },
-  { group: 'battle', id: 'SET_AI', label: '电脑难度', key: 'AI_LEVEL', opts: [[0, '简单'], [1, '普通'], [2, '困难']] },
-  { group: 'battle', advanced: true, id: 'SET_WINDOW', label: '受击硬直', key: 'WINDOW_MUL', note: '对手挨打后多久能挣脱', opts: [[.8, '紧 0.8×'], [1, '标准'], [1.25, '宽松 1.25×']] },
-  { group: 'battle', advanced: true, id: 'SET_BRK_START', label: '开局破链能量', key: 'BRK_START', opts: [[0, '0'], [20, '20'], [50, '50'], [100, '满']] },
-  { group: 'battle', advanced: true, id: 'SET_IMM', label: '每击立即生效比例', key: 'IMMEDIATE_RATIO', note: '其余进入暂存，越过阈值才掉落', opts: [[.2, '20%'], [.3, '30%'], [.5, '50%']] },
-  { group: 'battle', advanced: true, id: 'SET_SHARDS', label: '链晶出现', key: 'SHARDS', opts: [[true, '开'], [false, '关']] },
-  { group: 'battle', advanced: true, id: 'SET_STAGE', label: '场地大小', key: 'STAGE_W', opts: [[1280, '小'], [2400, '大'], [3200, '超大']] },
-  { group: 'battle', advanced: true, id: 'SET_SPEED', label: '移动速度', key: 'MOVE_MUL', opts: [[1, '经典'], [1.3, '快'], [1.6, '很快']] },
 ];
 const DEFAULTS = Object.fromEntries(SETTINGS.map(s => [s.key, CFG[s.key]]));
 const SAVE_KEY = 'duanlian.settings.v1';
@@ -1084,8 +1050,8 @@ const saveSettings = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify
 const EMPTY = { held: {}, pressed: {} };
 const G = {
   page: 'PG_TITLE', prev: null, mode: 'cpu', demo: false, running: false, paused: false, autoP1: false,
-  f: [], ai: [], stage: 'STG_01', round: 1, timer: 0, rs: 'RS_INTRO', rsT: 0, winner: null,
-  hitstop: 0, slow: 0, shake: 0, flash: 0, parts: [], pops: [], banner: null, shards: [], shardT: 0, frame: 0,
+  f: [], ai: [], stage: 'STG_01', round: 1, roundsToWin: CFG.ROUNDS_TO_WIN, timer: 0, rs: 'RS_INTRO', rsT: 0, winner: null,
+  hitstop: 0, slow: 0, shake: 0, flash: 0, parts: [], pops: [], banner: null, frame: 0,
   log: [], dummy: 'stand', ents: [], cam: { x: 640, z: 1, ly: 0 }, camT: { cx: 640, z: 1, fy: 446, ly: 0 }, liftT: 0,
   sel: { p1: 'CH_JIN', p2: 'CH_LAN', g1: 'GR_NONE', g2: 'GR_NONE', a1: 'AS_ARCHER', a2: 'AS_HOUND', stage: 'STG_01', dummy: 'stand' }, lastOpts: null,
   mvTab: 'CH_JIN', cxTab: 'pages',
@@ -1147,7 +1113,7 @@ const SFX = {
       case 'commit': this.tone(t, 92, 34, .6, 'sine', .7); [0, 4, 7].forEach((s, i) => { const f = 196 * Math.pow(2, (s + p * 2) / 12); this.tone(t + .02 * i, f, f, .7, 'triangle', .07); }); this.noise(t, .25, 'lowpass', 900, .28); break;
       case 'break': this.noise(t, .7, 'highpass', 2800, .42); this.tone(t, 1500, 180, .5, 'sawtooth', .07); this.tone(t, 80, 30, .7, 'sine', .7); break;
       case 'finish': this.tone(t, 120, 28, 1, 'sine', .9); this.noise(t, .5, 'lowpass', 1400, .5); this.tone(t + .05, 330, 110, .8, 'triangle', .11); break;
-      case 'shard': this.tone(t, 880, 880, .25, 'sine', .14); this.tone(t + .06, 1320, 1320, .3, 'sine', .11); break;
+      case 'heal': this.tone(t, 880, 880, .25, 'sine', .14); this.tone(t + .06, 1320, 1320, .3, 'sine', .11); break;
       case 'crush': this.noise(t, .3, 'bandpass', 600, .5, 2); this.tone(t, 200, 60, .3, 'square', .13); break;
       case 'ko': this.tone(t, 70, 25, 1.6, 'sine', .9); this.noise(t, 1, 'lowpass', 600, .4); break;
       case 'round': this.tone(t, 196, 196, 1.2, 'triangle', .16); this.tone(t, 294, 294, 1.2, 'triangle', .1); break;
@@ -1223,7 +1189,7 @@ function phys(f) {
 class Fighter {
   constructor(idx, ch, alt, gear = 'GR_NONE', assist = 'AS_ARCHER') {
     this.idx = idx; this.ch = ch; this.alt = alt; this.gear = gear; this.assist = assist; this.wins = 0;
-    this.stats = { maxHits: 0, maxLv: 0, dmg: 0, breaks: 0, shards: 0, fins: 0, parries: 0, assists: 0 }; this.reset();
+    this.stats = { maxHits: 0, maxLv: 0, dmg: 0, breaks: 0, fins: 0, parries: 0, assists: 0 }; this.reset();
   }
   reset() {
     Object.assign(this, { x: CFG.STAGE_W / 2 + (this.idx ? 210 : -210), z: 50, y: gy(50), vx: 0, vy: 0, face: this.idx ? -1 : 1, fv: this.idx ? -1 : 1, spinT: 0, hp: CFG.HP, trail: CFG.HP,
@@ -1759,7 +1725,7 @@ function updEnts() {
       e.face = f.x >= e.x ? 1 : -1; npcPose(e, 'win');
       if (e.t === 24) {
         f.hp = Math.min(CFG.HP, f.hp + CFG.HEAL); f.trail = Math.max(f.trail, f.hp); f.brk = Math.min(CFG.BRK_MAX, f.brk + 15);
-        pop(`+${CFG.HEAL}`, f.x, f.y - 230, '#7fe0a8', 32, FN); SFX.play('shard');
+        pop(`+${CFG.HEAL}`, f.x, f.y - 230, '#7fe0a8', 32, FN); SFX.play('heal');
         for (let i = 0; i < 18; i++) G.parts.push({ k: 'dust', x: f.x + rand(-40, 40), y: f.y - rand(0, 170), vx: 0, vy: -rand(.6, 2.2), g: 0, life: 32, max: 32, col: 'rgba(127,224,168,', sz: rand(3, 6) });
       }
     }
@@ -1826,8 +1792,6 @@ class AI {
     if (me.burnT <= 0 && me.brk >= CFG.BRK_MAX && dist < 300 && Math.random() < .004 * P.agg * (op.hp < CFG.HP * .45 ? 3 : 1)) { o.pressed.brk = true; return o; }
     if (this.cd <= 0 && canThrow(me) && Math.random() < .05 * P.agg) { o.held[tw] = true; o.pressed.h = true; this.cd = 30; return o; }
     if (me.grounded) { const sk = aiSkill(this, me, op, dist, dz, tw, aw); if (sk) return sk; }
-    const s = G.shards[0];
-    if (s && Math.abs(s.x - me.x) + 40 < Math.abs(s.x - op.x) + 80 && (Math.abs(s.x - me.x) > 18 || Math.abs(s.z - me.z) > 12) && me.grounded) { o.held.up = o.held.down = false; if (Math.abs(s.x - me.x) > 18) o.held[s.x > me.x ? 'right' : 'left'] = true; if (Math.abs(s.z - me.z) > 8) o.held[s.z < me.z ? 'up' : 'down'] = true; return o; }
     if (op.y < gy(op.z) - 60 && dist < 180 && this.cd <= 0 && Math.random() < P.agg * .5) { o.pressed.s = true; this.cd = 24; return o; }
     if (Math.abs(dz) > 20) { if (dist > 150) o.held[tw] = true; return o; }
     const sc = me.ch.scale, reachL = me.ch.moves.L.range * sc, reachH = me.ch.moves.H.range * sc, reachFS = me.ch.moves.FS.range * sc + me.ch.moves.FS.advance;
@@ -1882,17 +1846,19 @@ function startMatch(o) {
   G.spar = false; G.lastOpts = o; G.mode = o.mode; G.demo = false; G.rng = mulberry32(o.seed ?? ((Math.random() * 2 ** 31) | 0)); G.running = true; G.paused = false; G.stage = o.stage; G.dummy = o.dummy || 'stand';
   G.f = [new Fighter(0, CHAR[o.p1], false, o.g1 || 'GR_NONE', o.a1 || 'AS_ARCHER'), new Fighter(1, CHAR[o.p2], o.p1 === o.p2, o.g2 || 'GR_NONE', o.a2 || 'AS_HOUND')];
   G.ai = [new AI(CFG.AI_LEVEL), new AI(o.mode === 'train' ? 1 : CFG.AI_LEVEL)];
-  G.round = 1; G.log = []; G.lastMove = null; startRound(); go('PG_BATTLE'); SFX.init();
+  G.round = 1; G.roundsToWin = o.roundsToWin ?? CFG.ROUNDS_TO_WIN;
+  G.log = []; G.lastMove = null; startRound(); go('PG_BATTLE'); SFX.init();
 }
 function startDemo() {
   G.demo = true; G.running = false; G.paused = false; G.autoP1 = false; G.rng = null; G.stage = pick(STAGES).id;
+  G.roundsToWin = CFG.ROUNDS_TO_WIN;
   const a = pick(CHARS), b = pick(CHARS);
   G.f = [new Fighter(0, a, false, pick(GEAR).id, pick(ASSISTS).id), new Fighter(1, b, a === b, pick(GEAR).id, pick(ASSISTS).id)]; G.ai = [new AI(1), new AI(1)]; G.round = 1; startRound();
 }
 function startRound() {
   CFG.WALL_R = CFG.STAGE_W - CFG.WALL_L;
   for (const f of G.f) f.reset();
-  Object.assign(G, { tug: 0, timer: CFG.ROUND_TIME * 60, rs: 'RS_INTRO', rsT: 0, shards: [], shardT: 0, parts: [], pops: [], ents: [], hitstop: 0, slow: 0, winner: null, banner: null, koFx: null, dim: null, cutin: null, cine: null });
+  Object.assign(G, { tug: 0, timer: CFG.ROUND_TIME * 60, rs: 'RS_INTRO', rsT: 0, parts: [], pops: [], ents: [], hitstop: 0, slow: 0, winner: null, banner: null, koFx: null, dim: null, cutin: null, cine: null });
   G.cam.x = CFG.STAGE_W / 2;
   if (G.demo) { G.f[0].x = CFG.STAGE_W / 2 + 120; G.f[1].x = CFG.STAGE_W / 2 + 420; G.rsT = 80; return; }
   banner(`第 ${G.round} 回合`, G.mode === 'train' ? '训练模式 · 不会被击倒' : '', BONE, 60); SFX.play('round'); emit('EV_ROUND_START', { text: `R${G.round}` });
@@ -1901,7 +1867,7 @@ function roundOver() {
   const [A, B] = G.f;
   if (!G.demo && G.winner && G.winner.hp >= CFG.HP) G.winner.stats.perfects = (G.winner.stats.perfects || 0) + 1;
   if (G.demo) { if (A.wins >= 2 || B.wins >= 2) startDemo(); else { G.round++; startRound(); } return; }
-  if (A.wins >= CFG.ROUNDS_TO_WIN || B.wins >= CFG.ROUNDS_TO_WIN || G.round >= 9) endMatch();
+  if (A.wins >= G.roundsToWin || B.wins >= G.roundsToWin || G.round >= 9) endMatch();
   else { G.round++; startRound(); }
 }
 function endMatch() {
@@ -1909,7 +1875,7 @@ function endMatch() {
   const who = f => G.mode === 'online' ? (f.idx === LS.me ? '你' : esc((LS.peer || ROOM.peer || {}).nick || '对手')) : f.idx === 0 ? '1P' : G.mode === 'cpu' ? 'CPU' : '2P';
   $('#resTitle').textContent = w ? `${w.ch.name} 胜` : '平局';
   $('#resSub').textContent = w ? `${who(w)} · ${w.ch.title}　回合 ${w.wins} : ${(w === A ? B : A).wins}` : `回合 ${A.wins} : ${B.wins}`;
-  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['闪避', f => f.stats.parries], ['终结技', f => f.stats.fins], ['呼叫外援', f => f.stats.assists], ['燃链', f => f.stats.burns || 0], ['拾取道具', f => f.stats.shards]];
+  const rows = [['最高连段', f => f.stats.maxHits], ['最高掉落阶段', f => DROP_LEVELS[f.stats.maxLv].name], ['造成伤害', f => f.stats.dmg], ['破链次数', f => f.stats.breaks], ['闪避', f => f.stats.parries], ['终结技', f => f.stats.fins], ['呼叫外援', f => f.stats.assists], ['燃链', f => f.stats.burns || 0]];
   $('#resTable').innerHTML = `<tr><th></th><th class="num">${who(A)} · ${A.ch.name}</th><th class="num">${who(B)} · ${B.ch.name}</th></tr>` + rows.map(([n, fn]) => `<tr><td>${n}</td><td class="num">${fn(A)}</td><td class="num">${fn(B)}</td></tr>`).join('');
   $('#resBest').innerHTML = [A, B].map(f => { const b = f.stats.best; return `<div><b>${who(f)} · 最佳连段</b>${b ? `<small>${b.hits} 连 · ${DROP_LEVELS[b.lv].name}</small>${b.route.map(e => icSVG(icFor(e.id) || '')).join('')}` : '<small>没有打出连段</small>'}</div>`; }).join('');
   if (w) { w.move = null; w.setState('ST_WIN'); }
@@ -1971,23 +1937,6 @@ function simStep(inA, inB) {
   for (const a of G.f) { const c = a.chain; if (c) { const d = c.target, gx = a.x + a.face * CFG.CHAIN_DIST * a.ch.scale - d.x; if (Math.abs(gx) < 240) { d.x += gx * .18; setZ(d, d.z + (a.z - d.z) * .22); } } }
   clampAll();
   for (const f of G.f) if (!f.chainedBy) f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.GAIN.passive);
-  // 链晶
-  if (CFG.SHARDS && ++G.shardT >= CFG.SHARD_INTERVAL && !G.shards.length) { G.shardT = 0; const x = G.demo ? CFG.STAGE_W / 2 + grand(140, 420) : clamp((G.f[0].x + G.f[1].x) / 2 + grand(-420, 420), CFG.WALL_L + 60, CFG.WALL_R - 60); const r0 = grand(0, 1), type = r0 < .6 ? 'shard' : r0 < .82 ? 'elixir' : 'scroll'; const sz = grand(10, 90); G.shards.push({ x, z: sz, y: gy(sz) - 52, life: CFG.SHARD_LIFE, t: 0, type }); emit('EV_SHARD_SPAWN', { text: `${type} x=${Math.round(x)}` }); }
-  for (const s of G.shards) {
-    s.t++; s.life--;
-    for (const f of G.f) {
-      if (f.chainedBy || ['ST_KO', 'ST_KNOCKDOWN', 'ST_WAKEUP'].includes(f.state)) continue;
-      if (Math.abs(f.x - s.x) < 42 && Math.abs(f.z - s.z) < 26 && s.y > f.y - 190 * f.ch.scale && s.y < f.y + 10) {
-        s.life = 0; f.stats.shards++;
-        if (s.type === 'elixir') { f.hp = Math.min(CFG.HP, f.hp + CFG.ELIXIR); f.trail = Math.max(f.trail, f.hp); pop(`回春丹 +${CFG.ELIXIR}`, s.x, s.y - 50, '#7fe0a8', 26, FB); }
-        else if (s.type === 'scroll') { f.astCD = 0; pop('秘卷 · 外援就绪', s.x, s.y - 50, '#e8d39a', 26, FB); }
-        else { f.brk = Math.min(CFG.BRK_MAX, f.brk + CFG.SHARD_VALUE); pop(`链晶 +${CFG.SHARD_VALUE}`, s.x, s.y - 50, f.col, 26, FB); }
-        spark(s.x, s.y, BONE, 16, 7); ring(s.x, s.y, s.type === 'elixir' ? '#7fe0a8' : s.type === 'scroll' ? '#e8d39a' : f.col, 5, 90, 20);
-        SFX.play('shard'); emit('EV_SHARD_PICK', { who: f.idx }); break;
-      }
-    }
-  }
-  G.shards = G.shards.filter(s => s.life > 0);
   if (CFG.ROUND_TIME > 0 && G.mode !== 'train' && --G.timer <= 0) timeUp();
   if (G.mode === 'train' && !G.demo) for (const f of G.f) { if (!f.chainedBy && !f.chain && f.hp < CFG.HP) { if (++f.refill > 90) { f.hp = f.trail = CFG.HP; f.refill = 0; } } else f.refill = 0; }
 }
@@ -4064,29 +4013,6 @@ function drawParts(c) {
   }
   c.globalAlpha = 1;
 }
-function drawShard(c, s) {
-  {
-    if (s.life < 90 && G.frame % 8 < 4) return;
-    const y = s.y + Math.sin(s.t * .08) * 6, sc = Math.min(1, s.t / 15);
-    c.save(); c.translate(s.x, y); c.scale(sc * zs(s.z ?? 50), sc * zs(s.z ?? 50));
-    if (s.type === 'scroll') {
-      const g = c.createRadialGradient(0, 0, 0, 0, 0, 50); g.addColorStop(0, 'rgba(255,236,180,.6)'); g.addColorStop(1, 'rgba(232,211,154,0)'); c.fillStyle = g; c.fillRect(-50, -50, 100, 100);
-      c.rotate(Math.sin(s.t * .05) * .2); drawIc(c, 'IT_SCROLL', 0, 0, 56); c.restore(); return;
-    }
-    if (s.type === 'elixir') {
-      const g = c.createRadialGradient(0, 0, 0, 0, 0, 46); g.addColorStop(0, 'rgba(180,255,210,.55)'); g.addColorStop(1, 'rgba(60,160,110,0)'); c.fillStyle = g; c.fillRect(-46, -46, 92, 92);
-      c.rotate(Math.sin(s.t * .05) * .2); c.fillStyle = '#3a9a6a'; c.strokeStyle = INK; c.lineWidth = 3;
-      c.beginPath(); c.arc(0, 8, 14, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.arc(0, -10, 9, 0, 7); c.fill(); c.stroke();
-      c.fillStyle = RED; c.fillRect(-7, -3, 14, 4); c.fillStyle = BONE; c.fillRect(-2, -24, 4, 6); c.restore(); return;
-    }
-    const g = c.createRadialGradient(0, 0, 0, 0, 0, 46); g.addColorStop(0, 'rgba(255,220,200,.6)'); g.addColorStop(1, 'rgba(232,67,43,0)'); c.fillStyle = g; c.fillRect(-46, -46, 92, 92);
-    c.rotate(Math.sin(s.t * .05) * .3); c.fillStyle = BONE; c.strokeStyle = RED; c.lineWidth = 3;
-    c.beginPath(); c.moveTo(0, -22); c.lineTo(13, 0); c.lineTo(0, 22); c.lineTo(-13, 0); c.closePath(); c.fill(); c.stroke();
-    c.beginPath(); c.moveTo(0, -22); c.lineTo(0, 22); c.stroke();
-    c.restore();
-  }
-}
-function drawShards(c) { for (const s of G.shards) drawShard(c, s); }
 function drawFighterAt(c, f) {
   const k = zs(f.z); c.save(); c.translate(f.x, f.y); c.scale(k, k); c.translate(-f.x, -f.y);
   if (f.burnT > 0) drawAura(c, f); drawGhosts(c, f); drawSwoosh(c, f); drawFighter(c, f); drawStone(c, f); njOver(c, f); c.restore();
@@ -4257,7 +4183,7 @@ function hpBar(c, f, x, y, w, side) {
   c.font = `500 14px ${FU}`; c.fillStyle = MUTE; c.textAlign = side > 0 ? 'left' : 'right';
   otxt(c, G.mode === 'online' ? (f.idx === LS.me ? `${(ACC.profile || {}).nickname || '你'}（你）` : (ROOM.peer ? ROOM.peer.nick : '对手')) : f.ch.title, side > 0 ? x + 40 : x + w - 40, y + h + 42);
   c.font = `600 15px ${FN}`; c.textAlign = side > 0 ? 'right' : 'left'; c.fillStyle = BONE; otxt(c, Math.ceil(f.hp), side > 0 ? x + w : x, y + h + 30);
-  for (let i = 0; i < CFG.ROUNDS_TO_WIN; i++) {
+  for (let i = 0; i < G.roundsToWin; i++) {
     const cx = side > 0 ? x + w - 52 - i * 18 : x + 52 + i * 18, cy = y + h + 40;
     c.save(); c.translate(cx, cy); c.rotate(Math.PI / 4); c.fillStyle = i < f.wins ? RED : 'rgba(239,233,223,.2)'; c.fillRect(-5, -5, 10, 10); c.restore();
   }
@@ -4416,7 +4342,6 @@ function render(motion = 1) {
     for (const f of G.f) drawShadow(c, f);
     for (const a of G.f) if (a.chain) drawChainLinks(c, a);
     const L = [];
-    for (const s of G.shards) L.push([s.z ?? 50, 0, () => drawShard(c, s)]);
     for (const e of G.ents) L.push([e.under ? -1e3 : (e.z ?? 50), 1, () => drawEnt(c, e)]);
     for (const f of G.f) L.push([f.z, 2 + (f.state === 'ST_ATTACK' ? 1 : 0) - (f.chainedBy ? 1 : 0), () => drawFighterAt(c, f)]);
     L.sort((p, q) => p[0] - q[0] || p[1] - q[1]); for (const it of L) it[2]();
@@ -4590,7 +4515,7 @@ function buildMoves() {
     <div class="tablewrap"><table><tr><th>阶段</th><th class="num">阈值</th><th class="num">伤害倍率</th><th class="num">守方每击充能</th><th class="num">奥义倍率</th></tr>
     ${D.map(d => `<tr><td>${d.name} <span style="color:var(--mute)">${d.id}</span></td><td class="num">${d.min}</td><td class="num">${d.dmgMul}×</td><td class="num">+${d.gain}</td><td class="num">${d.fin}×</td></tr>`).join('')}</table></div>
     <p>${icSVG('SK_BRK')}<b>拆招</b>：被连时看准对手下一招<b>出手的瞬间</b>按破链键（头顶出现「拆！」时最准）：拆掉这一招，把对手震开、硬直 ${CFG.BREAK_STAGGER} 帧，连段结束、暂存伤害作废，势往自己这边推 ${CFG.TUG_CHAI}。消耗 ${Math.round(CFG.BRK_COST * CFG.CHAI_COST)} 能量；按早、按空扣 ${CFG.CHAI_MISS_COST} 能量，${(CFG.CHAI_MISS_LOCK / 60).toFixed(2)} 秒内不能再拆。对手也可能故意慢半拍骗你拆空。</p>
-    <p><b>充能方式</b>：被连受击（阶段越高越多）、闪避成功 +${CFG.PARRY_GAIN}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}、拾取场上的链晶 +${CFG.SHARD_VALUE}，以及随时间缓慢增长。</p>
+    <p><b>充能方式</b>：被连受击（阶段越高越多）、闪避成功 +${CFG.PARRY_GAIN}、命中对手 +${CFG.GAIN.landHit}、每次被掉落结算 +${CFG.GAIN.commit}，以及随时间缓慢增长。</p>
     <p><b>奥义</b>：势达到「${D[CFG.FIN_MIN_LV].name}」后，连段中可用，结算全部暂存伤害并造成重击，连段结束。坠落 ×${D[3].fin}、终焉 ×${D[D.length - 1].fin}。<b>放奥义会耗尽你这边的势</b>（势条回到中间，终焉中放会结束终焉），所以要想清楚：现在兑现，还是再推高一点打更痛的。</p>
     <p><b>兵器</b>：每个角色用自己的兵器打轻击和重击。轻击连按是三段，第三段会把对手挑起来。${CHARS.map(c => `${c.name}「${c.weapon.name}」${c.weapon.style}`).join('；')}。</p>
     <h3>进阶</h3>
@@ -4615,10 +4540,10 @@ const CODEX = {
   icons: { name: '图标 IC', note: '全部招式、特性、外援、道具的专属图标。每名角色有自己的徽章外形：烬圆、澜方圆、岳六角、影菱形、铃钟形、霜八角、雷五角。', cols: [], rows: () => [] },
   drops: { name: '掉落阶段 DL', note: '势推过阈值即升阶段；在连段中升阶段时结算暂存伤害。', cols: ['ID', '名称', '阈值', '伤害倍率', '守方每击充能', '连段结束后', '硬直帧', '说明'], rows: () => DROP_LEVELS.map(d => [d.id, d.name, d.min, d.dmgMul, d.gain, STATES[d.end].name, d.stun, d.note]) },
   states: { name: '状态 ST', note: '角色状态机。', cols: ['ID', '名称', '说明'], rows: () => Object.entries(STATES).map(([k, v]) => [k, v.name, v.desc]) },
-  world: { name: '场景与道具', note: 'STG 场景，IT 道具，DM 训练木桩。', cols: ['ID', '名称', '说明'], rows: () => [...STAGES.map(s => [s.id, s.name, s.desc]), ...ITEMS.map(i => [i.id, i.name, i.desc]), ...DUMMY.map(d => [d.id, d.name, d.desc])] },
+  world: { name: '场景与训练', note: 'STG 场景，DM 训练木桩。', cols: ['ID', '名称', '说明'], rows: () => [...STAGES.map(s => [s.id, s.name, s.desc]), ...DUMMY.map(d => [d.id, d.name, d.desc])] },
   events: { name: '事件 EV', note: '代码中用 on("EV_…", 函数) 订阅，可接成就、统计、演出。', cols: ['ID', '触发时机'], rows: () => Object.entries(EVENTS) },
   keys: { name: '按键', note: '在 KEYMAP 中修改。', cols: ['动作 ID', '动作', '1P', '2P'], rows: () => Object.entries(ACTIONS).map(([k, v]) => [k, v, KEYMAP.P1[k].map(keyName).join(' / '), KEYMAP.P2[k].map(keyName).join(' / ')]) },
-  cfg: { name: '参数 CFG', note: '全局参数，当前值已含设置页的修改。', cols: ['键', '当前值', '说明'], rows: () => Object.entries(CFG_DESC).map(([k, v]) => [k, JSON.stringify(CFG[k]), v]) },
+  cfg: { name: '参数 CFG', note: '战斗规则和本机偏好的只读清单。', cols: ['键', '当前值', '说明'], rows: () => Object.entries(CFG_DESC).map(([k, v]) => [k, JSON.stringify(CFG[k]), v]) },
   ai: { name: 'AI 与设置', note: 'AI 难度参数与设置项。', cols: ['ID', '名称', '说明'], rows: () => [...AI_LEVELS.map(a => [a.id, a.name, `闪避率 ${a.guard} · 失误率 ${a.drop} · 智能破链 ${a.smart} · 进攻性 ${a.agg}`]), ...SETTINGS.map(s => [s.id, s.label, `对应 CFG.${s.key}`])] },
 };
 function buildCodex() {
@@ -4626,13 +4551,13 @@ function buildCodex() {
   const t = CODEX[G.cxTab]; $('#cxNote').textContent = t.note;
   if (G.cxTab === 'icons') {
     const nm = id => { for (const c of CHARS) { for (const m of Object.values(c.moves)) if (m.id === id) return `${c.name} · ${m.name}`; if (c.mech.id === id) return `${c.name} · ${c.mech.name}`; }
-      const x = [...MECHS, ...GEAR, ...ASSISTS, ...ITEMS].find(o => o.id === id) || Object.values(COMMON).find(m => m.id === id); return x ? x.name : id === 'SK_BRK' ? '破链' : ''; };
+      const x = [...MECHS, ...GEAR, ...ASSISTS].find(o => o.id === id) || Object.values(COMMON).find(m => m.id === id); return x ? x.name : id === 'SK_BRK' ? '破链' : ''; };
     $('#cxTable').innerHTML = `<tr><td><div class="icgrid">${Object.keys(ICONS).filter(id => !['MECH_DASH', 'MV_YING_BS', 'MECH_THROW', 'MV_SIDE_U', 'MV_SIDE_D', 'MECH_SIDE'].includes(id)).map(id => `<figure>${icSVG(id)}<figcaption>${nm(id)}<br><code>${id}</code></figcaption></figure>`).join('')}</div></td></tr>`;
     return;
   }
   $('#cxTable').innerHTML = `<tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr>` + t.rows().map(r => `<tr>${r.map((v, i) => i === 0 ? `<td><code>${icFor(v) ? icSVG(icFor(v)) : ''}${v}</code></td>` : `<td class="${typeof v === 'number' ? 'num' : String(v).length > 14 ? 'w' : ''}">${v}</td>`).join('')}</tr>`).join('');
 }
-const SET_TABS = [['account', '账户'], ['video', '画面'], ['audio', '声音'], ['controls', '操作'], ['battle', '对战']];
+const SET_TABS = [['account', '账户'], ['video', '画面'], ['audio', '声音'], ['controls', '操作']];
 let settingsTab = 'video';
 function refreshSettingsAccount() {
   $('#setAccountStatus').textContent = ACC.state === 'in' ? ACC.profile?.nickname || '已登录'
@@ -4640,7 +4565,7 @@ function refreshSettingsAccount() {
     : ACC.state === 'off' || ACC.state === 'err' ? '账户服务暂不可用' : '尚未登录';
 }
 function buildSettings() {
-  const tabs = SET_TABS.filter(([tab]) => !G.paused || (tab !== 'account' && tab !== 'battle'));
+  const tabs = SET_TABS.filter(([tab]) => !G.paused || tab !== 'account');
   if (!tabs.some(([tab]) => tab === settingsTab)) settingsTab = 'video';
   $('#setTabs').innerHTML = tabs.map(([tab, label]) =>
     `<button type="button" data-settab="${tab}" aria-pressed="${tab === settingsTab}">${label}</button>`).join('');
@@ -4656,9 +4581,7 @@ function buildSettings() {
     const idx = s.opts.findIndex(o => o[0] === CFG[s.key]);
     return `${label}<select id="${s.id}" data-key="${s.key}">${s.opts.map((o, i) => `<option value="${i}" ${i === idx ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
   };
-  const advanced = fields.filter(s => s.advanced);
-  $('#setList').innerHTML = `<div class="set">${fields.filter(s => !s.advanced).map(row).join('')}</div>` +
-    (advanced.length ? `<details><summary>高级规则</summary><div class="set">${advanced.map(row).join('')}</div></details>` : '');
+  $('#setList').innerHTML = `<div class="set">${fields.map(row).join('')}</div>`;
   $('#PG_SETTINGS .settings-body').scrollTop = 0;
 }
 function applySettings() {
@@ -5545,12 +5468,11 @@ document.addEventListener('click', e => {
    ============================================================ */
 const NET = { lobby: null, members: [], status: 'idle', invite: null, invitePoll: 0, readingInvites: false, queue: null, leaving: null };
 const ROOM = { ch: null, code: '', host: false, peer: null, ready: [false, false], rtt: [], pulse: 0, joinedAt: 0, spar: false, rounds: 2 };
-const ONLINE_PROTOCOL = 18;   // v3.2 奥义耗尽势，和旧版本不能同场
+const ONLINE_PROTOCOL = 19;   // v3.6 移除场上拾取物，联机沿用版本内战斗规则
 // 位 4、5 保留给旧跳跃与防御输入，避免移动剩余按键位。
 const KEYS12 = ['left', 'right', 'up', 'down', null, null, 'l', 'h', 's', 'brk', 'fin', 'ast'];
 const encIn = r => { let b = 0; KEYS12.forEach((k, i) => { if (!k) return; if (r.held[k]) b |= 1 << i; if (r.pressed[k]) b |= 1 << (i + 12); }); return b; };
 const decIn = b => { const r = { held: {}, pressed: {} }; KEYS12.forEach((k, i) => { if (!k) return; r.held[k] = !!(b & (1 << i)); r.pressed[k] = !!(b & (1 << (i + 12))); }); return r; };
-const NET_CFG_SKIP = new Set(['SHAKE', 'SOUND', 'SFX_VOLUME', 'VIBRATE', 'STICK_MODE', 'CAMERA', 'SKETCH', 'GRAPHICS', 'FPS_LIMIT', 'TOUCH_LIFT', 'AI_LEVEL']);
 const LS_REJOIN_MS = 20000, LS_SEND_MS = 1000 / 15, LS_BATCH = 32, LS_CHUNK = 256, LS_MAX_FRAME = 432000;
 const LS_STEP_MS = 1000 / 60, LS_INPUT_RESERVE = 4;
 const LS_RTC_MS = 1000 / 30, LS_RELAY_IDLE_MS = 500, LS_D_MIN = 2, LS_SLACK_MS = 500;
@@ -5878,9 +5800,8 @@ async function roomMaybeStart() {
   // 双向延迟折算为单程，再留两个广播周期给发送间隔和一次补包。
   const rtt = ROOM.rtt.length ? median(ROOM.rtt) * 1.3 : 220;   // 开局后双方会按实际网络自动调整输入延迟
   const D = clamp(Math.ceil((rtt / 2 + 2 * LS_SEND_MS) / LS_STEP_MS), 7, 20);
-  const cfg = Object.fromEntries(Object.entries(CFG).filter(([k, v]) => !NET_CFG_SKIP.has(k) && typeof v !== 'object'));
-  if (ROOM.spar) cfg.ROUNDS_TO_WIN = ROOM.rounds;
-  const setup = { protocol: ONLINE_PROTOCOL, seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, cfg, spar: !!ROOM.spar };
+  const setup = { protocol: ONLINE_PROTOCOL, seed: (Math.random() * 2 ** 31) | 0, D, sel: { ...G.sel }, spar: ROOM.spar };
+  if (setup.spar) setup.rounds = ROOM.rounds;
   const launch = { id }; ROOM.launch = launch;
   try {
     await backendCall('room_start', { p_room: ROOM.id, p_game: id, p_setup: setup });
@@ -5895,7 +5816,7 @@ async function roomMaybeStart() {
 function validSetup(m) {
   return m && m.protocol === ONLINE_PROTOCOL && Number.isInteger(m.seed) && Number.isInteger(m.D) && m.D >= 7 && m.D <= 20
     && Object.entries(PICK_OPTIONS).every(([k, options]) => Object.hasOwn(options, m.sel?.[k]))
-    && m.cfg && typeof m.cfg === 'object' && (m.spar === undefined || typeof m.spar === 'boolean');
+    && (m.spar === true ? [1, 2, 3].includes(m.rounds) : m.spar === false && m.rounds === undefined);
 }
 async function roomAcceptStart(id) {
   if (ROOM.host || !ROOM.ready[1] || G.page !== 'PG_SELECT' || LS.on || ROOM.accepting || LS.id === id || !GAME_UUID.test(id)) return;
@@ -5904,7 +5825,8 @@ async function roomAcceptStart(id) {
   try {
     const game = await backendCall('online_game', { p_game: id });
     if (ROOM.ch === ch && ROOM.ready[1] && game?.guest === ACC.user?.id && game.host === peer.uid
-        && game.code === ROOM.code && validSetup(game.setup) && !!game.setup.spar === ROOM.spar) lsStart(id, game.setup);
+        && game.code === ROOM.code && validSetup(game.setup) && game.setup.spar === ROOM.spar
+        && (!ROOM.spar || game.setup.rounds === ROOM.rounds)) lsStart(id, game.setup);
   } catch (e) { /* The host repeats the announcement until the guest joins. */ }
   finally { if (ROOM.accepting === id) ROOM.accepting = null; }
 }
@@ -6003,24 +5925,21 @@ function lsStart(id, m, saved = null, inputs = null) {
   LS = {
     id, on: true, me: ROOM.host ? 0 : 1, peer: ROOM.peer, D: m.D, frame: 0, loc, rem, remTop: rem.length - 1, ack: -1,
     startedAt: performance.now(), lastProgress: performance.now(), nextSend: 0, sampledAt: 0, wait: 0, hash: new Map(), remHash: new Map(), desync: !!saved?.desync,
-    cfgBak: { ...CFG }, journal: saved || { uid: ACC.user.id, id, code: ROOM.code, match: ROOM.match, peer: ROOM.peer, counts: [0, 0] },
+    journal: saved || { uid: ACC.user.id, id, code: ROOM.code, match: ROOM.match, peer: ROOM.peer, counts: [0, 0] },
     replaying: !!saved, sent: 0,
     dcSent: 0, rtc: null, rtcNext: 0, dcAt: 0, peerDcAt: 0, slk: { min: 99, t0: performance.now(), sn: 0, rep: 99 }, slkSeen: -1, good: 0, tuneAt: 0,
     peerT: 0, peerTAt: 0, rtt: 0, stallMs: 0, stalls: 0, tickAt: 0, dMin: m.D, dMax: m.D, syncDebt: 0, syncAt: 0
   };
-  for (const [k, v] of Object.entries(m.cfg)) {
-    if (Object.hasOwn(CFG, k) && !NET_CFG_SKIP.has(k) && typeof v === typeof CFG[k]
-        && (typeof v === 'boolean' || (Number.isFinite(v) && Math.abs(v) <= 1000000))) CFG[k] = v;
-  }
   const s = m.sel; G.sel = { ...G.sel, ...s }; G.rngSeed = m.seed; G.frame = 0;
+  const { SOUND, VIBRATE } = CFG;
   if (saved) { CFG.SOUND = false; CFG.VIBRATE = false; }
-  startMatch({ mode: 'online', p1: s.p1, p2: s.p2, g1: s.g1, g2: s.g2, a1: s.a1, a2: s.a2, stage: s.stage, seed: m.seed });
+  startMatch({ mode: 'online', p1: s.p1, p2: s.p2, g1: s.g1, g2: s.g2, a1: s.a1, a2: s.a2, stage: s.stage, seed: m.seed, roundsToWin: m.spar ? m.rounds : undefined });
   G.spar = !!m.spar;
   if (saved) {
     while (LS.on && LS.frame < saved.frame) lsAdvance();
     LS.replaying = false;
     LS.lastProgress = performance.now();
-    CFG.SOUND = LS.cfgBak.SOUND; CFG.VIBRATE = LS.cfgBak.VIBRATE;
+    CFG.SOUND = SOUND; CFG.VIBRATE = VIBRATE;
   }
   acc = 0;
   last = performance.now();
@@ -6050,8 +5969,6 @@ async function lsConnect(state) {
 function lsStop() {
   if (!LS.on) return;
   LS.on = false; LS.endedAt = performance.now();
-  const keep = Object.fromEntries([...NET_CFG_SKIP].map(k => [k, CFG[k]]));
-  Object.assign(CFG, LS.cfgBak, keep);
   if (LS.unverified) { lsJournalDrop(LS.journal); LS.journal = null; }
   else lsJournalSave();
 }
