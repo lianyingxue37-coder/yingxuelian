@@ -19,7 +19,7 @@
       if (this.t === 'friendships') return this.friends(uid, deny);
       // 商城：目录公开只读；库存只看自己的；没拥有的商城称号挂不上（同 20261125000000_shop.sql）
       if (this.t === 'shop_items') return this.op === 'select' ? this.done(SHOP_ITEMS.slice()) : deny;
-      if (this.t === 'inventory' || this.t === 'shop_orders') return this.op === 'select' && uid ? this.done(LS_.get('t.' + this.t, []).filter(r => r.uid === uid)) : deny;
+      if (this.t === 'inventory' || this.t === 'shop_orders' || this.t === 'coin_unlocks') return this.op === 'select' && uid ? this.done(LS_.get('t.' + this.t, []).filter(r => r.uid === uid)) : deny;
       if (this.t === 'profiles' && this.op === 'update' && typeof this.p.title === 'string' && this.p.title.startsWith('SHOP_')
         && !LS_.get('t.inventory', []).some(r => r.uid === uid && r.item_id === this.p.title)) return { data: null, error: { code: '42501', message: 'title not owned' } };
       if (this.op === 'insert' || (this.op === 'update' && (!uid || this.t !== 'profiles' || Object.keys(this.p).some(k => !cosmetic.includes(k))))) return deny;
@@ -310,24 +310,32 @@
       async signOut() { set(null); return { error: null }; },
     };
   }
-  // 商城：模拟 Edge Function `shop/claim`。测试往 localStorage 'mock.paid' 写 { 订单号: 商品 ID } 表示已在爱发电付款
+  // 商城（v3.5）：模拟 Edge Function `shop` 的一人付路由。断链币余额存 localStorage 'mock.coins' = { uid: 数量 }；
+  // 'mock.yrf' = 'off' 表示充值通道还没开通。测试往 mock.coins 里加数就等于在支付宝付了款。
   const SHOP_ITEMS = [
-    { id: 'SHOP_DUANLIAN', name: '断链者', descr: '支持作者的第一枚称号', price_cny: 6, afdian_url: 'https://afdian.com/order/create?plan_id=mock1', sort: 10 },
-    { id: 'SHOP_ZHONGYAN', name: '终焉行者', descr: '把势推到尽头的人', price_cny: 12, afdian_url: 'https://afdian.com/order/create?plan_id=mock2', sort: 20 },
-    { id: 'SHOP_PATRON', name: '断链赞助人', descr: '感谢你让断链走得更远', price_cny: 30, afdian_url: null, sort: 40 },
+    { id: 'SHOP_DUANLIAN', name: '断链者', descr: '支持作者的第一枚称号', price_coins: 60, sort: 10 },
+    { id: 'SHOP_ZHONGYAN', name: '终焉行者', descr: '把势推到尽头的人', price_coins: 120, sort: 20 },
+    { id: 'SHOP_PATRON', name: '断链赞助人', descr: '感谢你让断链走得更远', price_coins: null, sort: 40 },
   ];
-  function shopClaim(body) {
-    const uid = session?.user.id; if (!uid) return { ok: false, error: 'login' };
-    const t = String(body?.out_trade_no || ''); if (!/^[0-9]{10,40}$/.test(t)) return { ok: false, error: 'format' };
-    const item = LS_.get('paid', {})[t]; if (!item) return { ok: false, error: 'not_found' };
-    const orders = LS_.get('t.shop_orders', []), prev = orders.find(o => o.out_trade_no === t);
-    if (prev) return { ok: prev.uid === uid, status: prev.uid === uid ? 'already' : 'taken', item: prev.item_id };
-    orders.push({ out_trade_no: t, uid, item_id: item, status: 'granted' }); LS_.set('t.shop_orders', orders);
-    const inv = LS_.get('t.inventory', []); if (!inv.some(r => r.uid === uid && r.item_id === item)) inv.push({ uid, item_id: item }); LS_.set('t.inventory', inv);
-    return { ok: true, status: 'granted', item };
+  const PACKS = [{ sku_id: 'sku60', name: '60 断链币', price: '6.00', coins: 60 }, { sku_id: 'sku130', name: '130 断链币', price: '12.00', coins: 130 }];
+  function shopFn(name, body) {
+    const uid = session?.user.id; if (!uid) return [{ ok: false, error: 'login' }, 401];
+    if (LS_.get('yrf', 'on') === 'off') return [{ ok: false, error: 'not_configured' }, 502];
+    const bal = LS_.get('coins', {}), have = bal[uid] || 0;
+    if (name === 'shop/coins') return [{ ok: true, status: 'ENABLED', packs: PACKS, coins: have }];
+    if (name === 'shop/buy') { const k = PACKS.find(x => x.sku_id === body?.sku_id); return [{ ok: true, qr: '', url: 'alipays://platformapi/startapp?appId=mock&sku=' + (k ? k.sku_id : ''), expire: '2026-11-23 23:59:59', pack: k || null }]; }
+    if (name === 'shop/unlock') {
+      const it = SHOP_ITEMS.find(x => x.id === body?.item_id); if (!it || !it.price_coins) return [{ ok: false, error: 'bad_item' }];
+      const inv = LS_.get('t.inventory', []); if (inv.some(r => r.uid === uid && r.item_id === it.id)) return [{ ok: true, status: 'owned' }];
+      if (have < it.price_coins) return [{ ok: false, error: 'coins' }];
+      bal[uid] = have - it.price_coins; LS_.set('coins', bal); inv.push({ uid, item_id: it.id }); LS_.set('t.inventory', inv);
+      return [{ ok: true, status: 'unlocked', remaining: bal[uid] }];
+    }
+    return [{ ok: false, error: 'route' }, 404];
   }
+  const fnInvoke = (name, opts = {}) => { const [d, st] = shopFn(name, opts.body); return st && st >= 400 ? { data: null, error: { message: 'Edge Function returned a non-2xx status code', context: { json: async () => d } } } : { data: d, error: null }; };
   const client = {
-    functions: { invoke: (name, opts = {}) => new Promise(r => setTimeout(() => r(name === 'shop/claim' ? { data: shopClaim(opts.body), error: null } : { data: null, error: { message: 'unknown function' } }), 30)) },
+    functions: { invoke: (name, opts = {}) => new Promise(r => setTimeout(() => r(fnInvoke(name, opts)), 30)) },
     auth: mockAuth(true),
     from: t => new Q(t), channel, removeChannel(ch) { ch.unsubscribe(); },
     realtime: { async setAuth() {} },
