@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="dl-ver" content="3.4">
+<meta name="dl-ver" content="3.5">
 <meta name="dl-shell" content="1">
 <script>
 /* 安装包热更新（v2.0 起）：安装包里的 index.html 只是保底版本。联网时后台把网站上的新版 index.html 下载到本机（见 hotUpdate），
@@ -194,8 +194,10 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:.6em;margin:.6em 0}
 .sitem{border:1px solid var(--line);padding:.7em .8em;display:flex;flex-direction:column;gap:.35em;background:rgba(239,233,223,.03)}
 .sitem .ptitle{margin-left:0;align-self:flex-start}.sitem .sp{font:600 1.25em "Oswald",sans-serif}.sitem .btn{align-self:flex-start;text-decoration:none}
-.scode{font:700 1.1em "Oswald",monospace;letter-spacing:.08em;color:var(--red);cursor:pointer;user-select:all}
-.shopclaim{display:flex;gap:.5em;flex-wrap:wrap;align-items:center}.shopclaim input{flex:1;min-width:12em}
+.swallet{display:flex;align-items:center;gap:.8em;flex-wrap:wrap;margin:.4em 0}.swallet .sp{color:var(--red);margin-left:.2em}
+.shopgrid.packs{grid-template-columns:repeat(auto-fill,minmax(9em,1fr))}.spack{align-items:flex-start;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.spay{display:flex;gap:1em;flex-wrap:wrap;align-items:flex-start;border:1px solid var(--red);padding:.8em;margin:.6em 0;background:rgba(239,233,223,.04)}.spay p{margin:.2em 0}
+.sqr{background:#fff;padding:6px;width:200px;height:200px;max-width:42vw;max-height:42vw;flex:none}
 .shopnote{font-size:.82em;color:var(--mute);border-left:3px solid var(--red);padding:.3em .7em;margin:.4em 0 .8em}
 .ptitle{display:inline-block;margin-left:.5em;font-size:.78em;color:#fff;background:var(--red);padding:.05em .55em;border-radius:99em;vertical-align:.25em}.pinfo small,.prow small{color:var(--mute)}.pinfo .ptitle,.prow .ptitle,.ibox .ptitle{justify-self:start;width:fit-content;margin:.1em 0}.pbtn{display:flex;gap:.5em}
 .statgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.45em}.statgrid div{background:rgba(239,233,223,.05);border:1px solid var(--line);padding:.45em .7em;display:grid}.statgrid b{font:600 1.45em/1.2 "Oswald","Noto Sans SC",sans-serif}.statgrid small{color:var(--mute);font-size:.8em}
@@ -278,10 +280,10 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-mode="pvp">双人对战<small>同一键盘 1P 对 2P</small></button>
     <button data-mode="train">训练模式<small>对木桩练连段与破链时机</small></button>
     <button data-go="PG_MOVES">招式与系统</button>
-    <button data-go="PG_SHOP">商城<small>称号 · 支持作者</small></button>
+    <button data-go="PG_SHOP">商城<small>断链币 · 称号</small></button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v3.4 · 背景为电脑自动对战演示</div>
+  <div class="ver">v3.5 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -5157,42 +5159,131 @@ function onlineResult(winner) {
 /* ---------- 界面：标题页账户入口 · 账户页 ---------- */
 const avHTML = (id, cls = '') => { const ch = CHAR[id] || CHARS[0]; return `<span class="av ${cls}" style="--c:${ch.color}">${esc(ch.name[0])}</span>`; };
 const titleOf = p => !p || !p.title ? '' : ACH_BY[p.title] ? ACH_BY[p.title].name : SHOP_BY[p.title] ? SHOP_BY[p.title].name : '';
-/* ---------- 商城（v3.4）：爱发电收款（微信 / 支付宝扫码），Edge Function `shop` 向爱发电核实订单后发货。只卖称号这类外观 ----------
-   自动到账：付款留言里填领取码（DL + 用户 ID 前 8 位），爱发电回调 /functions/v1/shop/webhook。
-   手动领取：填爱发电订单号 → /functions/v1/shop/claim。数据库：shop_items / inventory / shop_orders，见 supabase/migrations/20261125000000_shop.sql */
-const SHOP = { items: [], owned: new Set(), loaded: false, busy: false, msg: '' }, SHOP_BY = {};
-const shopCode = () => ACC.user ? 'DL' + ACC.user.id.replace(/-/g, '').slice(0, 8).toUpperCase() : '';
-const shopUrlOk = u => typeof u === 'string' && /^https:\/\/(afdian\.(com|net)|ifdian\.net)\//.test(u);
+/* ---------- 商城（v3.5）：一人付（支付宝）「断链币」积分包。只卖称号这类外观，不影响对战 ----------
+   断链币余额由支付宝 / 一人付记账；Edge Function `shop` 用服务端凭证查余额（/coins）、生成支付宝购买入口（/buy）、扣币解锁称号（/unlock）。
+   解锁成功后服务器写 inventory；同一称号的扣减用固定的一人付幂等编号，不会重复扣。数据库见 supabase/migrations/20261126000000_coins.sql
+   （v3.4 的爱发电路由 /webhook /claim 还在服务器上，客户端不再展示。） */
+const SHOP = { items: [], owned: new Set(), loaded: false, busy: false, msg: '', coins: null, packs: [], pay: 'wait', order: null, confirm: '' }, SHOP_BY = {};
+function qrMatrix(text) {
+  const data = Array.from(new TextEncoder().encode(text));
+  const EC = [0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26];
+  const BLK = [0, [[1, 16]], [[1, 28]], [[1, 44]], [[2, 32]], [[2, 43]], [[4, 27]], [[4, 31]], [[2, 38], [2, 39]], [[3, 36], [2, 37]], [[4, 43], [1, 44]]];
+  const ALN = [0, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50]];
+  let ver = 0, cap = 0;
+  for (let v = 1; v <= 10; v++) { cap = BLK[v].reduce((s, [c, n]) => s + c * n, 0); if (4 + (v < 10 ? 8 : 16) + data.length * 8 <= cap * 8) { ver = v; break; } }
+  if (!ver) return null;
+  // 比特流
+  const bits = []; const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+  put(4, 4); put(data.length, ver < 10 ? 8 : 16); for (const b of data) put(b, 8);
+  put(0, Math.min(4, cap * 8 - bits.length)); while (bits.length % 8) bits.push(0);
+  const cw = []; for (let i = 0; i < bits.length; i += 8) cw.push(parseInt(bits.slice(i, i + 8).join(''), 2));
+  for (let p = 0; cw.length < cap; p++) cw.push(p % 2 ? 0x11 : 0xEC);
+  // 里德-所罗门
+  const EXP = new Array(512), LOG = new Array(256); for (let i = 0, x = 1; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11D; } for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  const mul = (a, b) => a && b ? EXP[LOG[a] + LOG[b]] : 0;
+  const ne = EC[ver]; let gen = [1]; for (let i = 0; i < ne; i++) { const g = new Array(gen.length + 1).fill(0); for (let j = 0; j < gen.length; j++) { g[j] ^= gen[j]; g[j + 1] ^= mul(gen[j], EXP[i]); } gen = g; }
+  const rs = d => { const r = new Array(ne).fill(0); for (const b of d) { const f = b ^ r.shift(); r.push(0); for (let j = 0; j < ne; j++) r[j] ^= mul(gen[j + 1], f); } return r; };
+  const blocks = []; let k = 0; for (const [c, n] of BLK[ver]) for (let i = 0; i < c; i++) { const d = cw.slice(k, k + n); k += n; blocks.push([d, rs(d)]); }
+  const out = []; const maxD = Math.max(...blocks.map(b => b[0].length));
+  for (let i = 0; i < maxD; i++) for (const b of blocks) if (i < b[0].length) out.push(b[0][i]);
+  for (let i = 0; i < ne; i++) for (const b of blocks) out.push(b[1][i]);
+  // 画功能图形
+  const n = ver * 4 + 17, M = [], F = []; for (let i = 0; i < n; i++) { M.push(new Array(n).fill(0)); F.push(new Array(n).fill(false)); }
+  const set = (r, c, v) => { M[r][c] = v ? 1 : 0; F[r][c] = true; };
+  const finder = (r, c) => { for (let i = -1; i <= 7; i++) for (let j = -1; j <= 7; j++) { const y = r + i, x = c + j; if (y < 0 || x < 0 || y >= n || x >= n) continue; const d = Math.max(Math.abs(i - 3), Math.abs(j - 3)); set(y, x, d !== 2 && d !== 4); } };
+  finder(0, 0); finder(0, n - 7); finder(n - 7, 0);
+  for (let i = 8; i < n - 8; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+  const al = ALN[ver], L = al.length - 1; for (let ai = 0; ai <= L; ai++) for (let aj = 0; aj <= L; aj++) { if (ai === 0 && (aj === 0 || aj === L) || ai === L && aj === 0) continue; const r = al[ai], c = al[aj]; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) set(r + i, c + j, Math.max(Math.abs(i), Math.abs(j)) !== 1); }
+  const fmt = (mask) => { const d = (0 << 3) | mask; let r = d; for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537); return ((d << 10) | r) ^ 0x5412; };   // M = 00
+  const drawFmt = (mask) => {
+    const b = fmt(mask), g = i => (b >>> i) & 1;
+    for (let i = 0; i <= 5; i++) set(i, 8, g(i)); set(7, 8, g(6)); set(8, 8, g(7)); set(8, 7, g(8)); for (let i = 9; i < 15; i++) set(8, 14 - i, g(i));
+    for (let i = 0; i < 8; i++) set(8, n - 1 - i, g(i)); for (let i = 8; i < 15; i++) set(n - 15 + i, 8, g(i)); set(n - 8, 8, 1);
+  };
+  drawFmt(0);
+  if (ver >= 7) { let r = ver; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1F25); const b = (ver << 12) | r; for (let i = 0; i < 18; i++) { const v = (b >>> i) & 1, a = n - 11 + i % 3, c = Math.floor(i / 3); set(a, c, v); set(c, a, v); } }
+  // 放数据
+  const db = []; for (const c of out) for (let i = 7; i >= 0; i--) db.push((c >>> i) & 1);
+  let bi = 0; for (let right = n - 1; right >= 1; right -= 2) { if (right === 6) right = 5; for (let vert = 0; vert < n; vert++) for (let j = 0; j < 2; j++) { const x = right - j, up = ((right + 1) & 2) === 0, y = up ? n - 1 - vert : vert; if (!F[y][x] && bi < db.length) M[y][x] = db[bi++]; } }
+  // 选掩码
+  const MK = [(r, c) => (r + c) % 2 === 0, r => r % 2 === 0, (r, c) => c % 3 === 0, (r, c) => (r + c) % 3 === 0, (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0, (r, c) => r * c % 2 + r * c % 3 === 0, (r, c) => (r * c % 2 + r * c % 3) % 2 === 0, (r, c) => ((r + c) % 2 + r * c % 3) % 2 === 0];
+  const apply = m => { for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!F[r][c] && MK[m](r, c)) M[r][c] ^= 1; };
+  const penalty = () => {
+    let p = 0;
+    for (let t = 0; t < 2; t++) for (let i = 0; i < n; i++) { let run = 1; for (let j = 1; j <= n; j++) { const a = j < n && (t ? M[j][i] : M[i][j]) === (t ? M[j - 1][i] : M[i][j - 1]); if (a) run++; else { if (run >= 5) p += run - 2; run = 1; } } }
+    for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) { const v = M[r][c]; if (v === M[r][c + 1] && v === M[r + 1][c] && v === M[r + 1][c + 1]) p += 3; }
+    const pat = [1, 0, 1, 1, 1, 0, 1]; for (let t = 0; t < 2; t++) for (let i = 0; i < n; i++) for (let j = 0; j + 7 <= n; j++) { let ok = true; for (let q = 0; q < 7 && ok; q++) ok = (t ? M[j + q][i] : M[i][j + q]) === pat[q]; if (!ok) continue; const w = (a, b) => { for (let q = a; q < b; q++) { if (q < 0 || q >= n) continue; if (t ? M[q][i] : M[i][q]) return false; } return true; }; if (w(j - 4, j) || w(j + 7, j + 11)) p += 40; }
+    let dark = 0; for (const row of M) for (const v of row) dark += v; p += Math.floor(Math.abs(dark * 20 - n * n * 10) / (n * n)) * 10;
+    return p;
+  };
+  let best = 0, bp = Infinity; for (let m = 0; m < 8; m++) { apply(m); drawFmt(m); const p = penalty(); if (p < bp) { bp = p; best = m; } apply(m); }
+  apply(best); drawFmt(best);
+  return M;
+}
+async function shopCall(route, body) {
+  try {
+    const { data, error } = await ACC.sb.functions.invoke('shop/' + route, { body: body || {} });
+    if (!error) return data || {};
+    try { return await error.context.json(); } catch (x) { return { ok: false, error: 'network' }; }
+  } catch (e) { return { ok: false, error: 'network' }; }
+}
+const SHOP_ERR = { login: '请先登录', rate: '操作太频繁，稍后再试', not_configured: '充值通道还在开通中', upstream: '支付通道暂时连不上，稍后再试', network: '网络错误，稍后再试',
+  coins: '断链币不够，先充值吧', pending: '扣币结果还在确认，稍后再点一次（不会重复扣）', purchase: '生成付款码失败，稍后再试', config: '充值通道配置有误，请联系作者', failed: '解锁失败，稍后再试', bad_item: '这个商品暂时不能买' };
+async function shopCoins() {
+  if (ACC.state !== 'in' || !ACC.sb) return;
+  const uid = ACC.user.id, r = await shopCall('coins');
+  if (ACC.user?.id !== uid) return;
+  if (r.ok) { SHOP.pay = r.status === 'ENABLED' && r.packs.length ? 'ok' : 'wait'; SHOP.packs = r.packs || []; const before = SHOP.coins; SHOP.coins = r.coins; if (SHOP.order && before != null && r.coins > before) { toast(`断链币到账 +${r.coins - before}`); SFX.play('ui'); SHOP.order = null; } }
+  else SHOP.pay = r.error === 'not_configured' ? 'wait' : 'err';
+  if (G.page === 'PG_SHOP') buildShop();
+}
 async function shopLoad(force) {
   if (!ACC.sb || (SHOP.loaded && !force) || SHOP.loading) return;
   SHOP.loading = true;
   try {
-    const { data, error } = await ACC.sb.from('shop_items').select('id,name,descr,price_cny,afdian_url,sort').order('sort'); if (error) throw error;
+    const { data, error } = await ACC.sb.from('shop_items').select('id,name,descr,price_coins,sort').order('sort'); if (error) throw error;
     SHOP.items = data || []; for (const it of SHOP.items) SHOP_BY[it.id] = it; SHOP.loaded = true; if (SHOP.msg === '商城暂时连不上，稍后再试') SHOP.msg = '';
     const uid = ACC.user?.id;
     if (uid) { const r = await ACC.sb.from('inventory').select('item_id').eq('uid', uid); if (!r.error && ACC.user?.id === uid) SHOP.owned = new Set((r.data || []).map(x => x.item_id)); }
-    else SHOP.owned = new Set();
+    else { SHOP.owned = new Set(); SHOP.coins = null; SHOP.order = null; }
   } catch (e) { SHOP.msg = '商城暂时连不上，稍后再试'; }
   finally { SHOP.loading = false; }
   if (G.page === 'PG_SHOP') buildShop();
   if (G.page === 'PG_ACCOUNT' && ACC.edit === 'profile') buildAccount();
+  if (ACC.state === 'in' && (force || SHOP.coins == null)) shopCoins();
+}
+function shopQrHtml(o) {
+  if (/^https:\/\/[a-z0-9.-]+\.alipay(objects)?\.com\//.test(o.qr)) return `<img class="sqr" src="${esc(o.qr)}" width="200" height="200" alt="支付宝付款码">`;
+  const M = qrMatrix(o.qr || o.url); if (!M) return '';
+  const n = M.length, q = 4, sz = n + q * 2; let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (M[r][c]) d += `M${c + q} ${r + q}h1v1h-1z`;
+  return `<svg class="sqr" viewBox="0 0 ${sz} ${sz}" width="200" height="200" shape-rendering="crispEdges"><rect width="${sz}" height="${sz}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
 }
 function buildShop() {
   const B = $('#shopBody'); if (!B) return;
   if (ACC.state === 'off') { B.innerHTML = '<p>商城需要账户服务，作者还没开通。</p>'; return; }
   if (!SHOP.loaded) { B.innerHTML = `<p>${esc(SHOP.msg || '正在加载商城…')}</p>`; shopLoad(); return; }
-  const inn = ACC.state === 'in', cur = (ACC.profile || {}).title, yuan = v => (+v).toFixed(+v % 1 ? 2 : 0);
+  const inn = ACC.state === 'in', cur = (ACC.profile || {}).title, ok = SHOP.pay === 'ok';
   const cards = SHOP.items.map(it => {
-    const own = SHOP.owned.has(it.id);
+    const own = SHOP.owned.has(it.id), p = it.price_coins;
     const btn = own ? (cur === it.id ? '<button class="btn" disabled>使用中</button>' : `<button class="btn primary" data-shopuse="${esc(it.id)}">设为称号</button>`)
       : !inn ? '<button class="btn" data-go="PG_ACCOUNT">登录后购买</button>'
-      : shopUrlOk(it.afdian_url) ? `<a class="btn primary" href="${esc(it.afdian_url)}" target="_blank" rel="noopener">扫码购买 ¥${yuan(it.price_cny)}</a>` : '<button class="btn" disabled>即将开放</button>';
-    return `<div class="sitem"><span class="ptitle">${esc(it.name)}</span><small class="mute">${esc(it.descr)}</small><span class="sp">¥${yuan(it.price_cny)}${own ? ' <small class="mute">已拥有</small>' : ''}</span>${btn}</div>`;
+      : !p || !ok ? '<button class="btn" disabled>即将开放</button>'
+      : SHOP.confirm === it.id ? `<span class="pbtn"><button class="btn primary" data-shopunlock="${esc(it.id)}" ${SHOP.busy ? 'disabled' : ''}>确认花 ${p} 币</button><button class="btn" data-shopconfirm="">取消</button></span>`
+      : `<button class="btn primary" data-shopconfirm="${esc(it.id)}" ${SHOP.busy ? 'disabled' : ''}>解锁 · ${p} 币</button>`;
+    return `<div class="sitem"><span class="ptitle">${esc(it.name)}</span><small class="mute">${esc(it.descr)}</small><span class="sp">${p ? p + ' <small class="mute">断链币</small>' : '—'}${own ? ' <small class="mute">已拥有</small>' : ''}</span>${btn}</div>`;
   }).join('');
-  B.innerHTML = `<p class="shopnote">商城只卖外观（称号），不影响对战强弱。付款走爱发电（微信 / 支付宝扫码）。<b>未成年人请勿购买</b>；虚拟物品发放后不退款，遇到问题请联系作者。</p>
-    ${inn ? `<p>付款时在爱发电的<b>留言</b>里填写你的领取码 <span class="scode" title="点一下复制">${shopCode()}</span>，付款后自动到账（回到这里会自动刷新）。</p>` : '<p>登录后才能购买和领取。</p>'}
-    <div class="shopgrid">${cards || '<p class="hint">暂时没有商品。</p>'}</div>
-    ${inn ? `<h3>没自动到账？</h3><form class="shopclaim" id="shopClaim"><input name="t" inputmode="numeric" maxlength="40" placeholder="爱发电订单号（爱发电「我的订单」里）" required><button class="btn" type="submit" ${SHOP.busy ? 'disabled' : ''}>领取</button></form>` : ''}
+  const o = SHOP.order;
+  const wallet = !inn ? '<p>登录后才能充值和解锁。</p>'
+    : `<div class="swallet"><span>断链币 <b class="sp">${SHOP.coins == null ? '…' : SHOP.coins}</b></span><button class="btn" data-shoprefresh ${SHOP.busy ? 'disabled' : ''}>刷新</button></div>
+      ${SHOP.pay === 'ok' ? `<div class="shopgrid packs">${SHOP.packs.map(k => `<button class="btn sitem spack" data-shopbuy="${esc(k.sku_id)}" ${SHOP.busy ? 'disabled' : ''}><b class="sp">${k.coins} 币</b><span>¥${esc(String(k.price).replace(/\.00$/, ''))}</span></button>`).join('')}</div>`
+        : `<p class="hint">${SHOP.pay === 'err' ? '支付通道暂时连不上，稍后再试。' : '充值通道开通中（支付宝审核），开通后就能用断链币解锁称号。'}</p>`}
+      ${o ? `<div class="spay">${shopQrHtml(o)}<div><p><b>用支付宝扫码付款</b>${o.pack ? `：${o.pack.coins} 断链币 ¥${esc(String(o.pack.price).replace(/\.00$/, ''))}` : ''}</p>
+        ${o.url ? `<p><a class="btn primary" href="${esc(o.url)}" rel="noopener">在手机上打开支付宝付款</a></p>` : ''}
+        <p class="hint">付完款回到这里，断链币会自动到账（一般几十秒）。${o.expire ? `付款码 ${esc(o.expire)} 前有效。` : ''}</p>
+        <p class="pbtn"><button class="btn" data-shoprefresh>我付完了，刷新</button><button class="btn" data-shopclose>关闭</button></p></div></div>` : ''}`;
+  B.innerHTML = `<p class="shopnote">商城只卖外观（称号），不影响对战强弱。用支付宝充值「断链币」，再用断链币解锁称号。<b>未成年人请勿购买</b>；虚拟物品发放后不退款，遇到问题请联系作者。</p>
+    ${wallet}<h3>称号</h3><div class="shopgrid">${cards || '<p class="hint">暂时没有商品。</p>'}</div>
     <p class="err" id="shopMsg">${esc(SHOP.msg)}</p>`;
 }
 async function shopUse(id) {
@@ -5202,25 +5293,41 @@ async function shopUse(id) {
   catch (e) { toast('换称号失败，稍后再试'); }
   finally { SHOP.busy = false; buildShop(); }
 }
-async function shopClaim(t) {
-  if (!/^[0-9]{10,40}$/.test(t)) { SHOP.msg = '订单号是一串数字'; buildShop(); return; }
-  if (SHOP.busy || !ACC.sb) return;
-  SHOP.busy = true; SHOP.msg = '正在向爱发电核实订单…'; buildShop();
+async function shopBuy(sku) {
+  if (SHOP.busy || ACC.state !== 'in') return;
+  SHOP.busy = true; SHOP.msg = '正在生成付款码…'; buildShop();
   try {
-    const { data, error } = await ACC.sb.functions.invoke('shop/claim', { body: { out_trade_no: t } });
-    let r = data; if (error) { try { r = await error.context.json(); } catch (x) { r = { error: 'network' }; } }
-    const M = { taken: '这笔订单已被其他账户领取', unknown_plan: '这笔订单不是商城商品', not_found: '没找到这笔订单（刚付款的话等一分钟再试）', not_paid: '订单还没付款成功',
-      format: '订单号格式不对', rate: '操作太频繁，稍后再试', login: '请先登录', not_configured: '作者还没配置好收款，暂时不能领取', upstream: '爱发电暂时连不上，稍后再试', network: '网络错误，稍后再试' };
-    if (r && r.ok) { SHOP.msg = ''; toast(r.status === 'already' ? '这笔订单已经领过了' : `已领取「${(SHOP_BY[r.item] || {}).name || r.item}」`); SFX.play('ui'); }
-    else SHOP.msg = M[r && (r.status || r.error)] || '领取失败，稍后再试';
+    const r = await shopCall('buy', { sku_id: sku });
+    if (r.ok && (r.qr || r.url)) { SHOP.order = { qr: r.qr, url: r.url, expire: r.expire, pack: r.pack, at: Date.now() }; SHOP.msg = ''; shopPoll(); }
+    else SHOP.msg = SHOP_ERR[r.error] || '生成付款码失败，稍后再试';
+  } finally { SHOP.busy = false; buildShop(); }
+}
+async function shopUnlock(id) {
+  if (SHOP.busy || ACC.state !== 'in') return;
+  SHOP.busy = true; SHOP.confirm = ''; SHOP.msg = '正在解锁…'; buildShop();
+  try {
+    const r = await shopCall('unlock', { item_id: id });
+    if (r.ok) { SHOP.msg = ''; SHOP.owned.add(id); toast(`已解锁「${(SHOP_BY[id] || {}).name || id}」`); SFX.play('ui'); if (typeof r.remaining === 'number') SHOP.coins = r.remaining; }
+    else SHOP.msg = SHOP_ERR[r.error] || '解锁失败，稍后再试';
     await shopLoad(true);
   } finally { SHOP.busy = false; buildShop(); }
 }
+function shopPoll() {   // 付款码开着时每 6 秒查一次余额，最多 5 分钟
+  clearTimeout(SHOP.timer);
+  if (!SHOP.order || Date.now() - SHOP.order.at > 300000) return;
+  SHOP.timer = setTimeout(async () => { if (SHOP.order && !document.hidden && G.page === 'PG_SHOP') await shopCoins(); shopPoll(); }, 6000);
+}
 document.addEventListener('click', e => {
-  const u = e.target.closest && e.target.closest('[data-shopuse]'); if (u) { shopUse(u.dataset.shopuse); return; }
-  const c = e.target.closest && e.target.closest('.scode'); if (c && navigator.clipboard) navigator.clipboard.writeText(c.textContent).then(() => toast('领取码已复制'), () => {});
+  const t = e.target.closest && e.target.closest('[data-shopuse],[data-shopbuy],[data-shopunlock],[data-shopconfirm],[data-shoprefresh],[data-shopclose]'); if (!t) return;
+  const d = t.dataset;
+  if (d.shopuse) shopUse(d.shopuse);
+  else if (d.shopbuy) shopBuy(d.shopbuy);
+  else if (d.shopunlock) shopUnlock(d.shopunlock);
+  else if ('shopconfirm' in d) { SHOP.confirm = d.shopconfirm; buildShop(); }
+  else if ('shoprefresh' in d) shopCoins();
+  else if ('shopclose' in d) { SHOP.order = null; clearTimeout(SHOP.timer); buildShop(); }
 });
-document.addEventListener('visibilitychange', () => { if (!document.hidden && G.page === 'PG_SHOP' && ACC.state === 'in') shopLoad(true); });   // 从爱发电付完款回来，刷新库存
+document.addEventListener('visibilitychange', () => { if (!document.hidden && G.page === 'PG_SHOP' && ACC.state === 'in') shopLoad(true); });   // 从支付宝付完款回来，刷新余额和库存
 function accUI() {
   { const uid = ACC.user?.id || null; if (ACC.sb && (ACC.state === 'in' || ACC.state === 'out') && (!SHOP.loaded || SHOP.uid !== uid)) { SHOP.uid = uid; shopLoad(true); } }   // 商城：目录登录前也要（别人的称号名），库存跟着账户换
   const chip = $('#accChip'); if (chip) {
@@ -5383,7 +5490,6 @@ document.addEventListener('submit', e => {
   const form = e.target;
   if (form.id === 'accForm') { e.preventDefault(); accFormSubmit(form); }
   else if (form.id === 'accEditForm') { e.preventDefault(); accEditSubmit(form); }
-  else if (form.id === 'shopClaim') { e.preventDefault(); shopClaim(String(new FormData(form).get('t') || '').trim()); }
   else if (form.id === 'accPassword') {
     e.preventDefault(); accAction(form, async fd => {
       const password = newPassword(fd);
