@@ -48,21 +48,24 @@
 
 满速一局每秒约 30 条客户端发送的 Broadcast，即 **1,800 条发送／场／分钟**。每条转发给另一人，Supabase 按发送和投递分别计数，约 **3,600 条计费消息／场／分钟**。这个估算不含大厅、选人、重连和结算尾部广播；没有启用 Broadcast ACK。免费项目的 100 条消息／秒上限适合一场满速对局，仍需为大厅留余量。两场满速约 120 条／秒。按每月 200 万条估算，约 9.3 小时的总对局时间，实际用量请看项目 Realtime Reports。[Realtime 限额](https://supabase.com/docs/guides/realtime/limits) · [消息计量](https://supabase.com/docs/guides/platform/manage-your-usage/realtime-messages)
 
-## 商城（v3.4）
+## 商城（v3.5 断链币）
 
-只卖外观（称号），不影响对战。收款走爱发电（个人创作者平台，付款页支持微信 / 支付宝扫码），发货由 Edge Function `shop` 完成。
+只卖外观（称号），不影响对战。收款走**一人付**（碳基圈与支付宝合作，个人可申请），项目收费模式为**积分包**：玩家用支付宝买「断链币」，余额由支付宝 / 一人付记账，本库不存余额。
 
-- **数据**：迁移 `supabase/migrations/20261125000000_shop.sql`。`shop_items` 商品目录（公开可读），`inventory` 已拥有（只看自己的），`shop_orders` 订单（只看自己的）。玩家不能写这三张表，也不能调用发货函数 `shop_grant`（只给 service_role）。`profiles.title` 可以是 `ACH_*` 或 `SHOP_*`；挂 `SHOP_*` 称号必须已拥有（触发器 `profiles_shop_title`）。
-- **Edge Function `shop`**（`supabase/functions/shop/index.ts`，部署时关闭 JWT 校验）：
-  - `POST /functions/v1/shop/webhook`：爱发电订单回调。**不信任回调内容**，拿订单号调爱发电 `query-order` 查单，`status = 2` 才发货；买家留言里有领取码 `DL` + 用户 ID 前 8 位就直接发到该账户，没有就记为 `unclaimed` 等玩家领取。总是回 `{"ec":200,"em":""}`。
-  - `POST /functions/v1/shop/claim`：玩家登录后填爱发电订单号领取，同样先查单。每人每分钟最多 6 次（`shop_claim_gate`）。
-  - 同一订单号只发一次货（`shop_orders` 主键 + advisory lock）；别人的订单领不走（返回 `taken`）。
+- **数据**：迁移 `supabase/migrations/20261125000000_shop.sql`（商品、库存、称号校验）+ `20261126000000_coins.sql`（断链币）。
+  - `shop_items.price_coins`：解锁价格（断链币）；为空的商品显示「即将开放」。改价：`update public.shop_items set price_coins = … where id = 'SHOP_…';`
+  - `coin_unlocks`：每次扣币解锁的记录，主键是发给一人付的幂等编号 `unlock-<uid>-<商品>-<第几次>`。`coin_purchases`：每次生成的充值入口。玩家只能读自己的，不能写。
+  - `shop_unlock_begin`：已拥有 → `owned`；有一笔在途（PENDING / PROCESSING / UNKNOWN）→ `resume` 用原编号；上一笔确认失败 → 新开一笔。`shop_unlock_settle`：记录结果，`SUCCEEDED` 时写 `inventory`；终态不可改。都只给 service_role。
+- **Edge Function `shop`**（`supabase/functions/shop/index.ts`，部署时关闭 JWT 校验，函数里自己校验登录）：
+  - `POST /shop/coins`：一人付 `GET /product`（套餐、开通状态）+ `POST /access`（余额）。每人每分钟 20 次。
+  - `POST /shop/buy {sku_id}`：一人付 `POST /purchase`，返回支付宝二维码图片地址 `qr` 和手机唤起链接 `url`。每人每分钟 6 次。
+  - `POST /shop/unlock {item_id}`：`shop_unlock_begin` → 一人付 `POST /consume`（续上一笔时先 `POST /consumption` 查原结果）→ `shop_unlock_settle`。结果待确认时提示玩家稍后再点，**不会换编号重扣**。每人每分钟 10 次。
+  - v3.4 的爱发电路由 `/webhook`、`/claim` 仍保留，客户端已不再展示。
 - **作者需要做的**：
-  1. 爱发电为每个商品建一个「方案」或「商品」，记下 plan_id / sku_id 和购买链接。
-  2. 在 SQL Editor 里填映射：`update public.shop_items set afdian_plan_id = '…', afdian_url = 'https://afdian.com/…', price_cny = … where id = 'SHOP_…';`（没填链接的商品在游戏里显示「即将开放」）。
-  3. 在 Supabase → Edge Functions → Secrets 里**本人**填 `AFDIAN_USER_ID`、`AFDIAN_TOKEN`（爱发电「开发者」后台）。Token 不要发给别人，也不要提交到仓库。
-  4. 爱发电「开发者」后台的 Webhook 地址填 `https://<项目>.supabase.co/functions/v1/shop/webhook`。
-- **验证**：`dev/test_shop.sql`（数据库断言，回滚）；`dev/test_shop.py`（假 Supabase 下的完整界面流程）。
+  1. 一人付控制台：项目「断链」第 2 步用支付宝扫码配置积分包套餐（建议 60 币 ¥6、130 币 ¥12、330 币 ¥30）并通过审核。
+  2. 第 4 步申请 API Key，**本人**填到 Supabase → Edge Functions → Secrets：`YIRENFU_API_KEY`。不要发给别人，不要提交到仓库。
+  3. 没配凭证或支付宝没审核通过时，商城显示「充值通道开通中」，解锁按钮为「即将开放」。
+- **验证**：`dev/test_coins.sql`、`dev/test_shop.sql`（数据库断言，回滚）；`dev/test_shop.py`（假 Supabase 下的完整界面流程）。
 - **合规提醒**：中国大陆运营收费网络游戏需要版号；商城页标注了「未成年人请勿购买」和不退款说明。是否开放收费由作者决定。
 
 ## 验证
