@@ -48,6 +48,23 @@
 
 满速一局每秒约 30 条客户端发送的 Broadcast，即 **1,800 条发送／场／分钟**。每条转发给另一人，Supabase 按发送和投递分别计数，约 **3,600 条计费消息／场／分钟**。这个估算不含大厅、选人、重连和结算尾部广播；没有启用 Broadcast ACK。免费项目的 100 条消息／秒上限适合一场满速对局，仍需为大厅留余量。两场满速约 120 条／秒。按每月 200 万条估算，约 9.3 小时的总对局时间，实际用量请看项目 Realtime Reports。[Realtime 限额](https://supabase.com/docs/guides/realtime/limits) · [消息计量](https://supabase.com/docs/guides/platform/manage-your-usage/realtime-messages)
 
+## 商城（v3.4）
+
+只卖外观（称号），不影响对战。收款走爱发电（个人创作者平台，付款页支持微信 / 支付宝扫码），发货由 Edge Function `shop` 完成。
+
+- **数据**：迁移 `supabase/migrations/20261125000000_shop.sql`。`shop_items` 商品目录（公开可读），`inventory` 已拥有（只看自己的），`shop_orders` 订单（只看自己的）。玩家不能写这三张表，也不能调用发货函数 `shop_grant`（只给 service_role）。`profiles.title` 可以是 `ACH_*` 或 `SHOP_*`；挂 `SHOP_*` 称号必须已拥有（触发器 `profiles_shop_title`）。
+- **Edge Function `shop`**（`supabase/functions/shop/index.ts`，部署时关闭 JWT 校验）：
+  - `POST /functions/v1/shop/webhook`：爱发电订单回调。**不信任回调内容**，拿订单号调爱发电 `query-order` 查单，`status = 2` 才发货；买家留言里有领取码 `DL` + 用户 ID 前 8 位就直接发到该账户，没有就记为 `unclaimed` 等玩家领取。总是回 `{"ec":200,"em":""}`。
+  - `POST /functions/v1/shop/claim`：玩家登录后填爱发电订单号领取，同样先查单。每人每分钟最多 6 次（`shop_claim_gate`）。
+  - 同一订单号只发一次货（`shop_orders` 主键 + advisory lock）；别人的订单领不走（返回 `taken`）。
+- **作者需要做的**：
+  1. 爱发电为每个商品建一个「方案」或「商品」，记下 plan_id / sku_id 和购买链接。
+  2. 在 SQL Editor 里填映射：`update public.shop_items set afdian_plan_id = '…', afdian_url = 'https://afdian.com/…', price_cny = … where id = 'SHOP_…';`（没填链接的商品在游戏里显示「即将开放」）。
+  3. 在 Supabase → Edge Functions → Secrets 里**本人**填 `AFDIAN_USER_ID`、`AFDIAN_TOKEN`（爱发电「开发者」后台）。Token 不要发给别人，也不要提交到仓库。
+  4. 爱发电「开发者」后台的 Webhook 地址填 `https://<项目>.supabase.co/functions/v1/shop/webhook`。
+- **验证**：`dev/test_shop.sql`（数据库断言，回滚）；`dev/test_shop.py`（假 Supabase 下的完整界面流程）。
+- **合规提醒**：中国大陆运营收费网络游戏需要版号；商城页标注了「未成年人请勿购买」和不退款说明。是否开放收费由作者决定。
+
 ## 验证
 
 ```bash
