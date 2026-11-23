@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="dl-ver" content="3.3">
+<meta name="dl-ver" content="3.4">
 <meta name="dl-shell" content="1">
 <script>
 /* 安装包热更新（v2.0 起）：安装包里的 index.html 只是保底版本。联网时后台把网站上的新版 index.html 下载到本机（见 hotUpdate），
@@ -191,6 +191,12 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
 .form input:focus,.join input:focus{outline:2px solid var(--red);outline-offset:0;border-color:transparent}
 .err{color:#ff8f7a;min-height:1.2em;margin:0}.hint{color:var(--mute);font-size:.88em}.mute{color:var(--mute);font-weight:400;font-size:.85em}
 .prof{display:flex;align-items:center;gap:1em;flex-wrap:wrap;padding:.4em 0 .2em}.pinfo{display:grid;gap:.1em;flex:1;min-width:12em}.pnick{font-size:1.5em}
+.shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:.6em;margin:.6em 0}
+.sitem{border:1px solid var(--line);padding:.7em .8em;display:flex;flex-direction:column;gap:.35em;background:rgba(239,233,223,.03)}
+.sitem .ptitle{margin-left:0;align-self:flex-start}.sitem .sp{font:600 1.25em "Oswald",sans-serif}.sitem .btn{align-self:flex-start;text-decoration:none}
+.scode{font:700 1.1em "Oswald",monospace;letter-spacing:.08em;color:var(--red);cursor:pointer;user-select:all}
+.shopclaim{display:flex;gap:.5em;flex-wrap:wrap;align-items:center}.shopclaim input{flex:1;min-width:12em}
+.shopnote{font-size:.82em;color:var(--mute);border-left:3px solid var(--red);padding:.3em .7em;margin:.4em 0 .8em}
 .ptitle{display:inline-block;margin-left:.5em;font-size:.78em;color:#fff;background:var(--red);padding:.05em .55em;border-radius:99em;vertical-align:.25em}.pinfo small,.prow small{color:var(--mute)}.pinfo .ptitle,.prow .ptitle,.ibox .ptitle{justify-self:start;width:fit-content;margin:.1em 0}.pbtn{display:flex;gap:.5em}
 .statgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.45em}.statgrid div{background:rgba(239,233,223,.05);border:1px solid var(--line);padding:.45em .7em;display:grid}.statgrid b{font:600 1.45em/1.2 "Oswald","Noto Sans SC",sans-serif}.statgrid small{color:var(--mute);font-size:.8em}
 .cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:1.3em}
@@ -272,10 +278,10 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-mode="pvp">双人对战<small>同一键盘 1P 对 2P</small></button>
     <button data-mode="train">训练模式<small>对木桩练连段与破链时机</small></button>
     <button data-go="PG_MOVES">招式与系统</button>
-    
+    <button data-go="PG_SHOP">商城<small>称号 · 支持作者</small></button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v3.3 · 背景为电脑自动对战演示</div>
+  <div class="ver">v3.4 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -314,6 +320,11 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
   <div class="actions"><button class="btn" id="accBack" data-go="PG_TITLE">返回</button></div>
 </div></section>
 
+<section class="page" id="PG_SHOP"><div class="panel">
+  <h2>商城 <small id="shopSub">称号 · 支持断链</small></h2>
+  <div id="shopBody"></div>
+  <div class="actions"><button class="btn" data-go="PG_TITLE">返回</button></div>
+</div></section>
 <section class="page" id="PG_ONLINE"><div class="panel">
   <h2>联机对战 <small id="onSub"></small></h2>
   <div id="onBody"></div>
@@ -4513,7 +4524,7 @@ function go(id) {
   G.page = id;
   nextPaint = 0;
   $$('.page').forEach(p => p.classList.toggle('on', p.id === id));
-  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings, PG_ACCOUNT: buildAccount, PG_ONLINE: buildOnline, PG_RANK: buildRank })[id]?.();
+  ({ PG_SELECT: buildSelect, PG_MOVES: buildMoves, PG_CODEX: buildCodex, PG_SETTINGS: buildSettings, PG_ACCOUNT: buildAccount, PG_ONLINE: buildOnline, PG_RANK: buildRank, PG_SHOP: buildShop })[id]?.();
   Input.clear();
   $('#wrap').classList.toggle('battle', id === 'PG_BATTLE' && TOUCH);
   if (id === 'PG_BATTLE') requestAnimationFrame(() => { try { stickReset(); calcLift(); } catch (e) {} });
@@ -5145,8 +5156,73 @@ function onlineResult(winner) {
 
 /* ---------- 界面：标题页账户入口 · 账户页 ---------- */
 const avHTML = (id, cls = '') => { const ch = CHAR[id] || CHARS[0]; return `<span class="av ${cls}" style="--c:${ch.color}">${esc(ch.name[0])}</span>`; };
-const titleOf = p => p && p.title && ACH_BY[p.title] ? ACH_BY[p.title].name : '';
+const titleOf = p => !p || !p.title ? '' : ACH_BY[p.title] ? ACH_BY[p.title].name : SHOP_BY[p.title] ? SHOP_BY[p.title].name : '';
+/* ---------- 商城（v3.4）：爱发电收款（微信 / 支付宝扫码），Edge Function `shop` 向爱发电核实订单后发货。只卖称号这类外观 ----------
+   自动到账：付款留言里填领取码（DL + 用户 ID 前 8 位），爱发电回调 /functions/v1/shop/webhook。
+   手动领取：填爱发电订单号 → /functions/v1/shop/claim。数据库：shop_items / inventory / shop_orders，见 supabase/migrations/20261125000000_shop.sql */
+const SHOP = { items: [], owned: new Set(), loaded: false, busy: false, msg: '' }, SHOP_BY = {};
+const shopCode = () => ACC.user ? 'DL' + ACC.user.id.replace(/-/g, '').slice(0, 8).toUpperCase() : '';
+const shopUrlOk = u => typeof u === 'string' && /^https:\/\/(afdian\.(com|net)|ifdian\.net)\//.test(u);
+async function shopLoad(force) {
+  if (!ACC.sb || (SHOP.loaded && !force) || SHOP.loading) return;
+  SHOP.loading = true;
+  try {
+    const { data, error } = await ACC.sb.from('shop_items').select('id,name,descr,price_cny,afdian_url,sort').order('sort'); if (error) throw error;
+    SHOP.items = data || []; for (const it of SHOP.items) SHOP_BY[it.id] = it; SHOP.loaded = true; if (SHOP.msg === '商城暂时连不上，稍后再试') SHOP.msg = '';
+    const uid = ACC.user?.id;
+    if (uid) { const r = await ACC.sb.from('inventory').select('item_id').eq('uid', uid); if (!r.error && ACC.user?.id === uid) SHOP.owned = new Set((r.data || []).map(x => x.item_id)); }
+    else SHOP.owned = new Set();
+  } catch (e) { SHOP.msg = '商城暂时连不上，稍后再试'; }
+  finally { SHOP.loading = false; }
+  if (G.page === 'PG_SHOP') buildShop();
+  if (G.page === 'PG_ACCOUNT' && ACC.edit === 'profile') buildAccount();
+}
+function buildShop() {
+  const B = $('#shopBody'); if (!B) return;
+  if (ACC.state === 'off') { B.innerHTML = '<p>商城需要账户服务，作者还没开通。</p>'; return; }
+  if (!SHOP.loaded) { B.innerHTML = `<p>${esc(SHOP.msg || '正在加载商城…')}</p>`; shopLoad(); return; }
+  const inn = ACC.state === 'in', cur = (ACC.profile || {}).title, yuan = v => (+v).toFixed(+v % 1 ? 2 : 0);
+  const cards = SHOP.items.map(it => {
+    const own = SHOP.owned.has(it.id);
+    const btn = own ? (cur === it.id ? '<button class="btn" disabled>使用中</button>' : `<button class="btn primary" data-shopuse="${esc(it.id)}">设为称号</button>`)
+      : !inn ? '<button class="btn" data-go="PG_ACCOUNT">登录后购买</button>'
+      : shopUrlOk(it.afdian_url) ? `<a class="btn primary" href="${esc(it.afdian_url)}" target="_blank" rel="noopener">扫码购买 ¥${yuan(it.price_cny)}</a>` : '<button class="btn" disabled>即将开放</button>';
+    return `<div class="sitem"><span class="ptitle">${esc(it.name)}</span><small class="mute">${esc(it.descr)}</small><span class="sp">¥${yuan(it.price_cny)}${own ? ' <small class="mute">已拥有</small>' : ''}</span>${btn}</div>`;
+  }).join('');
+  B.innerHTML = `<p class="shopnote">商城只卖外观（称号），不影响对战强弱。付款走爱发电（微信 / 支付宝扫码）。<b>未成年人请勿购买</b>；虚拟物品发放后不退款，遇到问题请联系作者。</p>
+    ${inn ? `<p>付款时在爱发电的<b>留言</b>里填写你的领取码 <span class="scode" title="点一下复制">${shopCode()}</span>，付款后自动到账（回到这里会自动刷新）。</p>` : '<p>登录后才能购买和领取。</p>'}
+    <div class="shopgrid">${cards || '<p class="hint">暂时没有商品。</p>'}</div>
+    ${inn ? `<h3>没自动到账？</h3><form class="shopclaim" id="shopClaim"><input name="t" inputmode="numeric" maxlength="40" placeholder="爱发电订单号（爱发电「我的订单」里）" required><button class="btn" type="submit" ${SHOP.busy ? 'disabled' : ''}>领取</button></form>` : ''}
+    <p class="err" id="shopMsg">${esc(SHOP.msg)}</p>`;
+}
+async function shopUse(id) {
+  if (!SHOP.owned.has(id) || SHOP.busy) return;
+  SHOP.busy = true;
+  try { await accSaveProfile({ title: id }); toast(`称号已换成「${(SHOP_BY[id] || {}).name || id}」`); SFX.play('ui'); }
+  catch (e) { toast('换称号失败，稍后再试'); }
+  finally { SHOP.busy = false; buildShop(); }
+}
+async function shopClaim(t) {
+  if (!/^[0-9]{10,40}$/.test(t)) { SHOP.msg = '订单号是一串数字'; buildShop(); return; }
+  if (SHOP.busy || !ACC.sb) return;
+  SHOP.busy = true; SHOP.msg = '正在向爱发电核实订单…'; buildShop();
+  try {
+    const { data, error } = await ACC.sb.functions.invoke('shop/claim', { body: { out_trade_no: t } });
+    let r = data; if (error) { try { r = await error.context.json(); } catch (x) { r = { error: 'network' }; } }
+    const M = { taken: '这笔订单已被其他账户领取', unknown_plan: '这笔订单不是商城商品', not_found: '没找到这笔订单（刚付款的话等一分钟再试）', not_paid: '订单还没付款成功',
+      format: '订单号格式不对', rate: '操作太频繁，稍后再试', login: '请先登录', not_configured: '作者还没配置好收款，暂时不能领取', upstream: '爱发电暂时连不上，稍后再试', network: '网络错误，稍后再试' };
+    if (r && r.ok) { SHOP.msg = ''; toast(r.status === 'already' ? '这笔订单已经领过了' : `已领取「${(SHOP_BY[r.item] || {}).name || r.item}」`); SFX.play('ui'); }
+    else SHOP.msg = M[r && (r.status || r.error)] || '领取失败，稍后再试';
+    await shopLoad(true);
+  } finally { SHOP.busy = false; buildShop(); }
+}
+document.addEventListener('click', e => {
+  const u = e.target.closest && e.target.closest('[data-shopuse]'); if (u) { shopUse(u.dataset.shopuse); return; }
+  const c = e.target.closest && e.target.closest('.scode'); if (c && navigator.clipboard) navigator.clipboard.writeText(c.textContent).then(() => toast('领取码已复制'), () => {});
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && G.page === 'PG_SHOP' && ACC.state === 'in') shopLoad(true); });   // 从爱发电付完款回来，刷新库存
 function accUI() {
+  { const uid = ACC.user?.id || null; if (ACC.sb && (ACC.state === 'in' || ACC.state === 'out') && (!SHOP.loaded || SHOP.uid !== uid)) { SHOP.uid = uid; shopLoad(true); } }   // 商城：目录登录前也要（别人的称号名），库存跟着账户换
   const chip = $('#accChip'); if (chip) {
     const p = ACC.profile;
     chip.innerHTML = ACC.state === 'in' && p ? `${avHTML(p.avatar)}<span>${esc(p.nickname)}</span>` : ACC.state === 'loading' ? '<span>账户连接中…</span>' : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.4-4 4.2-6 7.5-6s6.1 2 7.5 6"/></svg><span>${ACC.state === 'off' ? '账户' : '登录 / 注册'}</span>`;
@@ -5172,8 +5248,8 @@ function buildAccount() {
   ${ACC.edit === 'profile' ? `<form id="accEditForm" class="form">
     <label><span>昵称</span><input name="n" maxlength="12" value="${esc(p.nickname)}" required></label>
     <div class="chips"><span class="lab">头像</span>${CHARS.map(c => `<button type="button" class="chip" data-av="${c.id}" aria-pressed="${c.id === p.avatar}">${avHTML(c.id, 'sm')}${c.name}</button>`).join('')}</div>
-    <div class="chips"><span class="lab">称号</span><button type="button" class="chip" data-ti="" aria-pressed="${!p.title}">不显示</button>${unlocked.map(a => `<button type="button" class="chip" data-ti="${a.id}" aria-pressed="${p.title === a.id}">${a.name}</button>`).join('')}</div>
-    <p class="hint">${unlocked.length ? '称号来自已解锁的成就。' : '解锁成就后可以把成就名设成称号。'}</p>
+    <div class="chips"><span class="lab">称号</span><button type="button" class="chip" data-ti="" aria-pressed="${!p.title}">不显示</button>${unlocked.map(a => `<button type="button" class="chip" data-ti="${a.id}" aria-pressed="${p.title === a.id}">${a.name}</button>`).join('')}${[...SHOP.owned].filter(id => SHOP_BY[id]).map(id => `<button type="button" class="chip" data-ti="${id}" aria-pressed="${p.title === id}">${esc(SHOP_BY[id].name)}</button>`).join('')}</div>
+    <p class="hint">${unlocked.length || SHOP.owned.size ? '称号来自已解锁的成就和商城。' : '解锁成就或在商城购买后可以设称号。'}</p>
     ${authFeedback}
     <div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">保存</button></div></form>` : ''}
   ${ACC.edit === 'password' ? accPasswordHTML() : ''}
@@ -5307,6 +5383,7 @@ document.addEventListener('submit', e => {
   const form = e.target;
   if (form.id === 'accForm') { e.preventDefault(); accFormSubmit(form); }
   else if (form.id === 'accEditForm') { e.preventDefault(); accEditSubmit(form); }
+  else if (form.id === 'shopClaim') { e.preventDefault(); shopClaim(String(new FormData(form).get('t') || '').trim()); }
   else if (form.id === 'accPassword') {
     e.preventDefault(); accAction(form, async fd => {
       const password = newPassword(fd);
@@ -6262,7 +6339,7 @@ function frOnStatus(uid) {
 function frHTML() {
   if (!NET.fr.loaded) { frLoad(); return '<p class="hint">正在读取好友…</p>'; }
   const prof = id => NET.fr.prof[id] || { nickname: '？', avatar: 'CH_JIN', username: '' };
-  const row = (id, right, sub) => { const p = prof(id); return `<div class="prow">${avHTML(p.avatar)}<div><b>${esc(p.nickname)}</b>${p.title ? `<span class="ptitle">${esc(p.title)}</span>` : ''}<small>@${esc(p.username)}${sub ? ' · ' + sub : ''}</small></div><span class="pbtns">${right}</span></div>`; };
+  const row = (id, right, sub) => { const p = prof(id); return `<div class="prow">${avHTML(p.avatar)}<div><b>${esc(p.nickname)}</b>${titleOf(p) ? `<span class="ptitle">${esc(titleOf(p))}</span>` : ''}<small>@${esc(p.username)}${sub ? ' · ' + sub : ''}</small></div><span class="pbtns">${right}</span></div>`; };
   const inc = frIncoming(), out = frOutgoing(), fr = frFriends().map(r => ({ r, id: frOther(r), s: frOnStatus(frOther(r)) })).sort((a, b) => (b.s.on - a.s.on) || (prof(a.id).nickname < prof(b.id).nickname ? -1 : 1));
   const busyMe = NET.status === 'room' && !(ROOM.host && !ROOM.peer);
   return `<div class="onact"><span class="join"><input id="frName" maxlength="16" placeholder="对方的账号名" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn" id="frAddBtn">加好友</button></span>
