@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>断链 · 运营后台</title>
+  <link rel="stylesheet" href="admin.css">
+  <script defer src="config.js"></script>
+  <script defer src="demo.js"></script>
+  <script defer src="admin.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <main class="login" id="login">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="brand login-brand"><span class="brand-mark" aria-hidden="true">断</span><span>断链<span class="brand-sub">运营后台</span></span></div>
+      <h1 id="login-title">管理员登录</h1>
+      <p class="subtle">使用已授权的《断链》账号登录。</p>
+      <form id="login-form">
+        <label for="login-user">账号名或邮箱</label>
+        <input id="login-user" name="username" autocomplete="username" maxlength="254" required>
+        <label for="login-password">密码</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+        <button class="button primary login-button">登录</button>
+        <p id="login-error" class="inline-error" role="alert"></p>
+      </form>
+      <a id="demo-link" class="text-button" href="?demo=1" hidden>打开本地演示</a>
+    </section>
+  </main>
+
+  <div id="app" class="shell" hidden>
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">断</span><span>断链<span class="brand-sub">运营后台</span></span></div>
+      <nav class="nav" aria-label="后台导航">
+        <button type="button" data-page="overview" aria-current="page"><span class="nav-icon" aria-hidden="true">▦</span>总览</button>
+        <button type="button" data-page="accounts"><span class="nav-icon" aria-hidden="true">♙</span>玩家账户</button>
+        <button type="button" data-page="servers"><span class="nav-icon" aria-hidden="true">▤</span>服务器</button>
+        <button type="button" data-page="audit"><span class="nav-icon" aria-hidden="true">≡</span>操作日志</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="operator">
+          <span class="avatar" aria-hidden="true">管</span>
+          <span><strong id="operator">管理员</strong><small id="operator-role">运营管理员</small></span>
+        </div>
+        <button type="button" class="side-link" id="logout">退出登录</button>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <span class="breadcrumb">断链 / <strong id="breadcrumb">总览</strong></span>
+        <span class="environment" id="environment"><span class="dot" aria-hidden="true"></span><span id="environment-name"></span></span>
+      </header>
+      <main class="content" id="main" tabindex="-1">
+        <div class="page-heading">
+          <div><h1 id="page-title">总览</h1><p class="subtle" id="page-description"></p></div>
+          <div class="page-actions">
+            <span id="refreshed" class="subtle"></span>
+            <button id="refresh" class="button secondary" type="button"><span aria-hidden="true">↻</span> 刷新数据</button>
+          </div>
+        </div>
+        <p class="notice" id="error-banner" role="alert" hidden></p>
+        <p class="sr-only" id="loading" role="status"></p>
+        <section id="page-content" aria-labelledby="page-title"></section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="action-dialog">
+    <form id="action-form">
+      <h2 id="action-title"></h2>
+      <p id="action-description" class="subtle"></p>
+      <label for="action-reason">操作原因</label>
+      <textarea id="action-reason" name="reason" rows="3" maxlength="240" required></textarea>
+      <p id="action-error" class="inline-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="action-cancel" class="button secondary" type="button">取消</button>
+        <button id="action-submit" class="button danger" type="submit">确认</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="player-dialog" aria-labelledby="player-title">
+    <div class="player-heading"><h2 id="player-title">管理账号</h2><button id="player-close" class="button secondary" type="button">关闭</button></div>
+    <p id="player-status" class="inline-error" role="status"></p>
+    <div id="player-content"></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <noscript>请启用 JavaScript 后访问《断链》运营后台。</noscript>
+</body>
+</html>
