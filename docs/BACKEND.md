@@ -50,25 +50,28 @@
 
 满速一局每秒约 30 条客户端发送的 Broadcast，即 **1,800 条发送／场／分钟**。每条转发给另一人，Supabase 按发送和投递分别计数，约 **3,600 条计费消息／场／分钟**。这个估算不含大厅、选人、重连和结算尾部广播；没有启用 Broadcast ACK。免费项目的 100 条消息／秒上限适合一场满速对局，仍需为大厅留余量。两场满速约 120 条／秒。按每月 200 万条估算，约 9.3 小时的总对局时间，实际用量请看项目 Realtime Reports。[Realtime 限额](https://supabase.com/docs/guides/realtime/limits) · [消息计量](https://supabase.com/docs/guides/platform/manage-your-usage/realtime-messages)
 
-## 商城（v3.5 断链币）
+## 商城与外观
 
-只卖外观（称号），不影响对战。收款走**一人付**（碳基圈与支付宝合作，个人可申请），项目收费模式为**积分包**：玩家用支付宝买「断链币」，余额由支付宝 / 一人付记账，本库不存余额。
+v3.7 将支付宝与微信支付统一显示为「即将上线」。七名角色的原立绘可在商城作为一个组合包预览，拥有该组合包的用户会看到库存状态。商城预览与战斗渲染、数值和联机协议独立。
 
-- **数据**：迁移 `supabase/migrations/20261125000000_shop.sql`（商品、库存、称号校验）+ `20261126000000_coins.sql`（断链币）。
-  - `shop_items.price_coins`：解锁价格（断链币）；为空的商品显示「即将开放」。改价：`update public.shop_items set price_coins = … where id = 'SHOP_…';`
-  - `coin_unlocks`：每次扣币解锁的记录，主键是发给一人付的幂等编号 `unlock-<uid>-<商品>-<第几次>`。`coin_purchases`：每次生成的充值入口。玩家只能读自己的，不能写。
-  - `shop_unlock_begin`：已拥有 → `owned`；有一笔在途（PENDING / PROCESSING / UNKNOWN）→ `resume` 用原编号；上一笔确认失败 → 新开一笔。`shop_unlock_settle`：记录结果，`SUCCEEDED` 时写 `inventory`；终态不可改。都只给 service_role。
-- **Edge Function `shop`**（`supabase/functions/shop/index.ts`，部署时关闭 JWT 校验，函数里自己校验登录）：
-  - `POST /shop/coins`：一人付 `GET /product`（套餐、开通状态）+ `POST /access`（余额）。每人每分钟 20 次。
-  - `POST /shop/buy {sku_id}`：一人付 `POST /purchase`，返回支付宝二维码图片地址 `qr` 和手机唤起链接 `url`。每人每分钟 6 次。
-  - `POST /shop/unlock {item_id}`：`shop_unlock_begin` → 一人付 `POST /consume`（续上一笔时先 `POST /consumption` 查原结果）→ `shop_unlock_settle`。结果待确认时提示玩家稍后再点，**不会换编号重扣**。每人每分钟 10 次。
-  - v3.4 的爱发电路由 `/webhook`、`/claim` 仍保留，客户端已不再展示。
-- **作者需要做的**：
-  1. 一人付控制台：项目「断链」第 2 步用支付宝扫码配置积分包套餐（建议 60 币 ¥6、130 币 ¥12、330 币 ¥30）并通过审核。
-  2. 第 4 步申请 API Key，**本人**填到 Supabase → Edge Functions → Secrets：`YIRENFU_API_KEY`。不要发给别人，不要提交到仓库。
-  3. 没配凭证或支付宝没审核通过时，商城显示「充值通道开通中」，解锁按钮为「即将开放」。
-- **验证**：`dev/test_coins.sql`、`dev/test_shop.sql`（数据库断言，回滚）；`dev/test_shop.py`（假 Supabase 下的完整界面流程）。
-- **合规提醒**：中国大陆运营收费网络游戏需要版号；商城页标注了「未成年人请勿购买」和不退款说明。是否开放收费由作者决定。
+- 后端 `shop` 返回 HTTP 410 拒绝充值和扣币入口。部署新版函数后旧客户端也无法发起新交易。以前确认收款的爱发电订单仍可由原回调或补领流程核验。
+- `SHOP_PORTRAITS` 是可管理的外观权益。商城组合包和已拥有称号共用账户库存，组合包不能设为称号。后台只允许收回后台发放且没有订单权益的道具。
+- 部署前检查 `coin_unlocks` 中状态为 `PENDING`、`PROCESSING` 或 `UNKNOWN` 的历史扣减。若仍有在途订单，按一人付原幂等编号确认结果后再处理库存。
+
+## 全服消息
+
+登录玩家共用同一个文字频道。消息的发送人由服务器验证，每个账户一分钟最多发送八次。打开页面会读最近五十条消息并订阅 Realtime，暂时收不到推送时每十二秒补查。新消息写入时清理超过七天的记录。运营后台可对某一玩家设置或解除文字禁言。
+
+语音使用 LiveKit 的一个公共房间 `duanlian-world`。登录后主动加入，默认收听。玩家需再次点击才开启麦克风。离开消息页、退出账户或关闭页面时会断开语音。音频通过 LiveKit 转发，游戏不保存录音。安卓版需要外壳版本 2 的麦克风权限，旧安装包需要更新 APK。 [LiveKit 音频权限](https://docs.livekit.io/frontends/reference/tokens-grants/)
+
+### 部署顺序
+
+1. 核对当前东京项目和正式备份。已有数据库按顺序应用 [后台迁移](../supabase/migrations/20261127000000_admin_console.sql) 和 [账户与频道迁移](../supabase/migrations/20261128000000_account_community.sql) 中尚未执行的版本。迁移会在项目存在 `supabase_realtime` publication 时加入文字消息表。
+2. 部署 `shop`、`admin-accounts` 和 `world-voice`。`shop` 保持原有的回调网关设置，`world-voice` 用 `supabase functions deploy world-voice --no-verify-jwt --project-ref <项目引用>`。语音函数自行验证 Supabase 会话，只向合法账号发麦克风专用的短期令牌。
+3. 配置 LiveKit Cloud 或一个可公网访问的自托管 LiveKit 服务，在 Supabase Edge Function Secrets 配置 `LIVEKIT_URL`（`wss://` 地址）、`LIVEKIT_API_KEY` 和 `LIVEKIT_API_SECRET`。未配置时游戏会明确显示语音服务待上线。生产环境和测试环境使用不同的 LiveKit 配置。
+4. 用两个普通玩家账号验证文字互收、语音双向和离开后断开；用已授权的独立管理员账号验证发放及收回道具、禁言和日志。验证网页和 Android 麦克风授权。
+
+测试用 `dev/test_shop.py`、`dev/test_community.py` 和回滚测试 `dev/test_account_community.sql`。支付历史回归用 `dev/test_shop.sql`、`dev/test_coins.sql`。
 
 ## 验证
 

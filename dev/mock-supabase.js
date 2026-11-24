@@ -19,9 +19,11 @@
       if (this.t === 'friendships') return this.friends(uid, deny);
       // 商城：目录公开只读；库存只看自己的；没拥有的商城称号挂不上（同 20261125000000_shop.sql）
       if (this.t === 'shop_items') return this.op === 'select' ? this.done(SHOP_ITEMS.slice()) : deny;
+      if (this.t === 'world_chat' && (this.op !== 'select' || !uid)) return deny;
       if (this.t === 'inventory' || this.t === 'shop_orders' || this.t === 'coin_unlocks') return this.op === 'select' && uid ? this.done(LS_.get('t.' + this.t, []).filter(r => r.uid === uid)) : deny;
       if (this.t === 'profiles' && this.op === 'update' && typeof this.p.title === 'string' && this.p.title.startsWith('SHOP_')
-        && !LS_.get('t.inventory', []).some(r => r.uid === uid && r.item_id === this.p.title)) return { data: null, error: { code: '42501', message: 'title not owned' } };
+        && (!SHOP_ITEMS.some(item => item.id === this.p.title && item.kind === 'title') ||
+          !LS_.get('t.inventory', []).some(r => r.uid === uid && r.item_id === this.p.title))) return { data: null, error: { code: '42501', message: 'title not owned' } };
       if (this.op === 'insert' || (this.op === 'update' && (!uid || this.t !== 'profiles' || Object.keys(this.p).some(k => !cosmetic.includes(k))))) return deny;
       let rows = LS_.get('t.' + this.t, []);
       if (this.t === 'matches') rows = rows.filter(r => r.user_id === uid);
@@ -133,6 +135,17 @@
     const read = k => LS_.get('t.' + k, []);
     const save = (k, rows) => LS_.set('t.' + k, rows);
     const profiles = read('profiles'), mine = profiles.find(p => p.id === uid);
+    if (name === 'dl_world_chat_post') {
+      const message = String(a.p_message || '').trim().replace(/\s+/g, ' ');
+      if (!message || [...message].length > 280) return { data: null, error: { message: 'invalid_message' } };
+      if (LS_.get('muted', []).includes(uid)) return { data: null, error: { message: 'chat_muted' } };
+      const rows = read('world_chat'), entry = { id: (rows.at(-1)?.id || 0) + 1, uid,
+        nickname: mine.nickname, message, created_at: new Date().toISOString() };
+      save('world_chat', [...rows, entry]);
+      const bus = new BroadcastChannel('mockrt:private:dl-world-chat');
+      bus.postMessage({ k: 'db', payload: entry }); bus.close();
+      return { data: entry, error: null };
+    }
     if (name === 'room_start') {
       const room = mockRooms().find(r => r.id === a.p_room);
       if (!roomLive(room) || room.host !== uid || !seatLive(room) || room.spar !== a.p_setup.spar
@@ -239,6 +252,7 @@
       else if (m.k === 'pres') { pres[m.key] = [m.meta]; syncs(); }
       else if (m.k === 'leave') { delete pres[m.key]; syncs(); }
       else if (m.k === 'bc') hs.filter(h => h.type === 'broadcast' && h.ev === m.event).forEach(h => h.cb({ payload: m.payload }));
+      else if (m.k === 'db') hs.filter(h => h.type === 'postgres_changes' && h.ev === 'INSERT').forEach(h => h.cb({ new: m.payload }));
     }
     const ch = {
       on(type, filter, cb) { hs.push({ type, ev: filter.event, cb }); return ch; },
@@ -310,30 +324,19 @@
       async signOut() { set(null); return { error: null }; },
     };
   }
-  // 商城（v3.5）：模拟 Edge Function `shop` 的一人付路由。断链币余额存 localStorage 'mock.coins' = { uid: 数量 }；
-  // 'mock.yrf' = 'off' 表示充值通道还没开通。测试往 mock.coins 里加数就等于在支付宝付了款。
+  // 商城只提供预览；保留测试用户现有库存。
   const SHOP_ITEMS = [
-    { id: 'SHOP_DUANLIAN', name: '断链者', descr: '支持作者的第一枚称号', price_coins: 60, sort: 10 },
-    { id: 'SHOP_ZHONGYAN', name: '终焉行者', descr: '把势推到尽头的人', price_coins: 120, sort: 20 },
-    { id: 'SHOP_PATRON', name: '断链赞助人', descr: '感谢你让断链走得更远', price_coins: null, sort: 40 },
+    { id: 'SHOP_DUANLIAN', kind: 'title', name: '断链者', descr: '支持作者的第一枚称号', sort: 10 },
+    { id: 'SHOP_ZHONGYAN', kind: 'title', name: '终焉行者', descr: '把势推到尽头的人', sort: 20 },
+    { id: 'SHOP_PATRON', kind: 'title', name: '断链赞助人', descr: '感谢你让断链走得更远', sort: 40 },
+    { id: 'SHOP_PORTRAITS', kind: 'bundle', name: '全角色立绘组合包', descr: '七名角色的原创新版立绘', sort: 100 },
   ];
-  const PACKS = [{ sku_id: 'sku60', name: '60 断链币', price: '6.00', coins: 60 }, { sku_id: 'sku130', name: '130 断链币', price: '12.00', coins: 130 }];
-  function shopFn(name, body) {
-    const uid = session?.user.id; if (!uid) return [{ ok: false, error: 'login' }, 401];
-    if (LS_.get('yrf', 'on') === 'off') return [{ ok: false, error: 'not_configured' }, 502];
-    const bal = LS_.get('coins', {}), have = bal[uid] || 0;
-    if (name === 'shop/coins') return [{ ok: true, status: 'ENABLED', packs: PACKS, coins: have }];
-    if (name === 'shop/buy') { const k = PACKS.find(x => x.sku_id === body?.sku_id); return [{ ok: true, qr: '', url: 'alipays://platformapi/startapp?appId=mock&sku=' + (k ? k.sku_id : ''), expire: '2026-11-23 23:59:59', pack: k || null }]; }
-    if (name === 'shop/unlock') {
-      const it = SHOP_ITEMS.find(x => x.id === body?.item_id); if (!it || !it.price_coins) return [{ ok: false, error: 'bad_item' }];
-      const inv = LS_.get('t.inventory', []); if (inv.some(r => r.uid === uid && r.item_id === it.id)) return [{ ok: true, status: 'owned' }];
-      if (have < it.price_coins) return [{ ok: false, error: 'coins' }];
-      bal[uid] = have - it.price_coins; LS_.set('coins', bal); inv.push({ uid, item_id: it.id }); LS_.set('t.inventory', inv);
-      return [{ ok: true, status: 'unlocked', remaining: bal[uid] }];
+  async function fnInvoke(name) {
+    if (name === 'world-voice' && session?.user.id && typeof window.__DL_TEST_WORLD_VOICE__ === 'function') {
+      return { data: await window.__DL_TEST_WORLD_VOICE__(session.user.id), error: null };
     }
-    return [{ ok: false, error: 'route' }, 404];
+    return { data: null, error: { context: { json: async () => ({ error: 'not_configured' }) } } };
   }
-  const fnInvoke = (name, opts = {}) => { const [d, st] = shopFn(name, opts.body); return st && st >= 400 ? { data: null, error: { message: 'Edge Function returned a non-2xx status code', context: { json: async () => d } } } : { data: d, error: null }; };
   const client = {
     functions: { invoke: (name, opts = {}) => new Promise(r => setTimeout(() => r(fnInvoke(name, opts)), 30)) },
     auth: mockAuth(true),

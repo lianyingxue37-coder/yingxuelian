@@ -33,6 +33,10 @@ window.createDuanlianAdminDemo = function () {
     { actor_name: 'demo_admin', action: 'unban', target_name: 'duanliu', reason: '复核完成，恢复登录', status: 'done', created_at: ago(132) },
   ];
   const trend = [2, 5, 3, 6, 8, 4, 10, 15, 11, 18, 14, 6];
+  const catalog = [
+    { id: 'SHOP_DUANLIAN', name: '断链者', kind: 'title' },
+    { id: 'SHOP_PORTRAITS', name: '全角色立绘组合包', kind: 'bundle' },
+  ];
   return {
     async overview() {
       const hour = new Date();
@@ -49,6 +53,30 @@ window.createDuanlianAdminDemo = function () {
       const q = query.trim().toLowerCase();
       return accounts.filter((a) => a.username.includes(q) || a.nickname.toLowerCase().includes(q) || a.id === q)
         .slice(offset, offset + 21);
+    },
+    async player(id) {
+      const account = accounts.find(item => item.id === id);
+      if (!account) throw new Error('account_not_found');
+      return { avatar: 'CH_JIN', muted: false, inventory: [], ...account, catalog, roles_locked: account.is_admin };
+    },
+    async playerUpdate(id, type, reason, value, avatar) {
+      const account = accounts.find(item => item.id === id);
+      if (!account || account.is_admin) throw new Error('protected_account');
+      account.inventory ||= [];
+      let detail = null;
+      if (type === 'edit_profile') { account.nickname = value; account.avatar = avatar; detail = { nickname: value }; }
+      else if (type === 'grant_item') {
+        const item = catalog.find(item => item.id === value);
+        if (!item) throw new Error('item_not_found');
+        if (account.inventory.some(item => item.id === value)) return;
+        account.inventory.push({ ...item, admin_granted: true });
+        detail = { item_id: value };
+      } else if (type === 'revoke_item') {
+        account.inventory = account.inventory.filter(item => item.id !== value);
+        detail = { item_id: value };
+      } else account.muted = type === 'mute_chat';
+      audit.unshift({ actor_name: 'demo_admin', action: type, target_name: account.username,
+        reason, detail, status: 'done', created_at: new Date().toISOString() });
     },
     async rooms() {
       return rooms.map((room, index) => ({ ...room, protocol: 18, host_until: ago(-(80 - index * 9) / 60) }));

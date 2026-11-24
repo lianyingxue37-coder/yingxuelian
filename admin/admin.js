@@ -12,11 +12,13 @@ const dateTime = new Intl.DateTimeFormat('zh-CN', {
 const clock = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 const pages = {
   overview: ['总览', '查看玩家增长、联机房间和对局结算。'],
-  accounts: ['玩家账户', '搜索《断链》玩家，查看资料和管理登录权限。'],
+  accounts: ['玩家账户', '搜索玩家，管理资料、道具、发言和登录权限。'],
   servers: ['服务器', '检查 Supabase 连接、匹配队列和联机房间。'],
   audit: ['操作日志', '查看管理员的账户处理和房间关闭记录。'],
 };
-const actionNames = { ban: '停用登录', unban: '恢复登录', close_room: '关闭房间' };
+const actionNames = { ban: '停用登录', unban: '恢复登录', close_room: '关闭房间', edit_profile: '更新资料',
+  grant_item: '发放道具', revoke_item: '收回道具', mute_chat: '全服文字禁言', unmute_chat: '解除禁言' };
+const avatars = { CH_JIN: '烬', CH_LAN: '澜', CH_YUE: '岳', CH_YING: '影', CH_LING: '铃', CH_SHUANG: '霜', CH_LEI: '雷' };
 const auditStates = {
   pending: ['处理中', 'warn'], done: ['已完成', 'good'],
   failed: ['失败', 'bad'], uncertain: ['待核对', 'warn'],
@@ -24,7 +26,11 @@ const auditStates = {
 const errors = {
   admin_required: '此账号没有后台管理权限。',
   authentication_required: '登录会话已失效，请重新登录。',
-  protected_account: '此账号属于后台管理员，无法在这里停用或恢复。',
+  protected_account: '管理员账号由项目所有者管理。',
+  invalid_profile: '请填写 1 到 12 个字符的昵称并选择头像。',
+  invalid_reason: '请填写 1 到 240 个字符的操作原因。',
+  item_not_found: '该道具已从目录移除，请刷新。',
+  item_not_admin_granted: '该道具属于订单权益，不能从后台收回。',
   account_not_found: '找不到该玩家账户。',
   account_state_changed: '账号状态已经变化，请刷新页面后再操作。',
   account_action_in_progress: '此账号有操作正在处理，请稍后刷新。',
@@ -53,6 +59,7 @@ let auditOffset = 0;
 let renderedRows = [];
 let loadId = 0;
 let currentAction;
+let managed;
 let toastTimer;
 
 async function signIn(username, password) {
@@ -79,6 +86,7 @@ async function signIn(username, password) {
     const { data, error: rpcError } = await client.rpc(name, args);
     if (rpcError) {
       if (rpcError.code === 'PGRST202' || rpcError.code === '42883') throw new Error('migration_required');
+      if (Object.hasOwn(errors, rpcError.message)) throw new Error(rpcError.message);
       if (rpcError.message === 'admin_required' || rpcError.code === '42501') throw new Error('admin_required');
       if (rpcError.code === 'PGRST301' || rpcError.code === 'PGRST303') throw new Error('authentication_required');
       throw new Error(rpcError.message);
@@ -88,6 +96,9 @@ async function signIn(username, password) {
   return {
     overview: () => rpc('dl_admin_overview'),
     accounts: (query, offset) => rpc('dl_admin_accounts', { p_query: query, p_offset: offset }),
+    player: (id) => rpc('dl_admin_player', { p_target: id }),
+    playerUpdate: (id, type, reason, value, avatar) => rpc('dl_admin_player_update',
+      { p_target: id, p_action: type, p_reason: reason, p_value: value, p_avatar: avatar }),
     rooms: () => rpc('dl_admin_rooms'),
     audit: (offset) => rpc('dl_admin_audit', { p_offset: offset }),
     async health() {
@@ -139,7 +150,8 @@ function pagination(offset, rows) {
 function auditTable(rows) {
   return table(['操作时间', '管理员', '操作', '对象', '原因', '结果'], rows.map((item) => [
     `<span class="time">${date(item.created_at)}</span>`, html(item.actor_name),
-    html(actionNames[item.action]), html(item.target_name), `<span class="note-cell">${html(item.reason)}</span>`,
+    html(actionNames[item.action]), html(item.target_name), `<span class="note-cell">${html(item.reason)}${item.detail?.item_id || item.detail?.nickname
+      ? '<small class="cell-detail">' + html(item.detail.item_id || item.detail.nickname) + '</small>' : ''}</span>`,
     badge(...(auditStates[item.status] || ['未知'])),
   ]), '暂无操作记录');
 }
@@ -208,7 +220,8 @@ function accounts(rows) {
         `<strong>${html(item.nickname)}</strong><span class="cell-detail">@${html(item.username)}</span><span class="cell-detail">${html(item.id)}</span>`,
         number.format(item.rating), `<span class="time">${date(item.created_at)}</span>`,
         `<span class="time">${date(item.last_sign_in_at)}</span>`, status,
-        item.is_admin ? '—' : `<button type="button" class="text-button ${banned ? '' : 'text-danger'}" data-action="${action}" data-id="${html(item.id)}">${actionNames[action]}</button>`,
+        `<span class="account-actions"><button type="button" class="text-button" data-manage="${html(item.id)}">管理账号</button>${item.is_admin ? '' :
+          `<button type="button" class="text-button ${banned ? '' : 'text-danger'}" data-action="${action}" data-id="${html(item.id)}">${actionNames[action]}</button>`}</span>`,
       ];
     }), '没有找到符合条件的玩家')}
     ${pagination(accountOffset, rows)}
@@ -363,6 +376,82 @@ function confirmAction(type, target) {
   $('action-reason').focus();
 }
 
+function renderPlayer(p) {
+  const owned = new Set(p.inventory.map(item => item.id));
+  const available = p.catalog.filter(item => !owned.has(item.id));
+  const reclaimable = p.inventory.filter(item => item.admin_granted);
+  const options = items => items.map(item => `<option value="${html(item.id)}">${html(item.name)}</option>`).join('');
+  const inventory = p.inventory.length ? '<ul>' + p.inventory.map(item =>
+    `<li>${html(item.name)} <small class="subtle">${item.admin_granted ? '后台发放' : '订单权益'}</small></li>`).join('') + '</ul>' : '<p class="subtle">暂无道具</p>';
+  const mute = p.muted ? 'unmute_chat' : 'mute_chat';
+  $('player-title').textContent = p.nickname + ' · 管理账号';
+  $('player-content').innerHTML = `<p class="subtle">@${html(p.username)} · ${number.format(p.rating)} 分<br>${html(p.id)}</p>
+    <div class="player-tools">${p.roles_locked ? '<p>管理员账号由项目所有者管理。</p>' :
+    `<label>操作原因<textarea id="player-reason" rows="2" maxlength="240" placeholder="每项变更都会写入操作日志"></textarea></label>
+      <section><h3>资料</h3><form data-player-action="edit_profile">
+        <label>昵称<input name="value" maxlength="12" required value="${html(p.nickname)}"></label>
+        <label>头像<select name="avatar">${Object.entries(avatars).map(([id, name]) =>
+          `<option value="${id}" ${id === p.avatar ? 'selected' : ''}>${name}</option>`).join('')}</select></label>
+        <button class="button primary">保存资料</button></form></section>`}
+      <section><h3>道具</h3>${inventory}
+      ${!p.roles_locked && available.length ? `<form data-player-action="grant_item"><label>可发放道具<select name="value">${options(available)}</select></label>
+        <button class="button primary">发放</button></form>` : ''}
+      ${!p.roles_locked && reclaimable.length ? `<form data-player-action="revoke_item"><label>可收回道具<select name="value">${options(reclaimable)}</select></label>
+        <button class="button danger">收回</button></form>` : ''}</section>
+      <section><h3>全服文字发言</h3><p>${p.muted ? '已禁言' : '可发言'}</p>${p.roles_locked ? '' :
+        `<form data-player-action="${mute}"><button class="button secondary">${actionNames[mute]}</button></form>`}</section>
+    </div>`;
+}
+
+async function openPlayer(id) {
+  const request = { id, busy: false };
+  managed = request;
+  const dialog = $('player-dialog');
+  $('player-title').textContent = '管理账号';
+  $('player-content').textContent = '';
+  $('player-status').textContent = '正在读取账户…';
+  dialog.showModal();
+  try {
+    const profile = await backend.player(id);
+    if (managed !== request || !dialog.open) return;
+    $('player-status').textContent = '';
+    renderPlayer(profile);
+  } catch (error) {
+    if (managed === request) $('player-status').textContent = displayError(error);
+  }
+}
+
+$('player-close').addEventListener('click', () => $('player-dialog').close());
+$('player-dialog').addEventListener('cancel', event => { if (managed?.busy) event.preventDefault(); });
+$('player-dialog').addEventListener('close', () => { managed = null; });
+$('player-content').addEventListener('submit', async event => {
+  event.preventDefault();
+  const request = managed, type = event.target.dataset.playerAction;
+  const reason = $('player-reason')?.value.trim();
+  if (!request || request.busy || !type) return;
+  if (!reason) { $('player-status').textContent = errors.invalid_reason; $('player-reason').focus(); return; }
+  const form = new FormData(event.target);
+  request.busy = true;
+  $('player-close').disabled = true;
+  const buttons = [...$('player-content').querySelectorAll('button')];
+  buttons.forEach(button => { button.disabled = true; });
+  $('player-status').textContent = '正在保存…';
+  try {
+    await backend.playerUpdate(request.id, type, reason, form.get('value'), form.get('avatar'));
+    const profile = await backend.player(request.id);
+    if (managed !== request) return;
+    renderPlayer(profile);
+    $('player-status').textContent = actionNames[type] + '已完成';
+    void loadPage();
+  } catch (error) {
+    if (managed === request) $('player-status').textContent = displayError(error);
+  } finally {
+    request.busy = false;
+    $('player-close').disabled = false;
+    buttons.forEach(button => { button.disabled = false; });
+  }
+});
+
 $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = event.currentTarget.querySelector('button');
@@ -420,6 +509,7 @@ $('page-content').addEventListener('click', (event) => {
     const target = renderedRows.find((row) => row.id === button.dataset.id);
     if (target) confirmAction(button.dataset.action, target);
   }
+  if (button.dataset.manage) void openPlayer(button.dataset.manage);
 });
 $('action-cancel').addEventListener('click', () => $('action-dialog').close());
 $('action-dialog').addEventListener('cancel', (event) => {

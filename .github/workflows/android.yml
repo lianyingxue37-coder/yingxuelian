@@ -63,6 +63,11 @@ jobs:
           let x = fs.readFileSync(mf, 'utf8');
           if (!x.includes('android:screenOrientation')) x = x.replace(/<activity\b/, '<activity android:screenOrientation="sensorLandscape"');
           if (!x.includes('android.permission.VIBRATE')) x = x.replace('</manifest>', '    <uses-permission android:name="android.permission.VIBRATE" />\n</manifest>');
+          for (const permission of ['RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS']) {
+            if (!x.includes('android.permission.' + permission)) {
+              x = x.replace('</manifest>', `    <uses-permission android:name="android.permission.${permission}" />\n</manifest>`);
+            }
+          }
           fs.writeFileSync(mf, x);
           const find = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? find(path.join(d, e.name)) : e.name === 'MainActivity.java' ? [path.join(d, e.name)] : []);
           for (const f of find('android/app/src/main/java')) {

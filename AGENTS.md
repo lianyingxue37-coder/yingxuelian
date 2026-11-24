@@ -85,12 +85,11 @@ v3.0 把底层从“轮流挨打”改成实时攻防，三处一起改：
 - 只在 `https://localhost`（Capacitor）里生效；测试用 `window.__HOT_FORCE`，见 `dev/test_hot_update.py`。
 - 安装包目前是调试签名，每次构建签名都不同，装新 APK 前要先卸载旧版。配好 GitHub Secrets 里的正式签名后就能直接覆盖安装。
 
-## 商城（v3.5 断链币）
+## 商城（v3.7 外观预览）
 
 - 只卖称号这类外观，**不要卖影响对战的东西**（联机是确定性帧同步，双方数值必须一致）。
-- 收款：一人付（碳基圈 × 支付宝），积分包模式。玩家用支付宝买「断链币」，余额在支付宝 / 一人付那边记账；在商城花断链币解锁称号。
-- 客户端：`SHOP` / `SHOP_BY` / `shopLoad` / `shopCoins` / `buildShop` / `shopBuy` / `shopUnlock` / `shopUse` / `qrMatrix`（付款码没有图片地址时本地画二维码；页面 `PG_SHOP`）；`titleOf` 同时认成就和商城称号。
-- 服务器：见 `docs/BACKEND.md`「商城」。发放只能经 Edge Function `shop` → `shop_unlock_settle`，客户端没有写权限；一人付凭证 `YIRENFU_API_KEY` 只在 Edge Function Secrets 里。
+- 支付渠道和七人立绘包均显示「即将上线」。仅在 `PG_SHOP` 加载立绘，已拥有的称号继续可用。
+- 发放走数据库授权的后台操作和历史订单核验。客户端没有库存写权限。见 `docs/BACKEND.md` 和 `docs/ADMIN.md`。
 
 ## 待办（给 Codex）
 
@@ -115,7 +114,8 @@ python3 dev/test_online.py 50 40 quick 0.15   # 快速匹配 + 844×390 排行�
 RTC=off python3 dev/test_online.py 100 40 no 0.1  # 直连打不通，只走服务器中转
 python3 dev/test_friends.py
 python3 dev/test_accounts_rooms.py
-python3 dev/test_shop.py                 # 商城：通道未开通、充值付款码、余额不足、到账、解锁、设称号
+python3 dev/test_shop.py                 # 商城：付款暂停、七张立绘和已拥有称号
+python3 dev/test_community.py            # 双账号全服文字互收、后台账号操作
 python3 dev/test_hot_update.py           # 安装包热更新：新版接管、坏版本退回、旧缓存清理
 python3 dev/sim_balance.py http://127.0.0.1:8765/index.html 12   # AI 对 AI 平衡统计（连段长度、拆招、终焉次数）
 ```

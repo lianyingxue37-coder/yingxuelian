@@ -1,12 +1,13 @@
 """安装包热更新：模拟安卓安装包（window.__HOT_FORCE），本机存一份“新版”后重新打开，检查新版接管、坏版本自动退回、旧缓存清理。
 用法：python3 -m http.server 8765 后运行 python3 dev/test_hot_update.py"""
-import asyncio, re, sys
+import asyncio, os, re
 from pathlib import Path
 from playwright.async_api import async_playwright
 
-URL = "http://127.0.0.1:8765/index.html"
+URL = os.environ.get("URL", "http://127.0.0.1:8765/index.html")
 SRC = (Path(__file__).parent.parent / "index.html").read_text(encoding="utf-8")
 VER = re.search(r'<meta name="dl-ver" content="([\d.]+)">', SRC).group(1)
+SHELL = int(re.search(r'<meta name="dl-shell" content="(\d+)">', SRC).group(1))
 
 def variant(ver, extra="", shell=None):
     s = SRC.replace(f'<meta name="dl-ver" content="{VER}">', f'<meta name="dl-ver" content="{ver}">', 1)
@@ -16,7 +17,8 @@ def variant(ver, extra="", shell=None):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch()
+        chrome = os.environ.get("CHROME")
+        b = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
         ctx = await b.new_context(service_workers="block")
         await ctx.add_init_script("window.__HOT_FORCE = true;")
         await ctx.route("https://**/*", lambda r: r.abort())   # 不联网：不让后台下载覆盖测试数据
@@ -27,7 +29,7 @@ async def main():
         st = lambda: pg.evaluate("[window.__HOT && window.__HOT.on, document.querySelector('.ver').textContent.split(' ')[0], document.querySelectorAll('#cv').length, typeof DUANLIAN, window.__MARK || 0, localStorage.getItem('dl-hot-try')]")
         print("bundled", await st()); assert (await st())[:4] == [False, f"v{VER}", 1, "object"]
 
-        async def seed(html, ver, shell=1):
+        async def seed(html, ver, shell=SHELL):
             await pg.evaluate("([h, v, s]) => { localStorage.setItem('dl-hot-html', h); localStorage.setItem('dl-hot-ver', v); localStorage.setItem('dl-hot-shell', String(s)); localStorage.removeItem('dl-hot-try'); }", [html, ver, shell])
 
         # 1) 新版接管：只有一份游戏在跑，新版的脚本执行，原文件后半段不执行

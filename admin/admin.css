@@ -138,6 +138,16 @@ dialog p { margin-top: 8px; overflow-wrap: anywhere; }
 dialog label { display: block; margin: 18px 0 7px; }
 dialog textarea { width: 100%; resize: vertical; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+#player-dialog { width: min(640px, calc(100% - 24px)); max-height: calc(100dvh - 24px); overflow: auto; }
+.player-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.player-tools { display: grid; gap: 12px; }
+.player-tools section { border-top: 1px solid var(--line); padding-top: 10px; }
+.player-tools form { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; }
+.player-tools form label { display: grid; gap: 4px; margin: 0; min-width: min(100%, 12em); }
+.player-tools form + form { margin-top: 8px; }
+.player-tools select { width: 100%; min-height: 2.5em; font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: 7px; padding: 5px; background: #fff; }
+.player-tools ul { padding-left: 1.25em; margin: 8px 0; }
+.account-actions { display: flex; column-gap: 12px; row-gap: 4px; flex-wrap: wrap; }
 .toast { position: fixed; bottom: 20px; right: 20px; max-width: calc(100% - 40px); z-index: 5; border-radius: 8px; background: #1d2a43; color: white; padding: 11px 15px; box-shadow: 0 4px 20px #10162744; }
 @media (max-width: 1050px) {
   .shell { grid-template-columns: 182px minmax(0, 1fr); }
