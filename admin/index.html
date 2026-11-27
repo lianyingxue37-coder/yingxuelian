@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>断链 · 管理后台</title>
+<style>
+:root{--ink:#141110;--ink2:#1f1a18;--ink3:#2a2421;--red:#e8432b;--bone:#efe9df;--mute:#a39a8f;--line:rgba(239,233,223,.14);--ok:#5fb36b;--warn:#e0a63a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--bone);font:14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--red)}
+.hide{display:none!important}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:1em;padding:.6em 1em;background:var(--ink2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header b{font-size:1.1em;letter-spacing:.1em}header b em{color:var(--red);font-style:normal}
+nav{display:flex;gap:.2em;flex-wrap:wrap;flex:1}
+nav button{background:none;border:0;padding:.4em .8em;border-radius:6px;cursor:pointer;color:var(--mute)}
+nav button[aria-selected=true]{background:var(--ink3);color:var(--bone)}
+#who{color:var(--mute);font-size:.9em}
+main{max-width:1200px;margin:0 auto;padding:1em}
+.btn{background:var(--ink3);border:1px solid var(--line);border-radius:6px;padding:.35em .9em;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--mute)}.btn:disabled{opacity:.45;cursor:default}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff}.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.sm{padding:.15em .55em;font-size:.88em}
+input,select,textarea{background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.4em .6em}
+textarea{width:100%;min-height:5em;resize:vertical}
+.row{display:flex;gap:.6em;align-items:center;flex-wrap:wrap}.row.sp{justify-content:space-between}
+.grid{display:grid;gap:.8em;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:.9em 1em}
+.card h3{margin:0 0 .6em;font-size:1em}
+.stat .n{font-size:1.8em;font-weight:700}.stat .l{color:var(--mute);font-size:.85em}
+.cols{display:grid;gap:1em;grid-template-columns:1fr 1fr}@media(max-width:820px){.cols{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.92em}
+th,td{text-align:left;padding:.45em .5em;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500}
+tr.click{cursor:pointer}tr.click:hover{background:var(--ink3)}
+.scroll{overflow-x:auto}
+.tag{display:inline-block;padding:0 .45em;border-radius:4px;font-size:.8em;background:var(--ink3);color:var(--mute);margin-right:.2em}
+.tag.red{background:rgba(232,67,43,.18);color:var(--red)}.tag.ok{background:rgba(95,179,107,.18);color:var(--ok)}.tag.warn{background:rgba(224,166,58,.18);color:var(--warn)}
+.mute{color:var(--mute)}.err{color:var(--red)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:90px}.bars i{flex:1;background:var(--red);opacity:.75;border-radius:2px 2px 0 0;min-height:2px;position:relative}
+.bars i:hover::after{content:attr(data-t);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--ink3);padding:.1em .4em;border-radius:4px;font-size:.8em;white-space:nowrap}
+#login{max-width:340px;margin:12vh auto}#login .card{display:grid;gap:.7em}#login input{width:100%}
+.drawer{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.55);display:flex;justify-content:flex-end}
+.drawer>div{width:min(760px,100%);height:100%;overflow:auto;background:var(--ink);border-left:1px solid var(--line);padding:1em}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1em}
+.modal>div{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:1.2em;width:min(440px,100%);display:grid;gap:.7em}
+.modal h3{margin:0}
+.achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.4em}
+.ach{border:1px solid var(--line);border-radius:6px;padding:.3em .5em;cursor:pointer;font-size:.88em}.ach.on{border-color:var(--ok);background:rgba(95,179,107,.1)}
+.ach small{display:block;color:var(--mute);font-size:.8em}
+.form{display:grid;grid-template-columns:auto 1fr;gap:.5em .8em;align-items:center}
+#toast{position:fixed;left:50%;bottom:1.2em;transform:translateX(-50%);z-index:30;background:var(--ink3);border:1px solid var(--line);padding:.5em 1em;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}#toast.bad{border-color:var(--red);color:var(--red)}
+</style>
+</head>
+<body>
+<div id="login" class="hide">
+  <div class="card">
+    <h2 style="margin:0">断链 · 管理后台</h2>
+    <p class="mute" style="margin:0">用管理员的游戏账号登录（账号名或邮箱）。</p>
+    <input id="lgUser" placeholder="账号名" autocomplete="username">
+    <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="btn pri" id="lgGo">登录</button>
+    <p class="err" id="lgErr"></p>
+  </div>
+</div>
+<div id="app" class="hide">
+  <header>
+    <b>断链 <em>GM</em></b>
+    <nav id="tabs"></nav>
+    <span id="who"></span><button class="btn sm" id="logout">退出</button>
+  </header>
+  <main id="view"></main>
+</div>
+<div id="toast"></div>
+<script>
+'use strict';
+const SUPA = { URL: 'https://gldzmkdvbiloitgkzqsy.supabase.co', KEY: 'sb_publishable_HXy6mnhoDEv1lKaG7jjiNA_PlSXZoYv' };
+const SB_SRC = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+  'https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'];
+const CHARS = { CH_JIN: '烬', CH_LAN: '澜', CH_YUE: '岳', CH_YING: '影', CH_LING: '铃', CH_SHUANG: '霜', CH_LEI: '雷' };
+const ACHS = [['ACH_FIRST','初出茅庐','完成第一场对战'],['ACH_WIN1','首胜','赢下第一场'],['ACH_WIN10','十胜','累计赢 10 场'],['ACH_WIN50','百炼','累计赢 50 场'],
+  ['ACH_G100','百战','累计打满 100 场'],['ACH_HIT10','十连','单次连段 10 连'],['ACH_HIT25','连绵不绝','单次连段 25 连'],['ACH_LV3','坠落','连段到「坠落」'],
+  ['ACH_LV4','终焉','连段到「终焉」'],['ACH_FIN10','终结者','终结技收尾 10 次'],['ACH_BRK10','断链者','破链 10 次'],['ACH_PARRY20','见招拆招','闪避 20 次'],
+  ['ACH_BURN','燃链','用一次燃链'],['ACH_AIR','凌空','旧版纪念'],['ACH_SIDE','游身','侧闪 30 次'],['ACH_THROW','擒拿','投技命中 10 次'],
+  ['ACH_PERFECT','完美','满血拿下一回合'],['ACH_ALL','七人众','每个角色都赢过'],['ACH_CPU2','破阵','战胜最高难度电脑'],['ACH_ON1','初登擂台','赢一场联机'],['ACH_ON10','擂主','联机赢 10 场']];
+const ACH_NAME = Object.fromEntries(ACHS.map(a => [a[0], a[1]]));
+const ACTIONS = { edit_profile: '修改资料', grant_item: '发放物品', revoke_item: '回收物品', grant_achievement: '发放成就', revoke_achievement: '回收成就',
+  reset_record: '清空战绩', ban: '封号', unban: '解封', kick: '踢下线', create_item: '新建商品', edit_item: '修改商品', announce: '发布公告',
+  announce_toggle: '公告上下线', admin_set: '管理员变更' };
+const ERRS = { not_admin: '这个账号不是管理员', reason_required: '请填写原因', player_not_found: '找不到这个玩家', protected_admin: '不能操作其他管理员（只有站长可以）',
+  cannot_ban_self: '不能封自己', cannot_change_self: '不能修改自己的管理员身份', item_not_found: '商品不存在', bad_rating: '段位分要在 0～5000 之间',
+  bad_achievement: '成就不存在', bad_hours: '封禁时长不对', bad_targets: '一次最多发给 500 人', 'rate limit exceeded': '操作太频繁，稍后再试',
+  'Invalid login credentials': '账号或密码不对' };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const dt = s => { if (!s) return '—'; if (s === 'infinity') return '永久'; const d = new Date(s); return isNaN(d) ? esc(s) : d.toLocaleString('zh-CN', { hour12: false }).replace(/\/(\d)\b/g, '/0$1').slice(0, 16); };
+const ago = s => { if (!s) return '从未'; const m = (Date.now() - new Date(s)) / 60000; return m < 1 ? '刚刚' : m < 60 ? Math.floor(m) + ' 分钟前' : m < 1440 ? Math.floor(m / 60) + ' 小时前' : Math.floor(m / 1440) + ' 天前'; };
+function errText(e) {
+  const m = String(e && (e.message || e.error_description) || e);
+  for (const k in ERRS) if (m.includes(k)) return ERRS[k];
+  if (/profiles_cosmetics|check constraint|nickname_len/.test(m)) return '资料格式不对（昵称 1～12 字，头像 / 称号要合法）';
+  if (/title|not owned|42501/.test(m)) return '这个玩家没有该称号对应的物品或成就';
+  return '操作失败：' + m.slice(0, 120);
+}
+let toastT; function toast(t, bad) { const e = $('#toast'); e.textContent = t; e.className = 'on' + (bad ? ' bad' : ''); clearTimeout(toastT); toastT = setTimeout(() => e.className = '', 2600); }
+
+/* ---------- 数据层：真实 Supabase，或本地测试时的假数据（window.__GM_MOCK） ---------- */
+let sb = null;
+const API = {
+  async rpc(fn, args) { if (window.__GM_MOCK) return window.__GM_MOCK.rpc(fn, args || {}); const { data, error } = await sb.rpc(fn, args || {}); if (error) throw error; return data; },
+  async byUsernames(list) { if (window.__GM_MOCK) return window.__GM_MOCK.byUsernames(list); const { data, error } = await sb.from('profiles').select('id,username').in('username', list); if (error) throw error; return data; },
+  async signIn(u, p) { if (window.__GM_MOCK) return window.__GM_MOCK.signIn(u, p); const { error } = await sb.auth.signInWithPassword({ email: u.includes('@') ? u : `${u.toLowerCase()}@players.duanlian.game`, password: p }); if (error) throw error; },
+  async signOut() { if (window.__GM_MOCK) return window.__GM_MOCK.signOut(); await sb.auth.signOut(); },
+  async session() { if (window.__GM_MOCK) return window.__GM_MOCK.session(); const { data } = await sb.auth.getSession(); return data.session; },
+};
+async function loadLib() {
+  if (window.__GM_MOCK) return;
+  for (const src of SB_SRC) {
+    if (window.supabase) break;
+    await new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
+  }
+  if (!window.supabase) throw new Error('加载 Supabase 失败，检查网络');
+  sb = window.supabase.createClient(SUPA.URL, SUPA.KEY, { auth: { storageKey: 'duanlian-gm-auth', persistSession: true, autoRefreshToken: true } });
+}
+
+/* ---------- 弹窗：所有改动都要填原因 ---------- */
+function ask({ title, body = '', fields = '', reason = true, ok = '确定', danger = false }) {
+  return new Promise(res => {
+    const m = document.createElement('div'); m.className = 'modal';
+    m.innerHTML = `<div><h3>${esc(title)}</h3>${body ? `<div class="mute">${body}</div>` : ''}${fields}
+      ${reason ? '<input id="mdReason" placeholder="原因（必填，会记入操作日志）" maxlength="200">' : ''}
+      <div class="row" style="justify-content:flex-end"><button class="btn" data-x>取消</button><button class="btn ${danger ? 'danger' : 'pri'}" data-ok>${esc(ok)}</button></div></div>`;
+    document.body.appendChild(m);
+    const done = v => { m.remove(); res(v); };
+    m.querySelector('[data-x]').onclick = () => done(null);
+    m.onclick = e => { if (e.target === m) done(null); };
+    m.querySelector('[data-ok]').onclick = () => {
+      const out = {}; m.querySelectorAll('[name]').forEach(i => out[i.name] = i.type === 'checkbox' ? i.checked : i.value);
+      if (reason) { out.reason = m.querySelector('#mdReason').value.trim(); if (!out.reason) { m.querySelector('#mdReason').focus(); return; } }
+      done(out);
+    };
+    (m.querySelector('input,select,textarea') || m.querySelector('[data-ok]')).focus();
+  });
+}
+async function act(fn, args, okText) {
+  try { const r = await API.rpc(fn, args); if (okText) toast(okText); return r; }
+  catch (e) { toast(errText(e), true); throw e; }
+}
+
+/* ---------- 页面 ---------- */
+const S = { me: null, tab: 'overview', q: '', sort: 'new', off: 0, catalog: null };
+const TABS = [['overview', '总览'], ['players', '玩家'], ['items', '商品'], ['games', '对局'], ['news', '公告'], ['log', '操作日志'], ['admins', '管理员']];
+function renderTabs() { $('#tabs').innerHTML = TABS.map(([k, n]) => `<button data-tab="${k}" aria-selected="${S.tab === k}">${n}</button>`).join(''); }
+async function show(tab) {
+  S.tab = tab; renderTabs(); try { history.replaceState(null, '', '#' + tab); } catch (e) { /* file:// 等 */ } const V = $('#view'); V.innerHTML = '<p class="mute">加载中…</p>';
+  try { await VIEWS[tab](V); } catch (e) { V.innerHTML = `<p class="err">${esc(errText(e))}</p>`; }
+}
+const bars = rows => { const max = Math.max(1, ...rows.map(r => r.n)); return `<div class="bars">${rows.map(r => `<i style="height:${Math.max(2, r.n / max * 100)}%" data-t="${esc(String(r.d).slice(5))}：${r.n}"></i>`).join('') || '<span class="mute">暂无</span>'}</div>`; };
+const VIEWS = {
+  async overview(V) {
+    const o = await API.rpc('gm_overview');
+    const st = [['players', '注册玩家'], ['new_1d', '今日新增'], ['new_7d', '7 日新增'], ['active_1d', '24h 登录'], ['active_7d', '7 日登录'], ['matches_1d', '24h 对局'],
+      ['online_1d', '24h 联机'], ['rooms_live', '开着的房间'], ['queue_live', '匹配中'], ['banned', '封禁中'], ['items_owned', '已发出物品'], ['announcements', '生效公告']];
+    V.innerHTML = `<div class="grid">${st.map(([k, l]) => `<div class="card stat"><div class="n">${o[k] ?? 0}</div><div class="l">${l}</div></div>`).join('')}</div>
+      <div class="cols" style="margin-top:1em"><div class="card"><h3>近 14 天注册</h3>${bars(o.signups || [])}</div><div class="card"><h3>近 14 天对局</h3>${bars(o.games || [])}</div></div>
+      <div class="card" style="margin-top:1em"><h3>最近操作</h3>${logTable(o.recent || [], false)}</div>`;
+  },
+  async players(V) {
+    V.innerHTML = `<div class="row" style="margin-bottom:.8em"><input id="pq" placeholder="账号名 / 昵称 / UUID" value="${esc(S.q)}" style="flex:1;min-width:200px">
+      <select id="psort">${[['new', '最新注册'], ['active', '最近登录'], ['rating', '段位分'], ['games', '对局数']].map(([k, n]) => `<option value="${k}" ${S.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+      <button class="btn pri" id="pgo">搜索</button></div><div id="plist"><p class="mute">加载中…</p></div>`;
+    await loadPlayers();
+  },
+  async items(V) {
+    const items = S.catalog = await API.rpc('gm_catalog');
+    V.innerHTML = `<div class="row sp" style="margin-bottom:.8em"><span class="mute">商品就是玩家号上的道具（称号、组合包）。下架后商城不再显示，已拥有的玩家不受影响。</span><button class="btn pri" data-newitem>新建商品</button></div>
+      <div class="card scroll"><table><tr><th>ID</th><th>名称</th><th>类型</th><th>断链币价</th><th>排序</th><th>拥有人数</th><th>状态</th><th></th></tr>
+      ${items.map(i => `<tr><td><code>${esc(i.id)}</code></td><td>${esc(i.name)}<br><small class="mute">${esc(i.descr)}</small></td><td>${i.kind === 'bundle' ? '组合包' : '称号'}</td>
+        <td>${i.price_coins ?? '—'}</td><td>${i.sort}</td><td>${i.owners}</td><td>${i.active ? '<span class="tag ok">上架</span>' : '<span class="tag">下架</span>'}</td>
+        <td class="row"><button class="btn sm" data-edititem="${esc(i.id)}">编辑</button><button class="btn sm" data-bulk="${esc(i.id)}">批量发放</button></td></tr>`).join('')}</table></div>`;
+  },
+  async games(V) {
+    const r = await API.rpc('gm_matches', { p_offset: 0 });
+    const st = { pending: ['进行中/待结算', 'warn'], verified: ['已核验', 'ok'], disputed: ['结果有争议', 'red'], expired: ['已过期', ''] };
+    V.innerHTML = `<div class="card scroll"><h3>开着的房间（${r.rooms.length}）</h3>${r.rooms.length ? `<table><tr><th>房号</th><th>房主</th><th>客人</th><th>类型</th><th>租约到</th></tr>
+      ${r.rooms.map(x => `<tr><td>${esc(x.code)}</td><td>${esc(x.host)}</td><td>${esc(x.guest || '—')}</td><td>${x.matched ? '匹配' : x.spar ? '切磋' : '房间'}</td><td>${dt(x.host_until)}</td></tr>`).join('')}</table>` : '<p class="mute">现在没有开着的房间</p>'}</div>
+      <div class="card scroll" style="margin-top:1em"><h3>最近联机对局</h3><table><tr><th>开局</th><th>房主</th><th>客人</th><th>胜方</th><th>状态</th></tr>
+      ${r.games.map(g => { const s = st[g.status] || [g.status, '']; return `<tr><td>${dt(g.opened_at)}</td><td>${esc(g.host)}</td><td>${esc(g.guest)}</td>
+        <td>${g.winner_slot === 0 ? esc(g.host) : g.winner_slot === 1 ? esc(g.guest) : '—'}</td><td><span class="tag ${s[1]}">${esc(s[0])}</span>${g.spar ? '<span class="tag">切磋</span>' : ''}</td></tr>`; }).join('')}</table></div>`;
+  },
+  async news(V) {
+    const list = await API.rpc('gm_announcements');
+    const live = a => a.active && new Date(a.starts_at) <= Date.now() && (!a.ends_at || new Date(a.ends_at) > Date.now());
+    V.innerHTML = `<div class="card"><h3>发布公告</h3><p class="mute" style="margin-top:0">玩家打开游戏时在标题页看到，每条只弹一次。</p>
+      <textarea id="nbody" maxlength="300" placeholder="公告内容（300 字以内）"></textarea>
+      <div class="row" style="margin-top:.5em"><select id="nlevel"><option value="info">普通</option><option value="warn">重要（醒目）</option></select>
+      <select id="nhours"><option value="0">一直显示</option><option value="2">2 小时</option><option value="24">1 天</option><option value="72">3 天</option><option value="168">7 天</option></select>
+      <button class="btn pri" id="npost">发布</button></div></div>
+      <div class="card scroll" style="margin-top:1em"><h3>历史公告</h3><table><tr><th>内容</th><th>发布</th><th>结束</th><th>状态</th><th></th></tr>
+      ${list.map(a => `<tr><td>${a.level === 'warn' ? '<span class="tag red">重要</span>' : ''}${esc(a.body)}</td><td>${dt(a.created_at)}</td><td>${a.ends_at ? dt(a.ends_at) : '—'}</td>
+        <td>${live(a) ? '<span class="tag ok">显示中</span>' : a.active ? '<span class="tag">已过期</span>' : '<span class="tag">已下线</span>'}</td>
+        <td><button class="btn sm" data-news="${a.id}" data-on="${a.active ? 0 : 1}">${a.active ? '下线' : '重新上线'}</button></td></tr>`).join('') || '<tr><td colspan="5" class="mute">还没有公告</td></tr>'}</table></div>`;
+  },
+  async log(V) { const rows = await API.rpc('gm_log', { p_target: null, p_offset: 0 }); V.innerHTML = `<div class="card scroll">${logTable(rows, true)}</div>`; },
+  async admins(V) {
+    const rows = await API.rpc('gm_admins'), owner = S.me.role === 'owner';
+    V.innerHTML = `<div class="card scroll"><table><tr><th>账号</th><th>昵称</th><th>身份</th><th>加入</th><th></th></tr>
+      ${rows.map(a => `<tr><td>${esc(a.username)}</td><td>${esc(a.nickname)}</td><td>${a.role === 'owner' ? '<span class="tag red">站长</span>' : '<span class="tag">管理员</span>'}</td><td>${dt(a.added_at)}</td>
+        <td>${owner && a.uid !== S.me.uid ? `<button class="btn sm danger" data-deladmin="${esc(a.username)}">移除</button>` : ''}</td></tr>`).join('')}</table></div>
+      ${owner ? `<div class="card" style="margin-top:1em"><h3>添加管理员</h3><div class="row"><input id="aduser" placeholder="游戏账号名"><select id="adrole"><option value="admin">管理员</option><option value="owner">站长</option></select><button class="btn pri" id="adadd">添加</button></div>
+        <p class="mute">管理员能管理玩家、商品、公告；站长还能增删管理员，并能操作其他管理员的账号。</p></div>` : '<p class="mute">只有站长能增删管理员。</p>'}`;
+  },
+};
+function logTable(rows, full) {
+  if (!rows.length) return '<p class="mute">暂无记录</p>';
+  return `<table><tr><th>时间</th><th>管理员</th><th>操作</th>${full ? '<th>对象</th>' : '<th>对象</th>'}<th>原因</th>${full ? '<th>详情</th>' : ''}</tr>
+    ${rows.map(l => `<tr><td>${dt(l.at)}</td><td>${esc(l.actor_name)}</td><td>${esc(ACTIONS[l.action] || l.action)}</td><td>${l.target ? `<a href="#" data-open="${esc(l.target)}">${esc(l.target_name || '玩家')}</a>` : esc(l.target_name || '')}</td>
+      <td>${esc(l.reason)}</td>${full ? `<td><small class="mute">${esc(detailText(l.detail))}</small></td>` : ''}</tr>`).join('')}</table>`;
+}
+function detailText(d) {
+  if (!d || typeof d !== 'object') return '';
+  if (d.item) return '物品 ' + d.item; if (d.achievement) return '成就 ' + (ACH_NAME[d.achievement] || d.achievement);
+  if (d.until !== undefined) return d.until ? '至 ' + dt(d.until) : '';
+  if (d.after) return Object.entries(d.after).filter(([k, v]) => d.before && d.before[k] !== v).map(([k, v]) => `${k}: ${d.before[k] ?? '空'} → ${v ?? '空'}`).join('；');
+  if (d.role !== undefined) return d.role ? '设为' + (d.role === 'owner' ? '站长' : '管理员') : '移除';
+  if (d.matches_deleted !== undefined) return '删除对局 ' + d.matches_deleted + ' 条';
+  return JSON.stringify(d).slice(0, 80);
+}
+async function loadPlayers() {
+  const L = $('#plist'); if (!L) return;
+  try {
+    const r = await API.rpc('gm_players', { p_query: S.q, p_sort: S.sort, p_offset: S.off });
+    L.innerHTML = `<p class="mute">共 ${r.total} 人</p><div class="card scroll"><table><tr><th>账号</th><th>昵称</th><th>角色</th><th>段位</th><th>对局</th><th>物品</th><th>注册</th><th>最近登录</th><th>状态</th></tr>
+      ${r.rows.map(p => `<tr class="click" data-open="${p.id}"><td>${esc(p.username)}</td><td>${esc(p.nickname)}</td><td>${CHARS[p.avatar] || ''}</td><td>${p.rating}</td><td>${p.games}</td><td>${p.items}</td>
+        <td>${dt(p.created_at)}</td><td>${ago(p.last_sign_in_at)}</td><td>${p.admin ? '<span class="tag red">管理</span>' : ''}${p.banned ? '<span class="tag red">封禁</span>' : '<span class="tag ok">正常</span>'}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">没有匹配的玩家</td></tr>'}</table></div>
+      <div class="row" style="margin-top:.6em">${S.off > 0 ? '<button class="btn" data-page="-1">上一页</button>' : ''}${S.off + 50 < r.total ? '<button class="btn" data-page="1">下一页</button>' : ''}</div>`;
+  } catch (e) { L.innerHTML = `<p class="err">${esc(errText(e))}</p>`; }
+}
+
+/* ---------- 玩家详情（抽屉） ---------- */
+let DR = null;
+async function openPlayer(id) {
+  if (!DR) { DR = document.createElement('div'); DR.className = 'drawer'; DR.innerHTML = '<div id="pd"></div>'; DR.onclick = e => { if (e.target === DR) closePlayer(); }; document.body.appendChild(DR); }
+  DR.dataset.id = id; $('#pd').innerHTML = '<p class="mute">加载中…</p>';
+  try { const [p, cat] = await Promise.all([API.rpc('gm_player', { p_target: id }), S.catalog ? S.catalog : API.rpc('gm_catalog')]); S.catalog = cat; if (DR && DR.dataset.id === id) renderPlayer(p); }
+  catch (e) { $('#pd').innerHTML = `<p class="err">${esc(errText(e))}</p><button class="btn" data-close>关闭</button>`; }
+}
+function closePlayer() { if (DR) { DR.remove(); DR = null; } if (S.tab === 'players') loadPlayers(); }
+const reload = () => DR && openPlayer(DR.dataset.id);
+function renderPlayer(p) {
+  const ach = p.achievements || {}, inv = p.inventory || [], owned = new Set(inv.map(i => i.id)), st = p.stats || {};
+  const titles = [['', '（不佩戴）'], ...ACHS.filter(a => ach[a[0]]).map(a => [a[0], '成就·' + a[1]]), ...inv.filter(i => i.kind === 'title').map(i => [i.id, '商城·' + i.name])];
+  const src = { gm: '后台发放', coins: '断链币购买', afdian: '爱发电购买' };
+  $('#pd').innerHTML = `
+    <div class="row sp"><h2 style="margin:0">${esc(p.nickname)} <small class="mute">@${esc(p.username)}</small></h2><button class="btn" data-close>关闭</button></div>
+    <p class="mute" style="margin:.3em 0 1em"><code>${esc(p.id)}</code> · 注册 ${dt(p.created_at)} · 最近登录 ${ago(p.last_sign_in_at)} · 在线会话 ${p.sessions}${p.real_email ? ' · 邮箱 ' + esc(p.real_email) : ''}
+      ${p.admin ? ` · <span class="tag red">${p.admin === 'owner' ? '站长' : '管理员'}</span>` : ''}${p.banned ? ` · <span class="tag red">封禁至 ${dt(p.banned_until)}</span>` : ''}</p>
+    <div class="card"><h3>账号控制</h3><div class="row">
+      ${p.banned ? '<button class="btn pri" data-pact="unban">解封</button>' : '<button class="btn danger" data-pact="ban">封号</button>'}
+      <button class="btn" data-pact="kick">踢下线</button><button class="btn danger" data-pact="reset">清空战绩</button></div></div>
+    <div class="card" style="margin-top:.8em"><h3>资料</h3><div class="form">
+      <label>昵称</label><input id="pfNick" maxlength="12" value="${esc(p.nickname)}">
+      <label>头像</label><select id="pfAva">${Object.entries(CHARS).map(([k, n]) => `<option value="${k}" ${p.avatar === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+      <label>称号</label><select id="pfTitle">${titles.map(([k, n]) => `<option value="${k}" ${(p.title || '') === k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+      <label>段位分</label><input id="pfRating" type="number" min="0" max="5000" value="${p.rating}">
+    </div><div class="row" style="margin-top:.6em"><button class="btn pri" data-pact="save">保存资料</button>
+      <span class="mute">战绩：${st.games || 0} 场 ${st.wins || 0} 胜 · 联机 ${st.onG || 0} 场 ${st.onW || 0} 胜 · 最高 ${st.maxHits || 0} 连 · 好友 ${p.friends}</span></div></div>
+    <div class="card" style="margin-top:.8em"><h3>物品（${inv.length}）</h3>
+      ${inv.length ? `<table>${inv.map(i => `<tr><td>${esc(i.name)} <small class="mute">${esc(i.id)}</small></td><td>${i.kind === 'bundle' ? '组合包' : '称号'}</td><td>${src[i.source] || i.source}</td><td>${dt(i.at)}</td>
+        <td><button class="btn sm danger" data-revoke="${esc(i.id)}">回收</button></td></tr>`).join('')}</table>` : '<p class="mute">没有物品</p>'}
+      <div class="row" style="margin-top:.5em"><select id="pfGive">${S.catalog.filter(c => !owned.has(c.id)).map(c => `<option value="${esc(c.id)}">${esc(c.name)}${c.active ? '' : '（已下架）'}</option>`).join('')}</select>
+        <button class="btn pri" data-pact="give" ${S.catalog.every(c => owned.has(c.id)) ? 'disabled' : ''}>发放</button></div>
+      ${inv.some(i => i.source !== 'gm') ? '<p class="mute" style="margin-bottom:0">提示：回收玩家花钱买的物品前，请先确认已经退款或有正当理由。</p>' : ''}</div>
+    <div class="card" style="margin-top:.8em"><h3>成就（${ACHS.filter(a => ach[a[0]]).length}/${ACHS.length}）<small class="mute"> 点一下给予 / 回收</small></h3>
+      <div class="achs">${ACHS.map(a => `<div class="ach ${ach[a[0]] ? 'on' : ''}" data-ach="${a[0]}">${a[1]}<small>${a[2]}</small></div>`).join('')}</div></div>
+    <div class="card scroll" style="margin-top:.8em"><h3>最近对局</h3>${(p.matches || []).length ? `<table><tr><th>时间</th><th>模式</th><th>角色</th><th>对手</th><th>结果</th><th>最高连</th></tr>
+      ${p.matches.map(m => `<tr><td>${dt(m.created_at)}</td><td>${m.mode === 'online' ? '联机' : m.mode === 'cpu' ? '人机' : esc(m.mode)}${m.verified ? ' <span class="tag ok">核验</span>' : ''}</td>
+        <td>${CHARS[m.my_char] || esc(m.my_char)}</td><td>${esc(m.opp_name || CHARS[m.opp_char] || m.opp_char || '')}</td>
+        <td>${m.result === 'win' ? '<span class="tag ok">胜</span>' : m.result === 'lose' ? '<span class="tag red">负</span>' : '<span class="tag">平</span>'}</td><td>${m.max_hits ?? ''}</td></tr>`).join('')}</table>` : '<p class="mute">没有对局记录</p>'}</div>
+    <div class="card scroll" style="margin-top:.8em"><h3>针对此账号的操作记录</h3>${logTable((p.log || []).map(l => ({ ...l, target: null, target_name: '' })), true)}</div>`;
+  DR._p = p;
+}
+async function playerAct(kind, arg) {
+  const p = DR._p, id = p.id, who = `${p.nickname}（@${p.username}）`;
+  if (kind === 'ban') {
+    const r = await ask({ title: '封号 ' + who, body: '封号后立即踢下线，期间无法登录。', danger: true, ok: '封号',
+      fields: `<select name="hours"><option value="1">1 小时</option><option value="24" selected>1 天</option><option value="72">3 天</option><option value="168">7 天</option><option value="720">30 天</option><option value="-1">永久</option></select>` });
+    if (r) await act('gm_ban', { p_target: id, p_hours: +r.hours, p_reason: r.reason }, '已封号');
+  } else if (kind === 'unban') {
+    const r = await ask({ title: '解封 ' + who, ok: '解封' }); if (r) await act('gm_ban', { p_target: id, p_hours: 0, p_reason: r.reason }, '已解封');
+  } else if (kind === 'kick') {
+    const r = await ask({ title: '踢下线 ' + who, body: '作废这个号的所有登录，玩家需要重新登录。' }); if (r) await act('gm_kick', { p_target: id, p_reason: r.reason }, '已踢下线');
+  } else if (kind === 'reset') {
+    const r = await ask({ title: '清空战绩 ' + who, body: '删除全部对局记录、统计归零、段位分回 1000。成就和物品保留。<b>不能撤销。</b>', danger: true, ok: '清空' });
+    if (r) await act('gm_reset_record', { p_target: id, p_reason: r.reason }, '战绩已清空');
+  } else if (kind === 'save') {
+    const nick = $('#pfNick').value.trim(), ava = $('#pfAva').value, title = $('#pfTitle').value, rating = parseInt($('#pfRating').value, 10);
+    if (!nick || nick.length > 12) return toast('昵称要 1～12 个字', true);
+    if (!(rating >= 0 && rating <= 5000)) return toast('段位分要在 0～5000 之间', true);
+    const r = await ask({ title: '修改 ' + who + ' 的资料' });
+    if (r) await act('gm_player_edit', { p_target: id, p_nickname: nick, p_avatar: ava, p_title: title, p_rating: rating, p_reason: r.reason }, '资料已保存');
+  } else if (kind === 'give') {
+    const item = $('#pfGive').value, name = (S.catalog.find(c => c.id === item) || {}).name;
+    const r = await ask({ title: `给 ${who} 发放「${name}」` }); if (r) await act('gm_item', { p_targets: [id], p_item: item, p_op: 'grant', p_reason: r.reason }, '已发放');
+  } else if (kind === 'revoke') {
+    const it = (p.inventory || []).find(i => i.id === arg);
+    const r = await ask({ title: `回收 ${who} 的「${it.name}」`, body: it.source !== 'gm' ? '<b class="err">这是玩家花钱买的。</b>' : '', danger: true, ok: '回收' });
+    if (r) await act('gm_item', { p_targets: [id], p_item: arg, p_op: 'revoke', p_reason: r.reason }, '已回收');
+  } else if (kind === 'ach') {
+    const on = !!(p.achievements || {})[arg];
+    const r = await ask({ title: `${on ? '回收' : '给予'} ${who} 的成就「${ACH_NAME[arg]}」`, danger: on, ok: on ? '回收' : '给予' });
+    if (r) await act('gm_achievement', { p_target: id, p_ach: arg, p_op: on ? 'revoke' : 'grant', p_reason: r.reason }, on ? '已回收成就' : '已给予成就');
+  } else return;
+  reload();
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-tab],[data-open],[data-close],[data-pact],[data-revoke],[data-ach],[data-page],[data-edititem],[data-newitem],[data-bulk],[data-news],[data-deladmin],#pgo,#npost,#adadd,#logout,#lgGo');
+  if (!t) return;
+  const d = t.dataset;
+  try {
+    if (d.tab) show(d.tab);
+    else if (d.open) { e.preventDefault(); openPlayer(d.open); }
+    else if ('close' in d) closePlayer();
+    else if (d.pact) await playerAct(d.pact);
+    else if (d.revoke) await playerAct('revoke', d.revoke);
+    else if (d.ach) await playerAct('ach', d.ach);
+    else if (d.page) { S.off = Math.max(0, S.off + 50 * +d.page); loadPlayers(); }
+    else if (t.id === 'pgo') { S.q = $('#pq').value.trim(); S.sort = $('#psort').value; S.off = 0; loadPlayers(); }
+    else if ('newitem' in d || d.edititem) await editItem(d.edititem);
+    else if (d.bulk) await bulkGrant(d.bulk);
+    else if (d.news) { const r = await ask({ title: d.on === '1' ? '重新上线公告' : '下线公告', reason: false }); if (r) { await act('gm_announce', { p_id: +d.news, p_body: null, p_level: null, p_hours: null, p_active: d.on === '1' }, '已更新'); show('news'); } }
+    else if (t.id === 'npost') {
+      const body = $('#nbody').value.trim(); if (!body) return toast('写点内容', true);
+      await act('gm_announce', { p_id: null, p_body: body, p_level: $('#nlevel').value, p_hours: +$('#nhours').value, p_active: true }, '公告已发布'); show('news');
+    } else if (t.id === 'adadd') {
+      const u = $('#aduser').value.trim().toLowerCase(); if (!u) return;
+      const r = await ask({ title: `把 ${u} 设为${$('#adrole').value === 'owner' ? '站长' : '管理员'}` }); if (r) { await act('gm_admin_set', { p_username: u, p_role: $('#adrole').value, p_reason: r.reason }, '已添加'); show('admins'); }
+    } else if (d.deladmin) { const r = await ask({ title: `移除管理员 ${d.deladmin}`, danger: true, ok: '移除' }); if (r) { await act('gm_admin_set', { p_username: d.deladmin, p_role: '', p_reason: r.reason }, '已移除'); show('admins'); } }
+    else if (t.id === 'logout') { await API.signOut(); location.reload(); }
+    else if (t.id === 'lgGo') login();
+  } catch (x) { /* act() 已提示 */ }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'pq') $('#pgo').click();
+  if (e.key === 'Enter' && (e.target.id === 'lgPass' || e.target.id === 'lgUser')) login();
+  if (e.key === 'Escape') { const m = document.querySelector('.modal [data-x]'); if (m) m.click(); else if (DR) closePlayer(); }
+});
+async function editItem(id) {
+  const i = id ? S.catalog.find(c => c.id === id) : { id: 'SHOP_', kind: 'title', name: '', descr: '', price_coins: '', sort: 100, active: true };
+  const r = await ask({ title: id ? '编辑商品 ' + id : '新建商品', fields: `<div class="form">
+    <label>ID</label><input name="id" value="${esc(i.id)}" ${id ? 'readonly' : ''} placeholder="SHOP_大写字母数字">
+    <label>名称</label><input name="name" maxlength="12" value="${esc(i.name)}"><label>说明</label><input name="descr" maxlength="60" value="${esc(i.descr)}">
+    <label>类型</label><select name="kind"><option value="title" ${i.kind === 'title' ? 'selected' : ''}>称号</option><option value="bundle" ${i.kind === 'bundle' ? 'selected' : ''}>组合包</option></select>
+    <label>断链币价</label><input name="price" type="number" min="1" max="99999" value="${i.price_coins ?? ''}" placeholder="留空 = 不能用断链币买">
+    <label>排序</label><input name="sort" type="number" value="${i.sort}"><label>上架</label><input name="active" type="checkbox" ${i.active ? 'checked' : ''}></div>` });
+  if (!r) return;
+  if (!/^SHOP_[A-Z0-9_]{2,24}$/.test(r.id)) return toast('ID 要以 SHOP_ 开头，后面是大写字母 / 数字 / 下划线', true);
+  if (!r.name.trim()) return toast('名称不能为空', true);
+  await act('gm_item_save', { p_id: r.id, p_kind: r.kind, p_name: r.name, p_descr: r.descr, p_price_coins: r.price ? +r.price : null, p_sort: +r.sort || 100, p_active: r.active, p_reason: r.reason }, '已保存');
+  show('items');
+}
+async function bulkGrant(item) {
+  const name = (S.catalog.find(c => c.id === item) || {}).name;
+  const r = await ask({ title: `批量发放「${name}」`, body: '每行一个游戏账号名（也可以用空格或逗号分隔），最多 500 个。已经有的会跳过。',
+    fields: '<textarea name="users" placeholder="player_a&#10;player_b"></textarea>' });
+  if (!r) return;
+  const list = [...new Set(r.users.toLowerCase().split(/[\s,，]+/).filter(Boolean))];
+  if (!list.length) return toast('没有填账号名', true);
+  if (list.length > 500) return toast('一次最多 500 个', true);
+  const found = await API.byUsernames(list), miss = list.filter(u => !found.some(f => f.username === u));
+  if (!found.length) return toast('这些账号都不存在', true);
+  const res = await act('gm_item', { p_targets: found.map(f => f.id), p_item: item, p_op: 'grant', p_reason: r.reason });
+  toast(`发放 ${res.changed} 人，跳过 ${res.skipped} 人${miss.length ? `，${miss.length} 个账号不存在：${miss.slice(0, 5).join('、')}${miss.length > 5 ? '…' : ''}` : ''}`);
+  show('items');
+}
+
+/* ---------- 登录 ---------- */
+async function login() {
+  const u = $('#lgUser').value.trim(), pw = $('#lgPass').value; $('#lgErr').textContent = '';
+  if (!u || !pw) return;
+  $('#lgGo').disabled = true;
+  try { await API.signIn(u, pw); await enter(); }
+  catch (e) { $('#lgErr').textContent = errText(e); }
+  finally { $('#lgGo').disabled = false; }
+}
+async function enter() {
+  try { S.me = await API.rpc('gm_me'); }
+  catch (e) {
+    await API.signOut().catch(() => {});
+    $('#login').classList.remove('hide'); $('#app').classList.add('hide'); $('#lgErr').textContent = errText(e); return;
+  }
+  $('#login').classList.add('hide'); $('#app').classList.remove('hide');
+  $('#who').textContent = `${S.me.username} · ${S.me.role === 'owner' ? '站长' : '管理员'}`;
+  show(location.hash.slice(1) in VIEWS ? location.hash.slice(1) : 'overview');
+}
+(async () => {
+  try { await loadLib(); } catch (e) { document.body.innerHTML = `<p class="err" style="padding:2em">${esc(e.message)}</p>`; return; }
+  if (await API.session()) enter(); else $('#login').classList.remove('hide');
+})();
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (S.me && h in VIEWS && h !== S.tab) show(h); });
+</script>
+</body>
+</html>
