@@ -19,6 +19,7 @@
       if (this.t === 'friendships') return this.friends(uid, deny);
       // 商城：目录公开只读；库存只看自己的；没拥有的商城称号挂不上（同 20261125000000_shop.sql）
       if (this.t === 'shop_items') return this.op === 'select' ? this.done(SHOP_ITEMS.slice()) : deny;
+      if (this.t === 'announcements') return this.op === 'select' ? this.done(LS_.get('ann', []).slice().reverse()) : deny;   // 测试写 localStorage 'mock.ann'
       if (this.t === 'inventory' || this.t === 'shop_orders' || this.t === 'coin_unlocks') return this.op === 'select' && uid ? this.done(LS_.get('t.' + this.t, []).filter(r => r.uid === uid)) : deny;
       if (this.t === 'profiles' && this.op === 'update' && typeof this.p.title === 'string' && this.p.title.startsWith('SHOP_')
         && !LS_.get('t.inventory', []).some(r => r.uid === uid && r.item_id === this.p.title)) return { data: null, error: { code: '42501', message: 'title not owned' } };
