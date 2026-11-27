@@ -16,6 +16,8 @@
 | `download.html` | 安装包下载页（二维码） |
 | `supabase_setup.sql` | 完整建库 / 升级脚本（可重复运行）：资料、战绩、服务器结算与 Elo、匹配、限流、私有对局频道、好友、服务器房间与邀请。按时间戳拼接 `supabase/migrations/` 下的迁移，增量 SQL 和完整脚本保持一致 |
 | `docs/BACKEND.md` | 后端说明：表与权限、结算规则、重连、流量估算、已知限制 |
+| `admin/index.html` / `docs/GM.md` | 管理后台（GM，v3.8）：玩家、物品、成就、封号、公告、操作日志；数据库函数 `gm_*`，见 `supabase/migrations/20261128000000_gm_console.sql` |
+| `dev/test_gm.py` / `dev/test_gm.sql` / `dev/mock-gm.js` | 管理后台：界面流程（假后端）+ 游戏标题页公告 / 数据库权限与操作断言（回滚） |
 | `.github/workflows/android.yml` | push 到 main 后自动打 APK 并发布到 Releases（版本号取自 `<div class="ver">vX.Y`） |
 | `dev/mock-supabase.js` | 本地测试用的假 supabase-js（BroadcastChannel 模拟 Realtime，可调延迟、抖动、丢包） |
 | `dev/test_shop.py` / `dev/test_shop.sql` / `dev/test_coins.sql` | 商城：界面流程（假 Supabase）/ 数据库断言（回滚） |
@@ -92,6 +94,14 @@ v3.0 把底层从“轮流挨打”改成实时攻防，三处一起改：
 - 客户端：`SHOP` / `SHOP_BY` / `shopLoad` / `shopCoins` / `buildShop` / `shopBuy` / `shopUnlock` / `shopUse` / `qrMatrix`（付款码没有图片地址时本地画二维码；页面 `PG_SHOP`）；`titleOf` 同时认成就和商城称号。
 - 服务器：见 `docs/BACKEND.md`「商城」。发放只能经 Edge Function `shop` → `shop_unlock_settle`，客户端没有写权限；一人付凭证 `YIRENFU_API_KEY` 只在 Edge Function Secrets 里。
 
+## 管理后台（v3.8）
+
+- 入口 `/admin/`，用管理员的游戏账号登录；登录会话和游戏分开存（`storageKey: duanlian-gm-auth`）。
+- 权限名单 `duanlian_private.gm_admins`（owner 站长 / admin 管理员）；所有操作走 `security definer` 的 `gm_*` 函数，开头都先校验名单，写操作必须填原因并记入 `duanlian_private.gm_log`。
+- 封号 = 改 `auth.users.banned_until` + 删 `auth.sessions`；踢下线 = 删 `auth.sessions`。不需要 service_role 密钥。
+- 公告表 `public.announcements`：游戏 `annLoad()` 在标题页弹出，每条只弹一次（本机 `dl-ann-seen`）。
+- 与 Codex 分支 `codex/admin-console` 的 `admin_*` / `dl_admin_*` 对象互不依赖（用户要求重做一个）。
+
 ## 待办（给 Codex）
 
 - **联机协议**：v3.6 使用协议 19，移除场上拾取物。战斗规则随客户端版本固定，好友切磋只同步双方确认的赛制。数据库从 `20261124000000_protocol_range.sql` 起接受 14–30，修改确定性对战规则时递增客户端 `ONLINE_PROTOCOL`（大厅、房间、匹配随之隔开）。
@@ -115,6 +125,7 @@ python3 dev/test_online.py 50 40 quick 0.15   # 快速匹配 + 844×390 排行�
 RTC=off python3 dev/test_online.py 100 40 no 0.1  # 直连打不通，只走服务器中转
 python3 dev/test_friends.py
 python3 dev/test_accounts_rooms.py
+python3 dev/test_gm.py                   # 管理后台：登录权限、玩家、物品、成就、封号、公告、管理员；游戏标题页公告
 python3 dev/test_shop.py                 # 商城：通道未开通、充值付款码、余额不足、到账、解锁、设称号
 python3 dev/test_hot_update.py           # 安装包热更新：新版接管、坏版本退回、旧缓存清理
 python3 dev/sim_balance.py http://127.0.0.1:8765/index.html 12   # AI 对 AI 平衡统计（连段长度、拆招、终焉次数）

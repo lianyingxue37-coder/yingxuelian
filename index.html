@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="dl-ver" content="3.7">
+<meta name="dl-ver" content="3.8">
 <meta name="dl-shell" content="1">
 <script>
 /* 安装包热更新（v2.0 起）：安装包里的 index.html 只是保底版本。联网时后台把网站上的新版 index.html 下载到本机（见 hotUpdate），
@@ -285,7 +285,7 @@ kbd{font:600 .9em "Oswald",sans-serif;background:rgba(239,233,223,.1);border:1px
     <button data-go="PG_SHOP">商城<small>立绘 · 称号</small></button>
     <button data-go="PG_SETTINGS">设置</button>
   </nav>
-  <div class="ver">v3.7 · 背景为电脑自动对战演示</div>
+  <div class="ver">v3.8 · 背景为电脑自动对战演示</div>
   <div id="titleTools"><button id="accChip" type="button" data-go="PG_ACCOUNT"><span>账户</span></button><a id="dlTitle" href="https://lianyingxue37-coder.github.io/yingxuelian/download.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.8l3 3 3-3"/></svg>装到手机</a>
   <button id="fsTitle" data-fs aria-label="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d=""/></svg><span class="lbl">全屏</span></button></div>
 </section>
@@ -4805,7 +4805,7 @@ function loadSupabase() {
     document.head.appendChild(s);
   })), Promise.reject(new Error('start')));
 }
-const ERR_CN = [[/Invalid login credentials|current.password.mismatch/i, '登录名或密码不对'], [/otp.expired|token is invalid/i, '验证码错误或已过期，请重新获取'], [/already registered|already been registered|already exists/i, '这个账号名已经被注册了'],
+const ERR_CN = [[/Invalid login credentials|current.password.mismatch/i, '登录名或密码不对'], [/banned/i, '账号已被封禁，如有疑问请联系作者'], [/otp.expired|token is invalid/i, '验证码错误或已过期，请重新获取'], [/already registered|already been registered|already exists/i, '这个账号名已经被注册了'],
   [/Password should be at least/i, '密码至少要 6 位'], [/rate limit|too many/i, '操作太频繁，请稍后再试'], [/Email not confirmed/i, '服务器还开着邮箱验证，请让作者在 Supabase 关闭 Confirm email'],
   [/room codes busy/i, '房号暂时用完了，请稍后重试'], [/room unavailable/i, '房间已关闭或成员已变化'],
   [/could not find the function/i, '服务器尚未升级，请联系作者'], [/signups not allowed/i, '服务器暂时关闭了注册'], [/Failed to fetch|NetworkError|network/i, '连不上服务器，请检查网络'], [/Database error/i, '服务器建表还没完成，或账号名不合规']];
@@ -4837,6 +4837,7 @@ async function accInit() {
     if (error) throw error;
     await accSetUser(data?.session?.user || null);
     if (ACC.state === 'in' && G.page === 'PG_TITLE') lsRecover();
+    annLoad();
   } catch (e) { ACC.state = 'err'; ACC.err = '账户连接失败，请检查网络后重试'; accUI(); }
 }
 async function accSetUser(user) {
@@ -5483,6 +5484,27 @@ async function queuePoll(q) {
 }
 function modal(html) { const el = $('#modal'); if (!el) return; el.innerHTML = `<div class="ibox">${html}</div>`; el.hidden = false; const b = el.querySelector('.primary'); b && b.focus({ preventScroll: true }); }
 function modalClose() { const el = $('#modal'); if (el) el.hidden = true; }
+/* 公告（v3.8）：管理后台发布，标题页弹一次；看过的记在本机 */
+async function annLoad() {
+  if (!ACC.sb) return;
+  try {
+    const { data, error } = await ACC.sb.from('announcements').select('id,body,level').order('id', { ascending: false }).limit(5);
+    if (error || !data) return;
+    let seen = []; try { seen = JSON.parse(localStorage.getItem('dl-ann-seen') || '[]'); } catch (e) { /* 坏数据就当没看过 */ }
+    const a = data.find(x => !seen.includes(x.id)); if (!a) return;
+    const show = () => {
+      if (G.page !== 'PG_TITLE' || !$('#modal') || !$('#modal').hidden) return setTimeout(show, 3000);
+      modal(`<div><b>${a.level === 'warn' ? '⚠ 重要公告' : '公告'}</b><p style="white-space:pre-wrap">${esc(a.body)}</p></div><div class="ibtn"><button class="btn primary" id="annOk" data-ann="${a.id}">知道了</button></div>`);
+    };
+    show();
+  } catch (e) { /* 公告失败不影响游戏 */ }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('#annOk'); if (!b) return;
+  let seen = []; try { seen = JSON.parse(localStorage.getItem('dl-ann-seen') || '[]'); } catch (x) { /* ignore */ }
+  seen.push(+b.dataset.ann); try { localStorage.setItem('dl-ann-seen', JSON.stringify(seen.slice(-30))); } catch (x) { /* ignore */ }
+  modalClose(); annLoad();
+});
 async function lobbyInvites() {
   if (NET.readingInvites || ACC.state !== 'in' || NET.status === 'room'
       || !['PG_TITLE', 'PG_ACCOUNT', 'PG_ONLINE', 'PG_RESULT'].includes(G.page)) return;
