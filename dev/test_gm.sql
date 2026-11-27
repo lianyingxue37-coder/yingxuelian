@@ -5,7 +5,7 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('6a000002-0000-0000-0000-000000000002', 'gmtest_admin@players.duanlian.game', '{"username":"gmtest_admin","nickname":"管理"}'),
   ('6a000003-0000-0000-0000-000000000003', 'gmtest_p1@players.duanlian.game', '{"username":"gmtest_p1","nickname":"玩家一"}'),
   ('6a000004-0000-0000-0000-000000000004', 'gmtest_p2@players.duanlian.game', '{"username":"gmtest_p2","nickname":"玩家二"}');
-insert into auth.sessions (user_id) values ('6a000003-0000-0000-0000-000000000003'), ('6a000003-0000-0000-0000-000000000003');
+insert into auth.sessions (id, user_id) values (gen_random_uuid(), '6a000003-0000-0000-0000-000000000003'), (gen_random_uuid(), '6a000003-0000-0000-0000-000000000003');
 insert into duanlian_private.gm_admins (uid, role) values ('6a000001-0000-0000-0000-000000000001', 'owner') on conflict (uid) do update set role = 'owner';
 insert into public.matches (user_id, mode, my_char, opp_char, result) values ('6a000003-0000-0000-0000-000000000003', 'cpu', 'CH_JIN', 'CH_LAN', 'win');
 
